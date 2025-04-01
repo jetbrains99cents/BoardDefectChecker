@@ -1,0 +1,6 @@
+Available model files:
+- FastSAM-s.pt
+- FastSAM-x.pt
+- sam2.1_hiera_tiny.pt
+- sam_vit_b_01ec64.pth
+- sam_vit_h_4b8939.pth

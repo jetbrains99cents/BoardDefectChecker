@@ -1,0 +1,3 @@
+Available model files:
+- FastSAM-s.pt
+- FastSAM-x.pt

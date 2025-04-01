@@ -1,0 +1,29 @@
+.venv\Scripts\activate
+
+set PYTHONPATH=C:\BoardDefectChecker\modules;C:\BoardDefectChecker\ui-design
+
+set PYTHONPATH=D:\Working\BoardDefectChecker\modules;D:\Working\BoardDefectChecker\ui-design
+
+pyside6-uic main_ui_design.ui -o main_ui_design.py
+
+pyside6-uic main_ui_design.ui -o main_ui_design.py; if ($?) { Copy-Item main_ui_design.py ..\modules\ }
+
+pyinstaller --onefile --add-data "C:\BoardDefectChecker\modules;modules" --add-data "C:\BoardDefectChecker\ui-design;ui-design" main.py
+
+pyinstaller --onefile --add-data "C:\BoardDefectChecker\modules;modules" main.py
+
+fsutil file createnew D:\testfile.bin 40000000000
+
+K3449230206AA0041
+\n
+
+Height: 116, x: 125 ,y: 129
+34, 18, 34
+
+Height: 82, x: 143 ,y: 163
+
+https://file.io/XdJDmGsZyCBB
+
+pyinstaller --clean main.spec
+
+pyinstaller --onefile --noconsole main.spec
