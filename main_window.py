@@ -8,6 +8,7 @@ from modules.image_processing import ImageProcessor
 from modules.main_ui_design import Ui_MainWindow
 from modules.ai_models import SmallFPCFastImageSegmenter, ModelManager
 from modules.token_fpc_tab import TokenFPCTabController  # Your separate tab logic
+from modules.bezel_pwb_position_tab import BezelPWBTabController
 from modules.language import SimpleLanguageManager
 from datetime import datetime
 import os
@@ -145,9 +146,10 @@ class MainWindow(QMainWindow):
         # self.ui.lineEdit_2.returnPressed.connect(self.handle_return_pressed())
         # self.ui.lineEdit_2.textChanged.connect(self.handle_text_changed())
 
-        # Instead of starting a grabber stream with DisplayWidget, we create a SnapSinkWorker.
-        self.snap_worker = SnapSinkWorker(self.camera_interaction.grabber)
-        self.snap_worker.image_captured.connect(self.update_video_frame)
+        # Create separate SnapSinkWorker instances for each tab
+        self.snap_worker_token = SnapSinkWorker()  # For Token FPC tab
+        self.snap_worker_left = SnapSinkWorker()  # For Bezel-PWB left camera
+        self.snap_worker_right = SnapSinkWorker()  # For Bezel-PWB right camera
 
         # Button for opening camera setting
         self.ui.pushButton.clicked.connect(self.camera_interaction.select_device)
@@ -160,10 +162,21 @@ class MainWindow(QMainWindow):
             self.ui,
             camera_worker=self.camera_worker,  # from your main window
             camera_interaction=self.camera_interaction,  # from your main window
-            snap_worker=self.snap_worker,  # from your main window
+            snap_worker=self.snap_worker_token,  # Dedicated worker
             detection_log_worker=self.detection_log_worker,  # if available
             image_processor=self.image_processor,  # if available
             parent=Ui_MainWindow
+        )
+
+        # Create the Bezel - PWB position tab controller with two distinct workers
+        self.bezel_pwb_tab_controller = BezelPWBTabController(
+            self.ui,
+            camera_worker=self.camera_worker,
+            camera_interaction=self.camera_interaction,
+            snap_worker_left=self.snap_worker_left,  # Left camera worker
+            snap_worker_right=self.snap_worker_right,  # Right camera worker
+            detection_log_worker=self.detection_log_worker,
+            parent=self
         )
 
         # Just after creation, manually call the camera state:

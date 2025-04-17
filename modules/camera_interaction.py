@@ -310,6 +310,7 @@ class SnapSinkWorker(QThread):
         Returns:
             str or None: Full path to the saved image if saved, else None.
         """
+        global timeout_ms
         try:
             if self.grabber is None:
                 print("Error: No camera selected. Opening device now.")
@@ -326,7 +327,9 @@ class SnapSinkWorker(QThread):
                 self.pre_process()
 
             print("Attempting to capture a single image...")
-            buffer = self.snap_sink.snap_single(1000)  # Timeout: 1000 ms
+            # Increase timeout (e.g., to 2000ms or 3000ms)
+            timeout_ms = 3000
+            buffer = self.snap_sink.snap_single(timeout_ms)
             print("Image captured successfully.")
 
             if save_image:
@@ -343,7 +346,8 @@ class SnapSinkWorker(QThread):
 
             return None
         except Exception as e:
-            print(f"Error capturing image: {e}")
+            # Include timeout value in error message if it fails
+            print(f"Error capturing image (timeout={timeout_ms}ms): {e}")
             return None
 
     def run(self):

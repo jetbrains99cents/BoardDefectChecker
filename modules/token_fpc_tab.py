@@ -50,13 +50,7 @@ class TokenFPCTabController:
       - label_63: Position varies by language (1070, 65 for en; 1000, 65 for vi).
       - label_98: Warning icon (blinks with detection result).
       - label_175: Disk space status.
-
-    External objects required (passed from main window):
-      - camera_worker: Instance of CameraWorker.
-      - camera_interaction: For selecting the camera device.
-      - snap_worker: For video streaming (emits image_captured).
-      - detection_log_worker: For logging detection results.
-      - image_processor: The old “general” image_processor (optional) if you still read config from it.
+      - label_187: Critical disk space warning (replaces dialog).
     """
 
     def __init__(self, ui, camera_worker, camera_interaction, snap_worker,
@@ -90,11 +84,13 @@ class TokenFPCTabController:
         self.disk_monitor.critical_space_stop.connect(self.handle_critical_space)
         self.disk_monitor.start()
 
-        # Set initial text for disk space
+        # Set initial text for disk space and critical warning labels
         initial_text = "Dung lượng ổ đĩa: \nĐang tính toán..." if self.lang_manager.current_language == "vi" else "Free disk size: \nCalculating..."
         self.ui.label_175.setText(initial_text)
+        self.ui.label_187.setText("--")  # Initialize label_187 to normal state
+        self.ui.label_187.setStyleSheet("color: white;")  # Set to white in normal state
 
-        # Blinking timer for label_175 (disk space)
+        # Blinking timer for label_175 and label_187 (disk space and critical warning)
         self.disk_blink_timer = QTimer()
         self.disk_blink_timer.timeout.connect(self.toggle_blink)
         self.is_blinking = False
@@ -129,7 +125,7 @@ class TokenFPCTabController:
             self.snap_worker.enumerate_devices()  # Trigger enumeration immediately
             QThread.msleep(500)  # Wait 500ms for device list to populate
 
-        # Disable checkbox 5 - Option for auto deleting file when full disk
+        # Disable checkbox 11 - Option for auto deleting files when full disk
         self.ui.checkBox_11.setEnabled(False)
 
         # Disable checkbox 9 - We needn't equalize histogram this AOI type
@@ -200,6 +196,13 @@ class TokenFPCTabController:
         self.ui.label_62.setText("--")
         self.update_detected_result_count()
 
+        # By default, enable counter, auto deleting on low disk size mechanism and checking without JIG options
+        self.ui.checkBox_7.setChecked(True)
+        self.ui.checkBox_11.setChecked(True)
+        self.ui.checkBox_13.setChecked(True)
+
+        self.toggle_counter(2)
+
     # -------------------- Translation --------------------
     def apply_translations(self):
         """Update translatable UI elements for this tab using keys from 'token_fpc_tab' in language.json."""
@@ -239,6 +242,7 @@ class TokenFPCTabController:
 
     def on_english_selected(self, checked):
         if checked:
+            print("English selected")
             self.lang_manager.set_language("en")
             self.apply_translations()
             self.ui.label_63.setGeometry(1070, 65, 271, 30)  # Position for English
@@ -246,19 +250,20 @@ class TokenFPCTabController:
                 self.current_connection_state if hasattr(self, 'current_connection_state') else False
             )
             # Update tab names for English
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Setting")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Detection log")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "AOI checking machine")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Settings")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Inspection log")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "AOI machine")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion),
-                                         "TOKEN FPC insertion checker")
+                                         "TP FPC checker")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_6_mounting), "FPC mounting machine")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_benzel_pwb_position),
                                          "Bezel - PWB position checker")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion),
-                                         "LED FPC insertion checker")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion), "LED FPC checker")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_optional_aoi), "Optional AOI checker")
 
     def on_vietnamese_selected(self, checked):
         if checked:
+            print("Vietnamese selected")
             self.lang_manager.set_language("vi")
             self.apply_translations()
             self.ui.label_63.setGeometry(1000, 65, 271, 30)  # Position for Vietnamese
@@ -269,11 +274,12 @@ class TokenFPCTabController:
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Cài đặt")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Nhật ký kiểm tra")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "Máy kiểm AOI tự động")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion), "Kiểm TOKEN FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion), "Kiểm TP FPC")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_6_mounting), "Máy gắn FPC tự động")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_benzel_pwb_position),
                                          "Kiểm bẻ ngàm - dán PWB")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion), "Kiểm LED FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_optional_aoi), "Kiểm AOI tùy chọn")
 
     # -------------------- Camera & Streaming --------------------
     @Slot(list)
@@ -467,10 +473,16 @@ class TokenFPCTabController:
 
     # -------------------- Disk Space Management --------------------
     def toggle_blink(self):
-        """Toggle visibility of label_175 for disk space blinking effect."""
+        """Toggle visibility of label_175 and label_187 for disk space blinking effect."""
         self.blink_visible = not self.blink_visible
-        color = "#be2b25" if self.is_blinking else "#25be7c"  # Red for blinking, green for normal
-        self.ui.label_175.setStyleSheet(f"color: {'transparent' if not self.blink_visible else color};")
+        # Blink both label_175 and label_187 when critical or low space
+        if self.is_critical or self.is_blinking:
+            color = "#be2b25"  # Red for critical or low space
+            self.ui.label_175.setStyleSheet(f"color: {'transparent' if not self.blink_visible else color};")
+            self.ui.label_187.setStyleSheet(f"color: {'transparent' if not self.blink_visible else color};")
+        else:
+            self.ui.label_175.setStyleSheet("color: #25be7c;")  # Green for normal state
+            self.ui.label_187.setStyleSheet("color: white;")  # White for normal state
 
     @Slot(str)
     def update_disk_space_label(self, text):
@@ -481,7 +493,7 @@ class TokenFPCTabController:
 
     @Slot(bool)
     def handle_low_space_warning(self, is_low):
-        """Handle low space warning: blink label red, log only on state change."""
+        """Handle low space warning: blink labels red, log only on state change."""
         if is_low and not self.is_blinking:
             self.is_blinking = True
             self.disk_blink_timer.start(500)
@@ -492,13 +504,14 @@ class TokenFPCTabController:
             self.is_blinking = False
             self.disk_blink_timer.stop()
             self.ui.label_175.setStyleSheet("color: #25be7c;")  # Green when normal
+            self.ui.label_187.setStyleSheet("color: white;")  # White when normal
             if self.was_low_space:  # Log only on transition out of low space
                 print("[TokenFPC] Low disk space warning deactivated")
                 self.was_low_space = False
 
     @Slot(bool)
     def handle_critical_space(self, is_critical):
-        """Handle critical space: stop software, show dialog, log only on state change."""
+        """Handle critical space: stop software, update label_187, log only on state change."""
         self.is_critical = is_critical
         if is_critical:
             self.is_blinking = True
@@ -508,16 +521,12 @@ class TokenFPCTabController:
             if not self.was_critical:  # Log only on transition to critical
                 print("[TokenFPC] Critical disk space: Software fully stopped")
                 self.was_critical = True
+            # Update label_187 with the critical message based on language
+            if self.lang_manager.current_language == "vi":
+                self.ui.label_187.setText("Xóa bớt dung lượng \nổ cứng")
+            else:
+                self.ui.label_187.setText("Delete some files \nto free disk size")
 
-            # Show a simple bilingual critical dialog with dynamic threshold
-            free_gb = sum(psutil.disk_usage(drive).free for drive in self.disk_monitor.get_all_drives()) / (1024 ** 3)
-            threshold_gb = self.disk_monitor.low_space_threshold  # Get threshold in bytes
-            threshold_gb_display = threshold_gb / (1024 ** 3)  # Convert to GB for display
-            title = "Lỗi Dung Lượng / Storage Error"
-            text = (
-                f"Không đủ dung lượng ổ đĩa: {free_gb:.0f} GB. Vui lòng xóa bớt dữ liệu để có thêm ít nhất {threshold_gb_display:.0f} GB.\n"
-                f"Insufficient disk space: {free_gb:.0f} GB. Please free up space to reach at least {threshold_gb_display:.0f} GB.")
-            QMessageBox.critical(None, title, text)
         elif not is_critical:
             total_free = sum(psutil.disk_usage(drive).free for drive in self.disk_monitor.get_all_drives())
             if total_free < self.disk_monitor.warning_threshold:
@@ -526,11 +535,15 @@ class TokenFPCTabController:
                 self.is_blinking = False
                 self.disk_blink_timer.stop()
                 self.ui.label_175.setStyleSheet("color: #25be7c;")  # Green when normal
+                self.ui.label_187.setStyleSheet("color: white;")  # White when normal
             # Re-enable UI
             self.ui.tabWidget.setEnabled(True)
             if self.was_critical:  # Log only on transition out of critical
                 print("[TokenFPC] Critical disk space resolved, software resumed")
                 self.was_critical = False
+            # Reset label_187 to normal state
+            self.ui.label_187.setText("--")
+            self.ui.label_187.setStyleSheet("color: white;")
 
     @Slot(str)
     def update_language(self, new_language):

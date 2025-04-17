@@ -10,10 +10,9 @@ from PySide6.QtCore import QThread, Signal
 OPERATION_LOG_DIR = r'C:\BoardDefectChecker\operation-logs'
 DETECTION_LOG_DIR = r'C:\BoardDefectChecker\detection-logs'
 
-# Define the log directory
-# LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'operation-logs')
-os.makedirs(OPERATION_LOG_DIR, exist_ok=True)  # Create directory if it doesn't exist
-os.makedirs(DETECTION_LOG_DIR, exist_ok=True)  # Create directory if it doesn't exist
+# Create directories if they don't exist
+os.makedirs(OPERATION_LOG_DIR, exist_ok=True)
+os.makedirs(DETECTION_LOG_DIR, exist_ok=True)
 
 # Set up logging configuration
 DETECTION_LOG_FILE = os.path.join(DETECTION_LOG_DIR, 'detection_log.log')
@@ -27,7 +26,7 @@ logging.basicConfig(
 
 
 class DetectionLogWorker(QThread):
-    log_result_signal = Signal(str, int, int, int)  # filepath, total_count, ng_count, ok_count
+    log_result_signal = Signal(str, int, int, int)  # log_message, total_count, ng_count, ok_count
 
     def __init__(self):
         super().__init__()
@@ -38,9 +37,6 @@ class DetectionLogWorker(QThread):
 
         self.detection_log_directory = DETECTION_LOG_DIR
         self.operation_log_directory = OPERATION_LOG_DIR
-        # Define the path for the detection-logs directory
-        # self.detection_log_directory = os.path.join(DETECTION_LOG_DIR, 'detection-logs')
-        # os.makedirs(self.detection_log_directory, exist_ok=True)  # Create the directory if it doesn't exist
 
     def set_staff_id(self, staff_id):
         """Set the staff ID dynamically."""
@@ -63,7 +59,12 @@ class DetectionLogWorker(QThread):
             logging.error("Staff ID not set. Cannot log detection result.")
             return
 
+        # Always increment counters
         self.detected_part_count += 1
+        if detection_result.lower() == "ng":
+            self.detected_ng_count += 1
+        elif detection_result.lower() == "ok":
+            self.detected_ok_count += 1
 
         # Determine file name based on staff ID, part serial number, and detection result
         file_name = f"{self.staff_id}_{part_serial_number}_{detection_result}.csv"
@@ -114,12 +115,6 @@ class DetectionLogWorker(QThread):
             logging.error(f"Failed to write to CSV file {file_path}: {e}")
             return
 
-        # Update counts based on the detection result.
-        if detection_result.lower() == "ng":
-            self.detected_ng_count += 1
-        elif detection_result.lower() == "ok":
-            self.detected_ok_count += 1
-
         # Emit a signal indicating the logging is complete with all counts
         self.log_result_signal.emit(
             f"Logged: {file_path}",
@@ -133,7 +128,12 @@ class DetectionLogWorker(QThread):
             logging.error("Staff ID not set. Cannot log detection result.")
             return
 
+        # Always increment counters
         self.detected_part_count += 1
+        if detection_result.lower() == "ng":
+            self.detected_ng_count += 1
+        elif detection_result.lower() == "ok":
+            self.detected_ok_count += 1
 
         file_name = f"{self.staff_id}_{part_serial_number}_{detection_result}.csv"
         file_path = os.path.join(self.operation_log_directory, file_name)
@@ -170,7 +170,8 @@ class DetectionLogWorker(QThread):
 
         # Integrity verification
         decoded_image_data = base64.b64decode(base64_image)
-        debug_output_path = os.path.join(self.operation_log_directory, f"debug_{part_serial_number}_{detection_result}.bmp")
+        debug_output_path = os.path.join(self.operation_log_directory,
+                                         f"debug_{part_serial_number}_{detection_result}.bmp")
         try:
             with open(debug_output_path, 'wb') as f:
                 f.write(decoded_image_data)
@@ -178,23 +179,137 @@ class DetectionLogWorker(QThread):
             if len(decoded_image_data) == len(image_data):
                 print("Debug: Base64 encoding/decoding integrity verified")
             else:
-                print(f"Debug: Integrity check failed! Original size: {len(image_data)}, Decoded size: {len(decoded_image_data)}")
+                print(
+                    f"Debug: Integrity check failed! Original size: {len(image_data)}, Decoded size: {len(decoded_image_data)}")
             os.remove(debug_output_path)
             print(f"Debug: Deleted decoded BMP file {debug_output_path}")
         except Exception as e:
             logging.error(f"Failed to handle debug BMP file {debug_output_path}: {e}")
 
-        # Update counts and emit signal with all counts
+        # Emit a signal with all counts
+        self.log_result_signal.emit(
+            f"Logged: {file_path}",
+            self.detected_part_count,
+            self.detected_ng_count,
+            self.detected_ok_count
+        )
+
+    def log_bezel_pwb_detection_result(self, part_serial_number, left_result, right_result, left_image_path,
+                                       right_image_path):
+        if self.staff_id is None:
+            logging.error("Staff ID not set. Cannot log detection result.")
+            return
+
+        # Always increment counters
+        self.detected_part_count += 1
+
+        # Overall result
+        detection_result = "OK" if left_result == "OK" and right_result == "OK" else "NG"
+        file_name = f"{self.staff_id}_{part_serial_number}_{detection_result}"
+        file_path = os.path.join(self.operation_log_directory, f"{file_name}.csv")
+        detection_time = datetime.now().strftime('%Y%m%d%H%M%S')
+
+        # Update NG/OK counts immediately after determining detection_result
         if detection_result.lower() == "ng":
             self.detected_ng_count += 1
         elif detection_result.lower() == "ok":
             self.detected_ok_count += 1
+
+        # Convert left image to Base64
+        try:
+            with open(left_image_path, 'rb') as f:
+                left_image_data = f.read()
+            left_base64_image = base64.b64encode(left_image_data).decode('utf-8')
+            print(f"Left image Base64 encoded size: {len(left_base64_image)} characters")
+        except Exception as e:
+            logging.error(f"Failed to read left image file {left_image_path}: {e}")
+            left_base64_image = "N/A"
+
+        # Convert right image to Base64
+        try:
+            with open(right_image_path, 'rb') as f:
+                right_image_data = f.read()
+            right_base64_image = base64.b64encode(right_image_data).decode('utf-8')
+            print(f"Right image Base64 encoded size: {len(right_base64_image)} characters")
+        except Exception as e:
+            logging.error(f"Failed to read right image file {right_image_path}: {e}")
+            right_base64_image = "N/A"
+
+        # Save the left Base64 data to a separate CSV file (raw Base64 string only)
+        left_base64_filename = f"{file_name}_left_capture.csv"
+        left_base64_save_path = os.path.join(self.operation_log_directory, left_base64_filename)
+        try:
+            with open(left_base64_save_path, mode='a', encoding='utf-8') as file:
+                # Write the raw Base64 string directly, no header, no quotes
+                file.write(left_base64_image + '\n')
+            print(f"[DetectionLogWorker] Saved left Base64 data to {left_base64_save_path}")
+        except Exception as e:
+            logging.error(f"Failed to save left Base64 data to {left_base64_save_path}: {e}")
+            left_base64_save_path = "N/A"
+
+        # Save the right Base64 data to a separate CSV file (raw Base64 string only)
+        right_base64_filename = f"{file_name}_right_capture.csv"
+        right_base64_save_path = os.path.join(self.operation_log_directory, right_base64_filename)
+        try:
+            with open(right_base64_save_path, mode='a', encoding='utf-8') as file:
+                # Write the raw Base64 string directly, no header, no quotes
+                file.write(right_base64_image + '\n')
+            print(f"[DetectionLogWorker] Saved right Base64 data to {right_base64_save_path}")
+        except Exception as e:
+            logging.error(f"Failed to save right Base64 data to {right_base64_save_path}: {e}")
+            right_base64_save_path = "N/A"
+
+        # Log entry for the main CSV file (unchanged)
+        log_entry = [
+            self.detected_part_count,
+            self.staff_id,
+            part_serial_number,
+            detection_result,
+            left_result,
+            right_result,
+            detection_time,
+            left_base64_save_path,  # Store the path to the left Base64 CSV file
+            right_base64_save_path  # Store the path to the right Base64 CSV file
+        ]
+
+        try:
+            with open(file_path, mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file, quoting=csv.QUOTE_ALL)
+                # Write header if file is new
+                if os.stat(file_path).st_size == 0:
+                    writer.writerow(["Index", "Staff ID", "Part Serial Number", "Detection Result",
+                                     "Left Result", "Right Result", "Timestamp",
+                                     "Left Base64 CSV Path", "Right Base64 CSV Path"])
+                writer.writerow(log_entry)
+            logging.info(f"Logged Bezel-PWB detection result: {file_path}")
+        except Exception as e:
+            logging.error(f"Failed to write to CSV file {file_path}: {e}")
+            return
 
         self.log_result_signal.emit(
             f"Logged: {file_path}",
             self.detected_part_count,
             self.detected_ng_count,
             self.detected_ok_count
+        )
+
+    def log_result(self, log_message, part_number, staff_id, final_result, defect_reason,
+                   left_result, right_result, left_time, right_time, is_counter_turned_on):
+        """Log a general detection result with detailed information."""
+        if self.staff_id is None:
+            logging.error("Staff ID not set. Cannot log result.")
+            return
+
+        # Always increment counters
+        self.detected_part_count += 1
+        if final_result.lower() == "ng":
+            self.detected_ng_count += 1
+        elif final_result.lower() == "ok":
+            self.detected_ok_count += 1
+
+        # Emit the updated counts
+        self.log_result_signal.emit(
+            log_message, self.detected_part_count, self.detected_ng_count, self.detected_ok_count
         )
 
     def reset_counts(self):
