@@ -43,7 +43,7 @@
 }</string>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_4">
      <property name="styleSheet">
@@ -11335,6 +11335,12 @@ defect check result:</string>
         <height>24</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
       <property name="text">
        <string>Open Camera Setting</string>
       </property>
@@ -11347,6 +11353,12 @@ defect check result:</string>
         <width>151</width>
         <height>24</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <bold>true</bold>
+       </font>
       </property>
       <property name="text">
        <string>Start Video Streaming</string>
@@ -14938,6 +14950,12 @@ when full disk</string>
         <height>24</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
       <property name="text">
        <string>Open Camera Setting</string>
       </property>
@@ -18446,10 +18464,16 @@ when full disk</string>
       <property name="geometry">
        <rect>
         <x>18</x>
-        <y>110</y>
-        <width>151</width>
-        <height>24</height>
+        <y>108</y>
+        <width>190</width>
+        <height>30</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+        <bold>true</bold>
+       </font>
       </property>
       <property name="text">
        <string>Open Camera Setting</string>

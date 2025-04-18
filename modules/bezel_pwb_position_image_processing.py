@@ -137,7 +137,7 @@ class BezelPWBPositionImageProcessor:
         start_time = datetime.now()
 
         # Set max_masks based on is_images_shown: None (all masks) if checked, another one if unchecked
-        max_masks = 50 if self.is_images_shown else 50
+        max_masks = 100 if self.is_images_shown else 100
         test_mode = True
         edge_threshold = 5
         sort_by_area = True
