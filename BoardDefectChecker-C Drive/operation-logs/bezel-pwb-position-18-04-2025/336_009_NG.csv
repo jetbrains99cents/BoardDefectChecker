@@ -1,0 +1,2 @@
+"Index","Staff ID","Part Serial Number","Detection Result","Left Result","Right Result","Timestamp","Left Base64 CSV Path","Right Base64 CSV Path"
+"9","336","009","NG","N/A","N/A","20250418144241","C:\BoardDefectChecker\operation-logs\bezel-pwb-position-18-04-2025\336_009_NG_left_capture.csv","C:\BoardDefectChecker\operation-logs\bezel-pwb-position-18-04-2025\336_009_NG_right_capture.csv"

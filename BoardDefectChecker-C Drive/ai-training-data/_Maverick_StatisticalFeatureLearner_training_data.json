@@ -1,0 +1,88 @@
+{
+    "distance_constraints": {
+        "bezel-copper_mark": {
+            "count": 42,
+            "mean": 172.305,
+            "range": [
+                40.184,
+                326.02
+            ],
+            "stddev": 55.081
+        }
+    },
+    "overlap_rules": [
+        {
+            "mode": "absolute",
+            "objects": [
+                "bezel",
+                "bezel"
+            ]
+        },
+        {
+            "mode": "absolute",
+            "objects": [
+                "bezel",
+                "copper_mark"
+            ]
+        },
+        {
+            "mode": "absolute",
+            "objects": [
+                "copper_mark",
+                "copper_mark"
+            ]
+        }
+    ],
+    "target_objects": {
+        "bezel": {
+            "count": 21,
+            "feature_ranges": {
+                "area": [
+                    13238.0,
+                    43065.0
+                ],
+                "aspect_ratio": [
+                    0.08,
+                    0.337
+                ],
+                "larger_dim": [
+                    509.519,
+                    677.683
+                ],
+                "perimeter": [
+                    980.603,
+                    1807.631
+                ],
+                "smaller_dim": [
+                    92.441,
+                    155.136
+                ]
+            }
+        },
+        "copper_mark": {
+            "count": 46,
+            "feature_ranges": {
+                "area": [
+                    1965.55,
+                    3348.45
+                ],
+                "aspect_ratio": [
+                    0.164,
+                    0.356
+                ],
+                "larger_dim": [
+                    102.55,
+                    118.609
+                ],
+                "perimeter": [
+                    246.669,
+                    294.517
+                ],
+                "smaller_dim": [
+                    22.199,
+                    35.501
+                ]
+            }
+        }
+    }
+}

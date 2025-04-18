@@ -1,0 +1,65 @@
+{
+    "distance_constraints": {
+        "bezel-copper_mark": {
+            "count": 62,
+            "mean": 169.314,
+            "range": [
+                40.184,
+                326.02
+            ],
+            "stddev": 52.744
+        }
+    },
+    "target_objects": {
+        "bezel": {
+            "count": 33,
+            "feature_ranges": {
+                "area": [
+                    13238.0,
+                    43065.0
+                ],
+                "aspect_ratio": [
+                    0.071,
+                    0.352
+                ],
+                "larger_dim": [
+                    486.845,
+                    677.683
+                ],
+                "perimeter": [
+                    880.627,
+                    1807.631
+                ],
+                "smaller_dim": [
+                    85.006,
+                    156.821
+                ]
+            }
+        },
+        "copper_mark": {
+            "count": 67,
+            "feature_ranges": {
+                "area": [
+                    1620.85,
+                    3363.15
+                ],
+                "aspect_ratio": [
+                    0.158,
+                    0.365
+                ],
+                "larger_dim": [
+                    99.805,
+                    118.609
+                ],
+                "perimeter": [
+                    234.104,
+                    301.283
+                ],
+                "smaller_dim": [
+                    20.219,
+                    35.998
+                ]
+            }
+        }
+    }
+}
