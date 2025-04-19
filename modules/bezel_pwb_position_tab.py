@@ -204,16 +204,18 @@ class BezelPWBTabController:
             self.disk_monitor.language = "en"
             self.apply_translations()
             self.update_connection_status(self.current_connection_state or False)
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Settings")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Inspection Log")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "AOI Auto Inspection")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion),
-                                         "Token FPC Check")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_6_mounting), "FPC Auto Mounting")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_benzel_pwb_position),
-                                         "Bezel - PWB Position Check")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion), "LED FPC Check")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_optional_aoi), "Optional AOI")
+            # Update tab names for English
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_operation_log), "Operation log")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_robotic_arm), "Robotic arm")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_aoi_machine), "AOI checking machine")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_tp_fpc),
+                                         "TP FPC insertion checker")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_fpc_mounting_machine),
+                                         "FPC mounting machine")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_bezel_pwb_position),
+                                         "Bezel - PWB position checker")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_led_fpc),
+                                         "LED FPC insertion checker")
 
     def on_vietnamese_selected(self, checked):
         if checked:
@@ -221,15 +223,20 @@ class BezelPWBTabController:
             self.disk_monitor.language = "vi"
             self.apply_translations()
             self.update_connection_status(self.current_connection_state or False)
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Cài đặt")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Nhật ký kiểm tra")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "Máy kiểm AOI tự động")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion), "Kiểm TP FPC")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_6_mounting), "Máy gắn FPC tự động")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_benzel_pwb_position),
+            # Update tab names for Vietnamese
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_operation_log), "Nhật ký hoạt động")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_robotic_arm), "Cánh tay robot")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_aoi_machine), "Máy kiểm AOI tự động")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_tp_fpc),
+                                         "Kiểm TP FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_fpc_mounting_machine),
+                                         "Máy gắn FPC tự động")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_bezel_pwb_position),
                                          "Kiểm bẻ ngàm - dán PWB")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion), "Kiểm LED FPC")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_optional_aoi), "Kiểm AOI tùy chọn")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_led_fpc),
+                                         "Kiểm LED FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_optional_aoi),
+                                         "Kiểm AOI tùy chọn")
 
     @Slot(str)
     def update_language(self, new_language):

@@ -1790,7 +1790,7 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
     Evaluates using counts defined in the loaded configuration.
     """
 
-    def __init__(self, model_type="x", model_path="ai-models/", output_dir=r"C:\BoardDefectChecker\ai-outputs"):
+    def __init__(self, model_type="x", model_path="ai-models/", output_dir=r"C:\Work\AOI\Work\BoardDefectChecker\ai-outputs"):
         """
         Initializes the BezelPWBPositionSegmenter.
 
@@ -2287,8 +2287,8 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 display_width = 1280
                 h_display, w_display = mask_image.shape[:2]
                 if w_display == 0: raise ValueError("Mask image width is zero.")
-                display_height = int(display_width * (h_display / w_display))
-
+                # display_height = int(display_width * (h_display / w_display))
+                display_height = 700
                 resized_mask_img = cv2.resize(mask_image, (display_width, display_height), interpolation=cv2.INTER_AREA)
                 table_window_title = f"{window_title} - Parameters"
                 resized_table_img = cv2.resize(table_image_np, (display_width, display_height),
@@ -3008,7 +3008,7 @@ def bezel_pwb_classification_test_main():
     """
     print("--- Running BezelPWBPositionSegmenter Classification Test ---")
     # --- Configuration ---
-    PROJECT_ROOT_ABS = r"D:\Working\BoardDefectChecker"  # ADJUST PATH AS NEEDED
+    PROJECT_ROOT_ABS = r"C:\Work\Sharp\AOI\BoardDefectChecker"  # ADJUST PATH AS NEEDED
     AI_MODEL_DIR = os.path.join(PROJECT_ROOT_ABS, "ai-models")
     SAMPLE_IMAGE_DIR = r"C:\BoardDefectChecker\images\samples_for_learning"  # ADJUST PATH AS NEEDED
     # --- End Configuration ---

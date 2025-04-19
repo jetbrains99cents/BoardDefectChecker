@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1590, 845)
+        MainWindow.resize(1584, 832)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -43,13 +43,13 @@ class Ui_MainWindow(object):
 "    background: #0078d7;  /* Highlighted tab background */\n"
 "    color: white;         /* Highlighted text color */\n"
 "}")
-        self.tab_4 = QWidget()
-        self.tab_4.setObjectName(u"tab_4")
-        self.tab_4.setStyleSheet(u"QWidget {\n"
+        self.tab_aoi_machine = QWidget()
+        self.tab_aoi_machine.setObjectName(u"tab_aoi_machine")
+        self.tab_aoi_machine.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.label_37 = QLabel(self.tab_4)
+        self.label_37 = QLabel(self.tab_aoi_machine)
         self.label_37.setObjectName(u"label_37")
         self.label_37.setGeometry(QRect(1170, 0, 91, 71))
         font1 = QFont()
@@ -59,20 +59,20 @@ class Ui_MainWindow(object):
         self.label_37.setFont(font1)
         self.label_37.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_37.setScaledContents(True)
-        self.tabWidget.addTab(self.tab_4, "")
-        self.tab_6_mounting = QWidget()
-        self.tab_6_mounting.setObjectName(u"tab_6_mounting")
-        self.tab_6_mounting.setStyleSheet(u"QWidget {\n"
+        self.tabWidget.addTab(self.tab_aoi_machine, "")
+        self.tab_fpc_mounting_machine = QWidget()
+        self.tab_fpc_mounting_machine.setObjectName(u"tab_fpc_mounting_machine")
+        self.tab_fpc_mounting_machine.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.label_36 = QLabel(self.tab_6_mounting)
+        self.label_36 = QLabel(self.tab_fpc_mounting_machine)
         self.label_36.setObjectName(u"label_36")
         self.label_36.setGeometry(QRect(1500, 0, 91, 71))
         self.label_36.setFont(font1)
         self.label_36.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_36.setScaledContents(True)
-        self.checkBox_6 = QCheckBox(self.tab_6_mounting)
+        self.checkBox_6 = QCheckBox(self.tab_fpc_mounting_machine)
         self.checkBox_6.setObjectName(u"checkBox_6")
         self.checkBox_6.setGeometry(QRect(15, 80, 220, 20))
         font2 = QFont()
@@ -82,20 +82,20 @@ class Ui_MainWindow(object):
         self.checkBox_6.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_4 = QPushButton(self.tab_6_mounting)
+        self.pushButton_4 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_4.setObjectName(u"pushButton_4")
         self.pushButton_4.setGeometry(QRect(15, 140, 151, 24))
-        self.checkBox_17 = QCheckBox(self.tab_6_mounting)
+        self.checkBox_17 = QCheckBox(self.tab_fpc_mounting_machine)
         self.checkBox_17.setObjectName(u"checkBox_17")
         self.checkBox_17.setGeometry(QRect(15, 110, 130, 20))
         self.checkBox_17.setFont(font2)
         self.checkBox_17.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_11 = QPushButton(self.tab_6_mounting)
+        self.pushButton_11 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_11.setObjectName(u"pushButton_11")
         self.pushButton_11.setGeometry(QRect(15, 170, 151, 24))
-        self.label_106 = QLabel(self.tab_6_mounting)
+        self.label_106 = QLabel(self.tab_fpc_mounting_machine)
         self.label_106.setObjectName(u"label_106")
         self.label_106.setGeometry(QRect(280, 580, 101, 30))
         palette = QPalette()
@@ -143,7 +143,7 @@ class Ui_MainWindow(object):
         self.label_106.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_107 = QLabel(self.tab_6_mounting)
+        self.label_107 = QLabel(self.tab_fpc_mounting_machine)
         self.label_107.setObjectName(u"label_107")
         self.label_107.setGeometry(QRect(30, 580, 231, 30))
         palette1 = QPalette()
@@ -179,22 +179,22 @@ class Ui_MainWindow(object):
         self.label_107.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_18 = QCheckBox(self.tab_6_mounting)
+        self.checkBox_18 = QCheckBox(self.tab_fpc_mounting_machine)
         self.checkBox_18.setObjectName(u"checkBox_18")
         self.checkBox_18.setGeometry(QRect(15, 50, 150, 20))
         self.checkBox_18.setFont(font2)
         self.checkBox_18.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_10 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_10 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_10.setObjectName(u"lineEdit_10")
         self.lineEdit_10.setGeometry(QRect(640, 50, 51, 30))
         self.lineEdit_10.setFont(font)
-        self.label_109 = QLabel(self.tab_6_mounting)
+        self.label_109 = QLabel(self.tab_fpc_mounting_machine)
         self.label_109.setObjectName(u"label_109")
         self.label_109.setGeometry(QRect(250, 60, 191, 30))
         self.label_109.setFont(font1)
-        self.label_110 = QLabel(self.tab_6_mounting)
+        self.label_110 = QLabel(self.tab_fpc_mounting_machine)
         self.label_110.setObjectName(u"label_110")
         self.label_110.setGeometry(QRect(30, 430, 231, 30))
         palette2 = QPalette()
@@ -230,7 +230,7 @@ class Ui_MainWindow(object):
         self.label_110.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_111 = QLabel(self.tab_6_mounting)
+        self.label_111 = QLabel(self.tab_fpc_mounting_machine)
         self.label_111.setObjectName(u"label_111")
         self.label_111.setGeometry(QRect(30, 520, 231, 30))
         palette3 = QPalette()
@@ -266,11 +266,11 @@ class Ui_MainWindow(object):
         self.label_111.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_112 = QLabel(self.tab_6_mounting)
+        self.label_112 = QLabel(self.tab_fpc_mounting_machine)
         self.label_112.setObjectName(u"label_112")
         self.label_112.setGeometry(QRect(470, 10, 161, 30))
         self.label_112.setFont(font)
-        self.label_113 = QLabel(self.tab_6_mounting)
+        self.label_113 = QLabel(self.tab_fpc_mounting_machine)
         self.label_113.setObjectName(u"label_113")
         self.label_113.setGeometry(QRect(280, 520, 111, 30))
         palette4 = QPalette()
@@ -306,21 +306,21 @@ class Ui_MainWindow(object):
         self.label_113.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_9 = QGraphicsView(self.tab_6_mounting)
+        self.graphicsView_9 = QGraphicsView(self.tab_fpc_mounting_machine)
         self.graphicsView_9.setObjectName(u"graphicsView_9")
         self.graphicsView_9.setGeometry(QRect(180, 105, 320, 320))
-        self.checkBox_19 = QCheckBox(self.tab_6_mounting)
+        self.checkBox_19 = QCheckBox(self.tab_fpc_mounting_machine)
         self.checkBox_19.setObjectName(u"checkBox_19")
         self.checkBox_19.setGeometry(QRect(15, 200, 130, 20))
         self.checkBox_19.setFont(font2)
         self.checkBox_19.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_11 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_11 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_11.setObjectName(u"lineEdit_11")
         self.lineEdit_11.setGeometry(QRect(640, 10, 311, 30))
         self.lineEdit_11.setFont(font)
-        self.label_114 = QLabel(self.tab_6_mounting)
+        self.label_114 = QLabel(self.tab_fpc_mounting_machine)
         self.label_114.setObjectName(u"label_114")
         self.label_114.setGeometry(QRect(30, 550, 231, 30))
         palette5 = QPalette()
@@ -356,12 +356,12 @@ class Ui_MainWindow(object):
         self.label_114.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_115 = QLabel(self.tab_6_mounting)
+        self.label_115 = QLabel(self.tab_fpc_mounting_machine)
         self.label_115.setObjectName(u"label_115")
         self.label_115.setGeometry(QRect(280, 240, 131, 30))
         self.label_115.setFont(font1)
         self.label_115.setScaledContents(True)
-        self.label_116 = QLabel(self.tab_6_mounting)
+        self.label_116 = QLabel(self.tab_fpc_mounting_machine)
         self.label_116.setObjectName(u"label_116")
         self.label_116.setGeometry(QRect(280, 550, 101, 30))
         palette6 = QPalette()
@@ -397,7 +397,7 @@ class Ui_MainWindow(object):
         self.label_116.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_117 = QLabel(self.tab_6_mounting)
+        self.label_117 = QLabel(self.tab_fpc_mounting_machine)
         self.label_117.setObjectName(u"label_117")
         self.label_117.setGeometry(QRect(470, 50, 161, 30))
         palette7 = QPalette()
@@ -433,7 +433,7 @@ class Ui_MainWindow(object):
         self.label_117.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_118 = QLabel(self.tab_6_mounting)
+        self.label_118 = QLabel(self.tab_fpc_mounting_machine)
         self.label_118.setObjectName(u"label_118")
         self.label_118.setGeometry(QRect(30, 460, 231, 30))
         palette8 = QPalette()
@@ -469,7 +469,7 @@ class Ui_MainWindow(object):
         self.label_118.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_119 = QLabel(self.tab_6_mounting)
+        self.label_119 = QLabel(self.tab_fpc_mounting_machine)
         self.label_119.setObjectName(u"label_119")
         self.label_119.setGeometry(QRect(280, 460, 131, 30))
         palette9 = QPalette()
@@ -505,11 +505,11 @@ class Ui_MainWindow(object):
         self.label_119.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_120 = QLabel(self.tab_6_mounting)
+        self.label_120 = QLabel(self.tab_fpc_mounting_machine)
         self.label_120.setObjectName(u"label_120")
         self.label_120.setGeometry(QRect(15, 10, 141, 30))
         self.label_120.setFont(font)
-        self.label_121 = QLabel(self.tab_6_mounting)
+        self.label_121 = QLabel(self.tab_fpc_mounting_machine)
         self.label_121.setObjectName(u"label_121")
         self.label_121.setGeometry(QRect(280, 430, 131, 30))
         palette10 = QPalette()
@@ -545,7 +545,7 @@ class Ui_MainWindow(object):
         self.label_121.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_12 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_12 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_12.setObjectName(u"lineEdit_12")
         self.lineEdit_12.setGeometry(QRect(160, 10, 191, 30))
         font4 = QFont()
@@ -553,31 +553,31 @@ class Ui_MainWindow(object):
         font4.setBold(True)
         font4.setItalic(False)
         self.lineEdit_12.setFont(font4)
-        self.label_122 = QLabel(self.tab_6_mounting)
+        self.label_122 = QLabel(self.tab_fpc_mounting_machine)
         self.label_122.setObjectName(u"label_122")
         self.label_122.setGeometry(QRect(800, 60, 401, 30))
         self.label_122.setFont(font1)
-        self.label_125 = QLabel(self.tab_6_mounting)
+        self.label_125 = QLabel(self.tab_fpc_mounting_machine)
         self.label_125.setObjectName(u"label_125")
         self.label_125.setGeometry(QRect(530, 95, 31, 30))
         self.label_125.setFont(font1)
         self.label_125.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_129 = QLabel(self.tab_6_mounting)
+        self.label_129 = QLabel(self.tab_fpc_mounting_machine)
         self.label_129.setObjectName(u"label_129")
         self.label_129.setGeometry(QRect(825, 400, 31, 30))
         self.label_129.setFont(font1)
         self.label_129.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_16 = QPushButton(self.tab_6_mounting)
+        self.pushButton_16 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_16.setObjectName(u"pushButton_16")
         self.pushButton_16.setGeometry(QRect(1170, 410, 130, 30))
         font5 = QFont()
         font5.setPointSize(12)
         self.pushButton_16.setFont(font5)
-        self.label_134 = QLabel(self.tab_6_mounting)
+        self.label_134 = QLabel(self.tab_fpc_mounting_machine)
         self.label_134.setObjectName(u"label_134")
         self.label_134.setGeometry(QRect(1180, 220, 111, 30))
         palette11 = QPalette()
@@ -613,7 +613,7 @@ class Ui_MainWindow(object):
         self.label_134.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_135 = QLabel(self.tab_6_mounting)
+        self.label_135 = QLabel(self.tab_fpc_mounting_machine)
         self.label_135.setObjectName(u"label_135")
         self.label_135.setGeometry(QRect(1180, 170, 41, 30))
         palette12 = QPalette()
@@ -649,7 +649,7 @@ class Ui_MainWindow(object):
         self.label_135.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_142 = QLabel(self.tab_6_mounting)
+        self.label_142 = QLabel(self.tab_fpc_mounting_machine)
         self.label_142.setObjectName(u"label_142")
         self.label_142.setGeometry(QRect(1230, 170, 41, 30))
         palette13 = QPalette()
@@ -685,7 +685,7 @@ class Ui_MainWindow(object):
         self.label_142.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_146 = QLabel(self.tab_6_mounting)
+        self.label_146 = QLabel(self.tab_fpc_mounting_machine)
         self.label_146.setObjectName(u"label_146")
         self.label_146.setGeometry(QRect(1190, 140, 16, 30))
         palette14 = QPalette()
@@ -721,7 +721,7 @@ class Ui_MainWindow(object):
         self.label_146.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_147 = QLabel(self.tab_6_mounting)
+        self.label_147 = QLabel(self.tab_fpc_mounting_machine)
         self.label_147.setObjectName(u"label_147")
         self.label_147.setGeometry(QRect(1240, 140, 16, 30))
         palette15 = QPalette()
@@ -757,7 +757,7 @@ class Ui_MainWindow(object):
         self.label_147.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_13 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_13 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_13.setObjectName(u"lineEdit_13")
         self.lineEdit_13.setGeometry(QRect(520, 225, 55, 30))
         self.lineEdit_13.setFont(font4)
@@ -765,7 +765,7 @@ class Ui_MainWindow(object):
 "    color: yellow;\n"
 "}\n"
 "")
-        self.lineEdit_14 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_14 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_14.setObjectName(u"lineEdit_14")
         self.lineEdit_14.setGeometry(QRect(685, 400, 55, 30))
         self.lineEdit_14.setFont(font4)
@@ -773,77 +773,77 @@ class Ui_MainWindow(object):
 "    color: yellow;\n"
 "}\n"
 "")
-        self.label_128 = QLabel(self.tab_6_mounting)
+        self.label_128 = QLabel(self.tab_fpc_mounting_machine)
         self.label_128.setObjectName(u"label_128")
         self.label_128.setGeometry(QRect(530, 355, 30, 30))
         self.label_128.setFont(font1)
         self.label_128.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_130 = QLabel(self.tab_6_mounting)
+        self.label_130 = QLabel(self.tab_fpc_mounting_machine)
         self.label_130.setObjectName(u"label_130")
         self.label_130.setGeometry(QRect(570, 400, 31, 30))
         self.label_130.setFont(font1)
         self.label_130.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_12 = QPushButton(self.tab_6_mounting)
+        self.pushButton_12 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_12.setObjectName(u"pushButton_12")
         self.pushButton_12.setGeometry(QRect(520, 125, 50, 50))
         icon = QIcon()
         icon.addFile(u"../resources/arrow-up.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_12.setIcon(icon)
         self.pushButton_12.setIconSize(QSize(45, 45))
-        self.pushButton_13 = QPushButton(self.tab_6_mounting)
+        self.pushButton_13 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_13.setObjectName(u"pushButton_13")
         self.pushButton_13.setGeometry(QRect(520, 305, 50, 50))
         icon1 = QIcon()
         icon1.addFile(u"../resources/arrow-down.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_13.setIcon(icon1)
         self.pushButton_13.setIconSize(QSize(45, 45))
-        self.pushButton_14 = QPushButton(self.tab_6_mounting)
+        self.pushButton_14 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_14.setObjectName(u"pushButton_14")
         self.pushButton_14.setGeometry(QRect(600, 390, 50, 50))
         icon2 = QIcon()
         icon2.addFile(u"../resources/arrow-left.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_14.setIcon(icon2)
         self.pushButton_14.setIconSize(QSize(45, 45))
-        self.pushButton_15 = QPushButton(self.tab_6_mounting)
+        self.pushButton_15 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_15.setObjectName(u"pushButton_15")
         self.pushButton_15.setGeometry(QRect(770, 390, 50, 50))
         icon3 = QIcon()
         icon3.addFile(u"../resources/arrow-right.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_15.setIcon(icon3)
         self.pushButton_15.setIconSize(QSize(45, 45))
-        self.pushButton_19 = QPushButton(self.tab_6_mounting)
+        self.pushButton_19 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_19.setObjectName(u"pushButton_19")
         self.pushButton_19.setGeometry(QRect(650, 215, 50, 50))
         icon4 = QIcon()
-        icon4.addFile(u"C:/BoardDefectChecker/resources/left-turn-arrow.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon4.addFile(u"../../../../../BoardDefectChecker/resources/left-turn-arrow.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_19.setIcon(icon4)
         self.pushButton_19.setIconSize(QSize(45, 45))
-        self.pushButton_20 = QPushButton(self.tab_6_mounting)
+        self.pushButton_20 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_20.setObjectName(u"pushButton_20")
         self.pushButton_20.setGeometry(QRect(800, 215, 50, 50))
         icon5 = QIcon()
-        icon5.addFile(u"C:/BoardDefectChecker/resources/right-turn-arrow.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon5.addFile(u"../../../../../BoardDefectChecker/resources/right-turn-arrow.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_20.setIcon(icon5)
         self.pushButton_20.setIconSize(QSize(45, 45))
-        self.label_127 = QLabel(self.tab_6_mounting)
+        self.label_127 = QLabel(self.tab_fpc_mounting_machine)
         self.label_127.setObjectName(u"label_127")
         self.label_127.setGeometry(QRect(660, 185, 31, 30))
         self.label_127.setFont(font1)
         self.label_127.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.label_136 = QLabel(self.tab_6_mounting)
+        self.label_136 = QLabel(self.tab_fpc_mounting_machine)
         self.label_136.setObjectName(u"label_136")
         self.label_136.setGeometry(QRect(810, 185, 31, 30))
         self.label_136.setFont(font1)
         self.label_136.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_17 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_17 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_17.setObjectName(u"lineEdit_17")
         self.lineEdit_17.setGeometry(QRect(720, 225, 55, 30))
         self.lineEdit_17.setFont(font4)
@@ -851,7 +851,7 @@ class Ui_MainWindow(object):
 "    color: #23b5d8;\n"
 "}\n"
 "")
-        self.lineEdit_15 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_15 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_15.setObjectName(u"lineEdit_15")
         self.lineEdit_15.setGeometry(QRect(860, 225, 55, 30))
         self.lineEdit_15.setFont(font4)
@@ -859,31 +859,31 @@ class Ui_MainWindow(object):
 "    color: yellow;\n"
 "}\n"
 "")
-        self.pushButton_17 = QPushButton(self.tab_6_mounting)
+        self.pushButton_17 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_17.setObjectName(u"pushButton_17")
         self.pushButton_17.setGeometry(QRect(860, 125, 50, 50))
         self.pushButton_17.setIcon(icon)
         self.pushButton_17.setIconSize(QSize(45, 45))
-        self.pushButton_18 = QPushButton(self.tab_6_mounting)
+        self.pushButton_18 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_18.setObjectName(u"pushButton_18")
         self.pushButton_18.setGeometry(QRect(860, 305, 50, 50))
         self.pushButton_18.setIcon(icon1)
         self.pushButton_18.setIconSize(QSize(45, 45))
-        self.label_126 = QLabel(self.tab_6_mounting)
+        self.label_126 = QLabel(self.tab_fpc_mounting_machine)
         self.label_126.setObjectName(u"label_126")
         self.label_126.setGeometry(QRect(870, 95, 31, 30))
         self.label_126.setFont(font1)
         self.label_126.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_131 = QLabel(self.tab_6_mounting)
+        self.label_131 = QLabel(self.tab_fpc_mounting_machine)
         self.label_131.setObjectName(u"label_131")
         self.label_131.setGeometry(QRect(870, 355, 30, 30))
         self.label_131.setFont(font1)
         self.label_131.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_16 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_16 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_16.setObjectName(u"lineEdit_16")
         self.lineEdit_16.setGeometry(QRect(580, 225, 55, 30))
         self.lineEdit_16.setFont(font4)
@@ -891,190 +891,190 @@ class Ui_MainWindow(object):
 "    color: #23b5d8;\n"
 "}\n"
 "")
-        self.pushButton_21 = QPushButton(self.tab_6_mounting)
+        self.pushButton_21 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_21.setObjectName(u"pushButton_21")
         self.pushButton_21.setGeometry(QRect(580, 125, 50, 50))
         icon6 = QIcon()
-        icon6.addFile(u"C:/BoardDefectChecker/resources/up-left-turn.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon6.addFile(u"../../../../../BoardDefectChecker/resources/up-left-turn.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_21.setIcon(icon6)
         self.pushButton_21.setIconSize(QSize(45, 45))
-        self.pushButton_22 = QPushButton(self.tab_6_mounting)
+        self.pushButton_22 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_22.setObjectName(u"pushButton_22")
         self.pushButton_22.setGeometry(QRect(580, 305, 50, 50))
         icon7 = QIcon()
-        icon7.addFile(u"C:/BoardDefectChecker/resources/down-right-turn.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon7.addFile(u"../../../../../BoardDefectChecker/resources/down-right-turn.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_22.setIcon(icon7)
         self.pushButton_22.setIconSize(QSize(45, 45))
-        self.label_137 = QLabel(self.tab_6_mounting)
+        self.label_137 = QLabel(self.tab_fpc_mounting_machine)
         self.label_137.setObjectName(u"label_137")
         self.label_137.setGeometry(QRect(590, 95, 31, 30))
         self.label_137.setFont(font1)
         self.label_137.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.label_138 = QLabel(self.tab_6_mounting)
+        self.label_138 = QLabel(self.tab_fpc_mounting_machine)
         self.label_138.setObjectName(u"label_138")
         self.label_138.setGeometry(QRect(590, 355, 30, 30))
         self.label_138.setFont(font1)
         self.label_138.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_23 = QPushButton(self.tab_6_mounting)
+        self.pushButton_23 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_23.setObjectName(u"pushButton_23")
         self.pushButton_23.setGeometry(QRect(520, 480, 50, 50))
         icon8 = QIcon()
-        icon8.addFile(u"C:/BoardDefectChecker/resources/reset.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon8.addFile(u"../../../../../BoardDefectChecker/resources/reset.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_23.setIcon(icon8)
         self.pushButton_23.setIconSize(QSize(45, 45))
-        self.label_139 = QLabel(self.tab_6_mounting)
+        self.label_139 = QLabel(self.tab_fpc_mounting_machine)
         self.label_139.setObjectName(u"label_139")
         self.label_139.setGeometry(QRect(510, 530, 131, 30))
         self.label_139.setFont(font1)
         self.label_139.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_24 = QPushButton(self.tab_6_mounting)
+        self.pushButton_24 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_24.setObjectName(u"pushButton_24")
         self.pushButton_24.setGeometry(QRect(935, 195, 35, 35))
         icon9 = QIcon()
-        icon9.addFile(u"C:/BoardDefectChecker/resources/stamping.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon9.addFile(u"../../../../../BoardDefectChecker/resources/stamping.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_24.setIcon(icon9)
         self.pushButton_24.setIconSize(QSize(30, 30))
-        self.label_140 = QLabel(self.tab_6_mounting)
+        self.label_140 = QLabel(self.tab_fpc_mounting_machine)
         self.label_140.setObjectName(u"label_140")
         self.label_140.setGeometry(QRect(935, 165, 201, 30))
         self.label_140.setFont(font3)
         self.label_140.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_25 = QPushButton(self.tab_6_mounting)
+        self.pushButton_25 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_25.setObjectName(u"pushButton_25")
         self.pushButton_25.setGeometry(QRect(935, 265, 35, 35))
         icon10 = QIcon()
-        icon10.addFile(u"C:/BoardDefectChecker/resources/gripper.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon10.addFile(u"../../../../../BoardDefectChecker/resources/gripper.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_25.setIcon(icon10)
         self.pushButton_25.setIconSize(QSize(30, 30))
-        self.label_141 = QLabel(self.tab_6_mounting)
+        self.label_141 = QLabel(self.tab_fpc_mounting_machine)
         self.label_141.setObjectName(u"label_141")
         self.label_141.setGeometry(QRect(935, 235, 201, 30))
         self.label_141.setFont(font3)
         self.label_141.setStyleSheet(u"QLabel {\n"
 "    color: rgb(0, 255, 0); /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_26 = QPushButton(self.tab_6_mounting)
+        self.pushButton_26 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_26.setObjectName(u"pushButton_26")
         self.pushButton_26.setGeometry(QRect(935, 125, 35, 35))
         icon11 = QIcon()
-        icon11.addFile(u"C:/BoardDefectChecker/resources/hook.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon11.addFile(u"../../../../../BoardDefectChecker/resources/hook.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_26.setIcon(icon11)
         self.pushButton_26.setIconSize(QSize(30, 30))
-        self.label_143 = QLabel(self.tab_6_mounting)
+        self.label_143 = QLabel(self.tab_fpc_mounting_machine)
         self.label_143.setObjectName(u"label_143")
         self.label_143.setGeometry(QRect(935, 95, 201, 30))
         self.label_143.setFont(font3)
         self.label_143.setStyleSheet(u"QLabel {\n"
 "    color: rgb(255, 85, 127); /* Set the text color to yellow */\n"
 "}")
-        self.label_144 = QLabel(self.tab_6_mounting)
+        self.label_144 = QLabel(self.tab_fpc_mounting_machine)
         self.label_144.setObjectName(u"label_144")
         self.label_144.setGeometry(QRect(935, 300, 201, 30))
         self.label_144.setFont(font3)
         self.label_144.setStyleSheet(u"QLabel {\n"
 "    color: rgb(170, 255, 0); /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_27 = QPushButton(self.tab_6_mounting)
+        self.pushButton_27 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_27.setObjectName(u"pushButton_27")
         self.pushButton_27.setGeometry(QRect(935, 330, 35, 35))
         icon12 = QIcon()
-        icon12.addFile(u"C:/BoardDefectChecker/resources/open_connector.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon12.addFile(u"../../../../../BoardDefectChecker/resources/open_connector.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_27.setIcon(icon12)
         self.pushButton_27.setIconSize(QSize(30, 30))
-        self.label_145 = QLabel(self.tab_6_mounting)
+        self.label_145 = QLabel(self.tab_fpc_mounting_machine)
         self.label_145.setObjectName(u"label_145")
         self.label_145.setGeometry(QRect(935, 370, 201, 30))
         self.label_145.setFont(font3)
         self.label_145.setStyleSheet(u"QLabel {\n"
 "    color: rgb(0, 170, 255); /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_28 = QPushButton(self.tab_6_mounting)
+        self.pushButton_28 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_28.setObjectName(u"pushButton_28")
         self.pushButton_28.setGeometry(QRect(935, 400, 35, 35))
         icon13 = QIcon()
-        icon13.addFile(u"C:/BoardDefectChecker/resources/close_connector.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon13.addFile(u"../../../../../BoardDefectChecker/resources/close_connector.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_28.setIcon(icon13)
         self.pushButton_28.setIconSize(QSize(30, 30))
-        self.label_4 = QLabel(self.tab_6_mounting)
+        self.label_4 = QLabel(self.tab_fpc_mounting_machine)
         self.label_4.setObjectName(u"label_4")
         self.label_4.setGeometry(QRect(920, 95, 5, 710))
         self.label_4.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_8 = QLabel(self.tab_6_mounting)
+        self.label_8 = QLabel(self.tab_fpc_mounting_machine)
         self.label_8.setObjectName(u"label_8")
         self.label_8.setGeometry(QRect(510, 90, 1085, 5))
         self.label_8.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_39 = QLabel(self.tab_6_mounting)
+        self.label_39 = QLabel(self.tab_fpc_mounting_machine)
         self.label_39.setObjectName(u"label_39")
         self.label_39.setGeometry(QRect(1160, 95, 5, 710))
         self.label_39.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_40 = QLabel(self.tab_6_mounting)
+        self.label_40 = QLabel(self.tab_fpc_mounting_machine)
         self.label_40.setObjectName(u"label_40")
         self.label_40.setGeometry(QRect(1000, 125, 35, 35))
         self.label_40.setFont(font1)
-        self.label_40.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_40.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_40.setScaledContents(True)
-        self.label_41 = QLabel(self.tab_6_mounting)
+        self.label_41 = QLabel(self.tab_fpc_mounting_machine)
         self.label_41.setObjectName(u"label_41")
         self.label_41.setGeometry(QRect(1000, 195, 35, 35))
         self.label_41.setFont(font1)
-        self.label_41.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_41.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_41.setScaledContents(True)
-        self.label_42 = QLabel(self.tab_6_mounting)
+        self.label_42 = QLabel(self.tab_fpc_mounting_machine)
         self.label_42.setObjectName(u"label_42")
         self.label_42.setGeometry(QRect(1000, 265, 35, 35))
         self.label_42.setFont(font1)
-        self.label_42.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_42.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_42.setScaledContents(True)
-        self.label_43 = QLabel(self.tab_6_mounting)
+        self.label_43 = QLabel(self.tab_fpc_mounting_machine)
         self.label_43.setObjectName(u"label_43")
         self.label_43.setGeometry(QRect(1000, 330, 35, 35))
         self.label_43.setFont(font1)
-        self.label_43.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_43.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_43.setScaledContents(True)
-        self.label_44 = QLabel(self.tab_6_mounting)
+        self.label_44 = QLabel(self.tab_fpc_mounting_machine)
         self.label_44.setObjectName(u"label_44")
         self.label_44.setGeometry(QRect(1000, 400, 35, 35))
         self.label_44.setFont(font1)
-        self.label_44.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_44.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_44.setScaledContents(True)
-        self.pushButton_29 = QPushButton(self.tab_6_mounting)
+        self.pushButton_29 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_29.setObjectName(u"pushButton_29")
         self.pushButton_29.setGeometry(QRect(935, 470, 35, 35))
         icon14 = QIcon()
-        icon14.addFile(u"C:/BoardDefectChecker/resources/hold_connector.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon14.addFile(u"../../../../../BoardDefectChecker/resources/hold_connector.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_29.setIcon(icon14)
         self.pushButton_29.setIconSize(QSize(30, 30))
-        self.label_148 = QLabel(self.tab_6_mounting)
+        self.label_148 = QLabel(self.tab_fpc_mounting_machine)
         self.label_148.setObjectName(u"label_148")
         self.label_148.setGeometry(QRect(935, 440, 201, 30))
         self.label_148.setFont(font3)
         self.label_148.setStyleSheet(u"QLabel {\n"
 "    color: rgb(255, 85, 0); /* Set the text color to yellow */\n"
 "}")
-        self.label_45 = QLabel(self.tab_6_mounting)
+        self.label_45 = QLabel(self.tab_fpc_mounting_machine)
         self.label_45.setObjectName(u"label_45")
         self.label_45.setGeometry(QRect(1000, 470, 35, 35))
         self.label_45.setFont(font1)
-        self.label_45.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_45.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_45.setScaledContents(True)
-        self.label_123 = QLabel(self.tab_6_mounting)
+        self.label_123 = QLabel(self.tab_fpc_mounting_machine)
         self.label_123.setObjectName(u"label_123")
         self.label_123.setGeometry(QRect(30, 490, 231, 30))
         palette16 = QPalette()
@@ -1110,7 +1110,7 @@ class Ui_MainWindow(object):
         self.label_123.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_124 = QLabel(self.tab_6_mounting)
+        self.label_124 = QLabel(self.tab_fpc_mounting_machine)
         self.label_124.setObjectName(u"label_124")
         self.label_124.setGeometry(QRect(280, 490, 131, 30))
         palette17 = QPalette()
@@ -1146,140 +1146,140 @@ class Ui_MainWindow(object):
         self.label_124.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_30 = QPushButton(self.tab_6_mounting)
+        self.pushButton_30 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_30.setObjectName(u"pushButton_30")
         self.pushButton_30.setGeometry(QRect(690, 480, 50, 50))
         icon15 = QIcon()
-        icon15.addFile(u"C:/BoardDefectChecker/resources/stop.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon15.addFile(u"../../../../../BoardDefectChecker/resources/stop.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_30.setIcon(icon15)
         self.pushButton_30.setIconSize(QSize(45, 45))
-        self.label_149 = QLabel(self.tab_6_mounting)
+        self.label_149 = QLabel(self.tab_fpc_mounting_machine)
         self.label_149.setObjectName(u"label_149")
         self.label_149.setGeometry(QRect(680, 530, 171, 30))
         self.label_149.setFont(font1)
         self.label_149.setStyleSheet(u"QLabel {\n"
 "    color:  #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_46 = QLabel(self.tab_6_mounting)
+        self.label_46 = QLabel(self.tab_fpc_mounting_machine)
         self.label_46.setObjectName(u"label_46")
         self.label_46.setGeometry(QRect(505, 90, 5, 710))
         self.label_46.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_47 = QLabel(self.tab_6_mounting)
+        self.label_47 = QLabel(self.tab_fpc_mounting_machine)
         self.label_47.setObjectName(u"label_47")
         self.label_47.setGeometry(QRect(20, 460, 400, 5))
         self.label_47.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_48 = QLabel(self.tab_6_mounting)
+        self.label_48 = QLabel(self.tab_fpc_mounting_machine)
         self.label_48.setObjectName(u"label_48")
         self.label_48.setGeometry(QRect(20, 490, 400, 5))
         self.label_48.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_49 = QLabel(self.tab_6_mounting)
+        self.label_49 = QLabel(self.tab_fpc_mounting_machine)
         self.label_49.setObjectName(u"label_49")
         self.label_49.setGeometry(QRect(20, 520, 400, 5))
         self.label_49.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_50 = QLabel(self.tab_6_mounting)
+        self.label_50 = QLabel(self.tab_fpc_mounting_machine)
         self.label_50.setObjectName(u"label_50")
         self.label_50.setGeometry(QRect(20, 550, 400, 5))
         self.label_50.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_51 = QLabel(self.tab_6_mounting)
+        self.label_51 = QLabel(self.tab_fpc_mounting_machine)
         self.label_51.setObjectName(u"label_51")
         self.label_51.setGeometry(QRect(20, 580, 400, 5))
         self.label_51.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_52 = QLabel(self.tab_6_mounting)
+        self.label_52 = QLabel(self.tab_fpc_mounting_machine)
         self.label_52.setObjectName(u"label_52")
         self.label_52.setGeometry(QRect(20, 430, 400, 5))
         self.label_52.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_53 = QLabel(self.tab_6_mounting)
+        self.label_53 = QLabel(self.tab_fpc_mounting_machine)
         self.label_53.setObjectName(u"label_53")
         self.label_53.setGeometry(QRect(270, 435, 5, 180))
         self.label_53.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_54 = QLabel(self.tab_6_mounting)
+        self.label_54 = QLabel(self.tab_fpc_mounting_machine)
         self.label_54.setObjectName(u"label_54")
         self.label_54.setGeometry(QRect(15, 430, 5, 185))
         self.label_54.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_55 = QLabel(self.tab_6_mounting)
+        self.label_55 = QLabel(self.tab_fpc_mounting_machine)
         self.label_55.setObjectName(u"label_55")
         self.label_55.setGeometry(QRect(415, 435, 5, 180))
         self.label_55.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_56 = QLabel(self.tab_6_mounting)
+        self.label_56 = QLabel(self.tab_fpc_mounting_machine)
         self.label_56.setObjectName(u"label_56")
         self.label_56.setGeometry(QRect(20, 610, 400, 5))
         self.label_56.setStyleSheet(u"QLabel {\n"
 "    background-color: white;\n"
 "}\n"
 "")
-        self.label_150 = QLabel(self.tab_6_mounting)
+        self.label_150 = QLabel(self.tab_fpc_mounting_machine)
         self.label_150.setObjectName(u"label_150")
         self.label_150.setGeometry(QRect(1060, 125, 95, 30))
         self.label_150.setFont(font3)
         self.label_150.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_151 = QLabel(self.tab_6_mounting)
+        self.label_151 = QLabel(self.tab_fpc_mounting_machine)
         self.label_151.setObjectName(u"label_151")
         self.label_151.setGeometry(QRect(1060, 195, 95, 30))
         self.label_151.setFont(font3)
         self.label_151.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_152 = QLabel(self.tab_6_mounting)
+        self.label_152 = QLabel(self.tab_fpc_mounting_machine)
         self.label_152.setObjectName(u"label_152")
         self.label_152.setGeometry(QRect(1060, 260, 95, 30))
         self.label_152.setFont(font3)
         self.label_152.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_153 = QLabel(self.tab_6_mounting)
+        self.label_153 = QLabel(self.tab_fpc_mounting_machine)
         self.label_153.setObjectName(u"label_153")
         self.label_153.setGeometry(QRect(1060, 330, 95, 30))
         self.label_153.setFont(font3)
         self.label_153.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_154 = QLabel(self.tab_6_mounting)
+        self.label_154 = QLabel(self.tab_fpc_mounting_machine)
         self.label_154.setObjectName(u"label_154")
         self.label_154.setGeometry(QRect(1060, 400, 95, 30))
         self.label_154.setFont(font3)
         self.label_154.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_155 = QLabel(self.tab_6_mounting)
+        self.label_155 = QLabel(self.tab_fpc_mounting_machine)
         self.label_155.setObjectName(u"label_155")
         self.label_155.setGeometry(QRect(1060, 470, 95, 30))
         self.label_155.setFont(font3)
         self.label_155.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_156 = QLabel(self.tab_6_mounting)
+        self.label_156 = QLabel(self.tab_fpc_mounting_machine)
         self.label_156.setObjectName(u"label_156")
         self.label_156.setGeometry(QRect(645, 625, 271, 30))
         font6 = QFont()
@@ -1290,14 +1290,14 @@ class Ui_MainWindow(object):
         self.label_156.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.label_132 = QLabel(self.tab_6_mounting)
+        self.label_132 = QLabel(self.tab_fpc_mounting_machine)
         self.label_132.setObjectName(u"label_132")
         self.label_132.setGeometry(QRect(520, 570, 261, 30))
         self.label_132.setFont(font1)
         self.label_132.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_18 = QLineEdit(self.tab_6_mounting)
+        self.lineEdit_18 = QLineEdit(self.tab_fpc_mounting_machine)
         self.lineEdit_18.setObjectName(u"lineEdit_18")
         self.lineEdit_18.setGeometry(QRect(780, 570, 55, 30))
         self.lineEdit_18.setFont(font4)
@@ -1305,34 +1305,34 @@ class Ui_MainWindow(object):
 "    color: yellow;\n"
 "}\n"
 "")
-        self.label_275 = QLabel(self.tab_6_mounting)
+        self.label_275 = QLabel(self.tab_fpc_mounting_machine)
         self.label_275.setObjectName(u"label_275")
         self.label_275.setGeometry(QRect(935, 510, 201, 30))
         self.label_275.setFont(font3)
         self.label_275.setStyleSheet(u"QLabel {\n"
 "    color: rgb(85, 255, 0); /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_53 = QPushButton(self.tab_6_mounting)
+        self.pushButton_53 = QPushButton(self.tab_fpc_mounting_machine)
         self.pushButton_53.setObjectName(u"pushButton_53")
         self.pushButton_53.setGeometry(QRect(935, 540, 35, 35))
         icon16 = QIcon()
-        icon16.addFile(u"C:/BoardDefectChecker/resources/laser.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon16.addFile(u"../../../../../BoardDefectChecker/resources/laser.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_53.setIcon(icon16)
         self.pushButton_53.setIconSize(QSize(30, 30))
-        self.label_276 = QLabel(self.tab_6_mounting)
+        self.label_276 = QLabel(self.tab_fpc_mounting_machine)
         self.label_276.setObjectName(u"label_276")
         self.label_276.setGeometry(QRect(1000, 540, 35, 35))
         self.label_276.setFont(font1)
-        self.label_276.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/available.png"))
+        self.label_276.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/available.png"))
         self.label_276.setScaledContents(True)
-        self.label_277 = QLabel(self.tab_6_mounting)
+        self.label_277 = QLabel(self.tab_fpc_mounting_machine)
         self.label_277.setObjectName(u"label_277")
         self.label_277.setGeometry(QRect(1060, 540, 95, 30))
         self.label_277.setFont(font3)
         self.label_277.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.radioButton_5 = QRadioButton(self.tab_6_mounting)
+        self.radioButton_5 = QRadioButton(self.tab_fpc_mounting_machine)
         self.radioButton_5.setObjectName(u"radioButton_5")
         self.radioButton_5.setGeometry(QRect(1240, 20, 52, 30))
         self.radioButton_5.setFont(font2)
@@ -1341,26 +1341,26 @@ class Ui_MainWindow(object):
 "}")
         self.radioButton_5.setIconSize(QSize(16, 12))
         self.radioButton_5.setChecked(True)
-        self.radioButton_6 = QRadioButton(self.tab_6_mounting)
+        self.radioButton_6 = QRadioButton(self.tab_fpc_mounting_machine)
         self.radioButton_6.setObjectName(u"radioButton_6")
         self.radioButton_6.setGeometry(QRect(1360, 20, 50, 30))
         self.radioButton_6.setFont(font2)
         self.radioButton_6.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_100 = QLabel(self.tab_6_mounting)
+        self.label_100 = QLabel(self.tab_fpc_mounting_machine)
         self.label_100.setObjectName(u"label_100")
         self.label_100.setGeometry(QRect(1410, 20, 50, 30))
         self.label_100.setFont(font1)
-        self.label_100.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/vietnamese.png"))
+        self.label_100.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/vietnamese.png"))
         self.label_100.setScaledContents(True)
-        self.label_101 = QLabel(self.tab_6_mounting)
+        self.label_101 = QLabel(self.tab_fpc_mounting_machine)
         self.label_101.setObjectName(u"label_101")
         self.label_101.setGeometry(QRect(1300, 20, 50, 30))
         self.label_101.setFont(font1)
-        self.label_101.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/english.png"))
+        self.label_101.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/english.png"))
         self.label_101.setScaledContents(True)
-        self.tabWidget.addTab(self.tab_6_mounting, "")
+        self.tabWidget.addTab(self.tab_fpc_mounting_machine, "")
         self.tab_optional_aoi = QWidget()
         self.tab_optional_aoi.setObjectName(u"tab_optional_aoi")
         self.tab_optional_aoi.setStyleSheet(u"QWidget {\n"
@@ -1368,57 +1368,57 @@ class Ui_MainWindow(object):
 "	color: white\n"
 "}")
         self.tabWidget.addTab(self.tab_optional_aoi, "")
-        self.tab_small_fpc_insertion = QWidget()
-        self.tab_small_fpc_insertion.setObjectName(u"tab_small_fpc_insertion")
+        self.tab_led_fpc = QWidget()
+        self.tab_led_fpc.setObjectName(u"tab_led_fpc")
         font7 = QFont()
         font7.setPointSize(9)
         font7.setBold(False)
         font7.setItalic(False)
-        self.tab_small_fpc_insertion.setFont(font7)
-        self.tab_small_fpc_insertion.setStyleSheet(u"QWidget {\n"
+        self.tab_led_fpc.setFont(font7)
+        self.tab_led_fpc.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.label = QLabel(self.tab_small_fpc_insertion)
+        self.label = QLabel(self.tab_led_fpc)
         self.label.setObjectName(u"label")
         self.label.setGeometry(QRect(18, 10, 161, 30))
         self.label.setFont(font)
-        self.lineEdit_2 = QLineEdit(self.tab_small_fpc_insertion)
+        self.lineEdit_2 = QLineEdit(self.tab_led_fpc)
         self.lineEdit_2.setObjectName(u"lineEdit_2")
         self.lineEdit_2.setGeometry(QRect(640, 10, 350, 30))
         self.lineEdit_2.setFont(font)
-        self.label_2 = QLabel(self.tab_small_fpc_insertion)
+        self.label_2 = QLabel(self.tab_led_fpc)
         self.label_2.setObjectName(u"label_2")
         self.label_2.setGeometry(QRect(470, 10, 161, 30))
         self.label_2.setFont(font)
-        self.lineEdit = QLineEdit(self.tab_small_fpc_insertion)
+        self.lineEdit = QLineEdit(self.tab_led_fpc)
         self.lineEdit.setObjectName(u"lineEdit")
         self.lineEdit.setGeometry(QRect(180, 10, 191, 30))
         self.lineEdit.setFont(font4)
-        self.label_3 = QLabel(self.tab_small_fpc_insertion)
+        self.label_3 = QLabel(self.tab_led_fpc)
         self.label_3.setObjectName(u"label_3")
-        self.label_3.setGeometry(QRect(250, 65, 191, 30))
+        self.label_3.setGeometry(QRect(330, 95, 191, 30))
         self.label_3.setFont(font1)
-        self.label_5 = QLabel(self.tab_small_fpc_insertion)
+        self.label_5 = QLabel(self.tab_led_fpc)
         self.label_5.setObjectName(u"label_5")
-        self.label_5.setGeometry(QRect(710, 65, 201, 30))
+        self.label_5.setGeometry(QRect(790, 95, 201, 30))
         self.label_5.setFont(font1)
-        self.label_6 = QLabel(self.tab_small_fpc_insertion)
+        self.label_6 = QLabel(self.tab_led_fpc)
         self.label_6.setObjectName(u"label_6")
-        self.label_6.setGeometry(QRect(1120, 65, 121, 30))
+        self.label_6.setGeometry(QRect(1300, 95, 121, 30))
         self.label_6.setFont(font1)
-        self.graphicsView = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView = QGraphicsView(self.tab_led_fpc)
         self.graphicsView.setObjectName(u"graphicsView")
-        self.graphicsView.setGeometry(QRect(180, 105, 350, 350))
-        self.graphicsView_3 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView.setGeometry(QRect(210, 130, 450, 450))
+        self.graphicsView_3 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_3.setObjectName(u"graphicsView_3")
-        self.graphicsView_3.setGeometry(QRect(640, 105, 350, 350))
-        self.graphicsView_4 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView_3.setGeometry(QRect(670, 130, 450, 450))
+        self.graphicsView_4 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_4.setObjectName(u"graphicsView_4")
-        self.graphicsView_4.setGeometry(QRect(1010, 105, 350, 350))
-        self.label_7 = QLabel(self.tab_small_fpc_insertion)
+        self.graphicsView_4.setGeometry(QRect(1130, 130, 450, 450))
+        self.label_7 = QLabel(self.tab_led_fpc)
         self.label_7.setObjectName(u"label_7")
-        self.label_7.setGeometry(QRect(710, 470, 201, 51))
+        self.label_7.setGeometry(QRect(810, 590, 201, 51))
         palette18 = QPalette()
         palette18.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette18.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1452,9 +1452,9 @@ class Ui_MainWindow(object):
         self.label_7.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_9 = QLabel(self.tab_small_fpc_insertion)
+        self.label_9 = QLabel(self.tab_led_fpc)
         self.label_9.setObjectName(u"label_9")
-        self.label_9.setGeometry(QRect(1070, 470, 201, 51))
+        self.label_9.setGeometry(QRect(1170, 590, 201, 51))
         palette19 = QPalette()
         palette19.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette19.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1488,9 +1488,9 @@ class Ui_MainWindow(object):
         self.label_9.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_10 = QLabel(self.tab_small_fpc_insertion)
+        self.label_10 = QLabel(self.tab_led_fpc)
         self.label_10.setObjectName(u"label_10")
-        self.label_10.setGeometry(QRect(1270, 460, 51, 51))
+        self.label_10.setGeometry(QRect(1380, 590, 60, 51))
         font8 = QFont()
         font8.setPointSize(28)
         font8.setBold(True)
@@ -1499,9 +1499,9 @@ class Ui_MainWindow(object):
         self.label_10.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_11 = QLabel(self.tab_small_fpc_insertion)
+        self.label_11 = QLabel(self.tab_led_fpc)
         self.label_11.setObjectName(u"label_11")
-        self.label_11.setGeometry(QRect(20, 460, 251, 30))
+        self.label_11.setGeometry(QRect(18, 610, 251, 30))
         palette20 = QPalette()
         palette20.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette20.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1535,9 +1535,9 @@ class Ui_MainWindow(object):
         self.label_11.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_12 = QLabel(self.tab_small_fpc_insertion)
+        self.label_12 = QLabel(self.tab_led_fpc)
         self.label_12.setObjectName(u"label_12")
-        self.label_12.setGeometry(QRect(20, 500, 241, 30))
+        self.label_12.setGeometry(QRect(18, 650, 241, 30))
         palette21 = QPalette()
         palette21.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette21.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1571,9 +1571,9 @@ class Ui_MainWindow(object):
         self.label_12.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_13 = QLabel(self.tab_small_fpc_insertion)
+        self.label_13 = QLabel(self.tab_led_fpc)
         self.label_13.setObjectName(u"label_13")
-        self.label_13.setGeometry(QRect(20, 540, 241, 30))
+        self.label_13.setGeometry(QRect(18, 690, 241, 30))
         palette22 = QPalette()
         palette22.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette22.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1607,9 +1607,9 @@ class Ui_MainWindow(object):
         self.label_13.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_14 = QLabel(self.tab_small_fpc_insertion)
+        self.label_14 = QLabel(self.tab_led_fpc)
         self.label_14.setObjectName(u"label_14")
-        self.label_14.setGeometry(QRect(280, 460, 121, 30))
+        self.label_14.setGeometry(QRect(278, 610, 121, 30))
         palette23 = QPalette()
         palette23.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette23.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1643,9 +1643,9 @@ class Ui_MainWindow(object):
         self.label_14.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_15 = QLabel(self.tab_small_fpc_insertion)
+        self.label_15 = QLabel(self.tab_led_fpc)
         self.label_15.setObjectName(u"label_15")
-        self.label_15.setGeometry(QRect(410, 500, 191, 30))
+        self.label_15.setGeometry(QRect(410, 650, 191, 30))
         palette24 = QPalette()
         palette24.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette24.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1679,9 +1679,9 @@ class Ui_MainWindow(object):
         self.label_15.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_16 = QLabel(self.tab_small_fpc_insertion)
+        self.label_16 = QLabel(self.tab_led_fpc)
         self.label_16.setObjectName(u"label_16")
-        self.label_16.setGeometry(QRect(410, 540, 181, 30))
+        self.label_16.setGeometry(QRect(410, 690, 181, 30))
         palette25 = QPalette()
         palette25.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette25.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1715,9 +1715,9 @@ class Ui_MainWindow(object):
         self.label_16.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.label_17 = QLabel(self.tab_small_fpc_insertion)
+        self.label_17 = QLabel(self.tab_led_fpc)
         self.label_17.setObjectName(u"label_17")
-        self.label_17.setGeometry(QRect(410, 460, 108, 30))
+        self.label_17.setGeometry(QRect(410, 610, 108, 30))
         palette26 = QPalette()
         palette26.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette26.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1751,9 +1751,9 @@ class Ui_MainWindow(object):
         self.label_17.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_18 = QLabel(self.tab_small_fpc_insertion)
+        self.label_18 = QLabel(self.tab_led_fpc)
         self.label_18.setObjectName(u"label_18")
-        self.label_18.setGeometry(QRect(280, 500, 121, 30))
+        self.label_18.setGeometry(QRect(278, 650, 121, 30))
         palette27 = QPalette()
         palette27.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette27.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1787,9 +1787,9 @@ class Ui_MainWindow(object):
         self.label_18.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_19 = QLabel(self.tab_small_fpc_insertion)
+        self.label_19 = QLabel(self.tab_led_fpc)
         self.label_19.setObjectName(u"label_19")
-        self.label_19.setGeometry(QRect(280, 540, 121, 30))
+        self.label_19.setGeometry(QRect(278, 690, 121, 30))
         palette28 = QPalette()
         palette28.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette28.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1823,9 +1823,9 @@ class Ui_MainWindow(object):
         self.label_19.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_20 = QLabel(self.tab_small_fpc_insertion)
+        self.label_20 = QLabel(self.tab_led_fpc)
         self.label_20.setObjectName(u"label_20")
-        self.label_20.setGeometry(QRect(520, 460, 131, 30))
+        self.label_20.setGeometry(QRect(520, 610, 131, 30))
         palette29 = QPalette()
         palette29.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette29.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1859,9 +1859,9 @@ class Ui_MainWindow(object):
         self.label_20.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_21 = QLabel(self.tab_small_fpc_insertion)
+        self.label_21 = QLabel(self.tab_led_fpc)
         self.label_21.setObjectName(u"label_21")
-        self.label_21.setGeometry(QRect(600, 500, 101, 30))
+        self.label_21.setGeometry(QRect(600, 650, 101, 30))
         palette30 = QPalette()
         palette30.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette30.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1895,9 +1895,9 @@ class Ui_MainWindow(object):
         self.label_21.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_22 = QLabel(self.tab_small_fpc_insertion)
+        self.label_22 = QLabel(self.tab_led_fpc)
         self.label_22.setObjectName(u"label_22")
-        self.label_22.setGeometry(QRect(600, 540, 101, 30))
+        self.label_22.setGeometry(QRect(600, 690, 101, 30))
         palette31 = QPalette()
         palette31.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette31.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1931,9 +1931,9 @@ class Ui_MainWindow(object):
         self.label_22.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_23 = QLabel(self.tab_small_fpc_insertion)
+        self.label_23 = QLabel(self.tab_led_fpc)
         self.label_23.setObjectName(u"label_23")
-        self.label_23.setGeometry(QRect(710, 595, 301, 40))
+        self.label_23.setGeometry(QRect(810, 715, 301, 40))
         palette32 = QPalette()
         palette32.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette32.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -1971,9 +1971,9 @@ class Ui_MainWindow(object):
         self.label_23.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.label_24 = QLabel(self.tab_small_fpc_insertion)
+        self.label_24 = QLabel(self.tab_led_fpc)
         self.label_24.setObjectName(u"label_24")
-        self.label_24.setGeometry(QRect(1080, 560, 111, 111))
+        self.label_24.setGeometry(QRect(1180, 680, 130, 111))
         font10 = QFont()
         font10.setPointSize(60)
         font10.setBold(True)
@@ -1982,63 +1982,66 @@ class Ui_MainWindow(object):
         self.label_24.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_25 = QLabel(self.tab_small_fpc_insertion)
+        self.label_25 = QLabel(self.tab_led_fpc)
         self.label_25.setObjectName(u"label_25")
-        self.label_25.setGeometry(QRect(910, 460, 51, 51))
+        self.label_25.setGeometry(QRect(1020, 590, 60, 51))
         self.label_25.setFont(font8)
         self.label_25.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_26 = QLabel(self.tab_small_fpc_insertion)
+        self.label_26 = QLabel(self.tab_led_fpc)
         self.label_26.setObjectName(u"label_26")
-        self.label_26.setGeometry(QRect(750, 245, 131, 30))
+        self.label_26.setGeometry(QRect(670, 130, 450, 450))
         self.label_26.setFont(font1)
+        self.label_26.setPixmap(QPixmap(u"../../../Images/FPC-Wrong-Position.bmp"))
         self.label_26.setScaledContents(True)
-        self.label_27 = QLabel(self.tab_small_fpc_insertion)
+        self.label_27 = QLabel(self.tab_led_fpc)
         self.label_27.setObjectName(u"label_27")
-        self.label_27.setGeometry(QRect(1130, 245, 131, 30))
+        self.label_27.setGeometry(QRect(1130, 130, 450, 450))
         self.label_27.setFont(font1)
+        self.label_27.setPixmap(QPixmap(u"../../../Images/FPC-Wrong-Position.bmp"))
         self.label_27.setScaledContents(True)
-        self.label_29 = QLabel(self.tab_small_fpc_insertion)
+        self.label_29 = QLabel(self.tab_led_fpc)
         self.label_29.setObjectName(u"label_29")
-        self.label_29.setGeometry(QRect(290, 245, 131, 30))
+        self.label_29.setGeometry(QRect(210, 130, 450, 450))
         self.label_29.setFont(font1)
+        self.label_29.setPixmap(QPixmap(u"../../../Images/FPC-Wrong-Position.bmp"))
         self.label_29.setScaledContents(True)
-        self.label_28 = QLabel(self.tab_small_fpc_insertion)
+        self.label_28 = QLabel(self.tab_led_fpc)
         self.label_28.setObjectName(u"label_28")
         self.label_28.setGeometry(QRect(1500, 0, 91, 71))
         self.label_28.setFont(font1)
         self.label_28.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_28.setScaledContents(True)
-        self.graphicsView_2 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView_2 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_2.setObjectName(u"graphicsView_2")
-        self.graphicsView_2.setGeometry(QRect(180, 275, 350, 5))
+        self.graphicsView_2.setGeometry(QRect(210, 370, 450, 5))
         self.graphicsView_2.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: blue;\n"
 "    border: 2px solid blue;     \n"
 "}")
-        self.graphicsView_5 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView_5 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_5.setObjectName(u"graphicsView_5")
-        self.graphicsView_5.setGeometry(QRect(240, 105, 5, 350))
+        self.graphicsView_5.setGeometry(QRect(260, 130, 5, 450))
         self.graphicsView_5.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: blue;\n"
 "    border: 2px solid blue;     \n"
 "}")
-        self.graphicsView_6 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView_6 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_6.setObjectName(u"graphicsView_6")
-        self.graphicsView_6.setGeometry(QRect(460, 105, 5, 350))
+        self.graphicsView_6.setGeometry(QRect(590, 130, 5, 450))
         self.graphicsView_6.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: blue;\n"
 "    border: 2px solid blue;     \n"
 "}")
-        self.graphicsView_7 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView_7 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_7.setObjectName(u"graphicsView_7")
-        self.graphicsView_7.setGeometry(QRect(180, 205, 350, 5))
+        self.graphicsView_7.setGeometry(QRect(210, 240, 450, 5))
         self.graphicsView_7.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: green;\n"
 "    border: 2px solid green;     \n"
 "}")
-        self.checkBox = QCheckBox(self.tab_small_fpc_insertion)
+        self.checkBox = QCheckBox(self.tab_led_fpc)
         self.checkBox.setObjectName(u"checkBox")
         self.checkBox.setGeometry(QRect(18, 50, 150, 20))
         self.checkBox.setFont(font2)
@@ -2046,14 +2049,14 @@ class Ui_MainWindow(object):
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.checkBox.setChecked(True)
-        self.checkBox_2 = QCheckBox(self.tab_small_fpc_insertion)
+        self.checkBox_2 = QCheckBox(self.tab_led_fpc)
         self.checkBox_2.setObjectName(u"checkBox_2")
         self.checkBox_2.setGeometry(QRect(18, 80, 220, 20))
         self.checkBox_2.setFont(font2)
         self.checkBox_2.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_30 = QLabel(self.tab_small_fpc_insertion)
+        self.label_30 = QLabel(self.tab_led_fpc)
         self.label_30.setObjectName(u"label_30")
         self.label_30.setGeometry(QRect(470, 50, 151, 30))
         palette33 = QPalette()
@@ -2089,11 +2092,11 @@ class Ui_MainWindow(object):
         self.label_30.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_3 = QLineEdit(self.tab_small_fpc_insertion)
+        self.lineEdit_3 = QLineEdit(self.tab_led_fpc)
         self.lineEdit_3.setObjectName(u"lineEdit_3")
         self.lineEdit_3.setGeometry(QRect(640, 50, 51, 30))
         self.lineEdit_3.setFont(font)
-        self.checkBox_3 = QCheckBox(self.tab_small_fpc_insertion)
+        self.checkBox_3 = QCheckBox(self.tab_led_fpc)
         self.checkBox_3.setObjectName(u"checkBox_3")
         self.checkBox_3.setGeometry(QRect(18, 110, 161, 20))
         self.checkBox_3.setFont(font2)
@@ -2101,9 +2104,9 @@ class Ui_MainWindow(object):
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.checkBox_3.setChecked(True)
-        self.label_31 = QLabel(self.tab_small_fpc_insertion)
+        self.label_31 = QLabel(self.tab_led_fpc)
         self.label_31.setObjectName(u"label_31")
-        self.label_31.setGeometry(QRect(710, 530, 131, 30))
+        self.label_31.setGeometry(QRect(810, 650, 131, 30))
         palette34 = QPalette()
         palette34.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette34.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2137,9 +2140,9 @@ class Ui_MainWindow(object):
         self.label_31.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_32 = QLabel(self.tab_small_fpc_insertion)
+        self.label_32 = QLabel(self.tab_led_fpc)
         self.label_32.setObjectName(u"label_32")
-        self.label_32.setGeometry(QRect(850, 530, 111, 30))
+        self.label_32.setGeometry(QRect(950, 650, 111, 30))
         palette35 = QPalette()
         palette35.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette35.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2173,9 +2176,9 @@ class Ui_MainWindow(object):
         self.label_32.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_33 = QLabel(self.tab_small_fpc_insertion)
+        self.label_33 = QLabel(self.tab_led_fpc)
         self.label_33.setObjectName(u"label_33")
-        self.label_33.setGeometry(QRect(1070, 530, 141, 30))
+        self.label_33.setGeometry(QRect(1170, 650, 141, 30))
         palette36 = QPalette()
         palette36.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette36.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2209,9 +2212,9 @@ class Ui_MainWindow(object):
         self.label_33.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_34 = QLabel(self.tab_small_fpc_insertion)
+        self.label_34 = QLabel(self.tab_led_fpc)
         self.label_34.setObjectName(u"label_34")
-        self.label_34.setGeometry(QRect(1210, 530, 111, 30))
+        self.label_34.setGeometry(QRect(1310, 650, 111, 30))
         palette37 = QPalette()
         palette37.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette37.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2245,27 +2248,24 @@ class Ui_MainWindow(object):
         self.label_34.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton = QPushButton(self.tab_small_fpc_insertion)
+        self.pushButton = QPushButton(self.tab_led_fpc)
         self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setGeometry(QRect(18, 140, 151, 24))
-        font11 = QFont()
-        font11.setPointSize(10)
-        font11.setBold(True)
-        self.pushButton.setFont(font11)
-        self.pushButton_2 = QPushButton(self.tab_small_fpc_insertion)
+        self.pushButton.setGeometry(QRect(18, 140, 180, 35))
+        self.pushButton.setFont(font2)
+        self.pushButton_2 = QPushButton(self.tab_led_fpc)
         self.pushButton_2.setObjectName(u"pushButton_2")
-        self.pushButton_2.setGeometry(QRect(18, 240, 151, 24))
-        self.pushButton_2.setFont(font11)
-        self.checkBox_4 = QCheckBox(self.tab_small_fpc_insertion)
+        self.pushButton_2.setGeometry(QRect(18, 250, 180, 35))
+        self.pushButton_2.setFont(font2)
+        self.checkBox_4 = QCheckBox(self.tab_led_fpc)
         self.checkBox_4.setObjectName(u"checkBox_4")
-        self.checkBox_4.setGeometry(QRect(18, 270, 161, 20))
+        self.checkBox_4.setGeometry(QRect(18, 290, 161, 20))
         self.checkBox_4.setFont(font2)
         self.checkBox_4.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_91 = QLabel(self.tab_small_fpc_insertion)
+        self.label_91 = QLabel(self.tab_led_fpc)
         self.label_91.setObjectName(u"label_91")
-        self.label_91.setGeometry(QRect(20, 590, 121, 50))
+        self.label_91.setGeometry(QRect(18, 740, 121, 50))
         palette38 = QPalette()
         palette38.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette38.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2297,11 +2297,11 @@ class Ui_MainWindow(object):
         self.label_91.setPalette(palette38)
         self.label_91.setFont(font4)
         self.label_91.setStyleSheet(u"QLabel {\n"
-"    color: yellow; /* Set the text color to yellow */\n"
+"    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.label_92 = QLabel(self.tab_small_fpc_insertion)
+        self.label_92 = QLabel(self.tab_led_fpc)
         self.label_92.setObjectName(u"label_92")
-        self.label_92.setGeometry(QRect(150, 590, 401, 50))
+        self.label_92.setGeometry(QRect(148, 740, 401, 50))
         palette39 = QPalette()
         palette39.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette39.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2335,59 +2335,59 @@ class Ui_MainWindow(object):
         self.label_92.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_22 = QGraphicsView(self.tab_small_fpc_insertion)
+        self.graphicsView_22 = QGraphicsView(self.tab_led_fpc)
         self.graphicsView_22.setObjectName(u"graphicsView_22")
-        self.graphicsView_22.setGeometry(QRect(20, 580, 630, 5))
+        self.graphicsView_22.setGeometry(QRect(18, 730, 630, 5))
         self.graphicsView_22.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: white;\n"
 "    border: 2px solid white;     \n"
 "}")
-        self.radioButton_3 = QRadioButton(self.tab_small_fpc_insertion)
+        self.radioButton_3 = QRadioButton(self.tab_led_fpc)
         self.radioButton_3.setObjectName(u"radioButton_3")
-        self.radioButton_3.setGeometry(QRect(1240, 20, 52, 30))
+        self.radioButton_3.setGeometry(QRect(1240, 20, 60, 30))
         self.radioButton_3.setFont(font2)
         self.radioButton_3.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.radioButton_3.setIconSize(QSize(16, 12))
         self.radioButton_3.setChecked(True)
-        self.radioButton_4 = QRadioButton(self.tab_small_fpc_insertion)
+        self.radioButton_4 = QRadioButton(self.tab_led_fpc)
         self.radioButton_4.setObjectName(u"radioButton_4")
         self.radioButton_4.setGeometry(QRect(1360, 20, 50, 30))
         self.radioButton_4.setFont(font2)
         self.radioButton_4.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_96 = QLabel(self.tab_small_fpc_insertion)
+        self.label_96 = QLabel(self.tab_led_fpc)
         self.label_96.setObjectName(u"label_96")
         self.label_96.setGeometry(QRect(1300, 20, 50, 30))
         self.label_96.setFont(font1)
-        self.label_96.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/english.png"))
+        self.label_96.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/english.png"))
         self.label_96.setScaledContents(True)
-        self.label_97 = QLabel(self.tab_small_fpc_insertion)
+        self.label_97 = QLabel(self.tab_led_fpc)
         self.label_97.setObjectName(u"label_97")
         self.label_97.setGeometry(QRect(1410, 20, 50, 30))
         self.label_97.setFont(font1)
-        self.label_97.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/vietnamese.png"))
+        self.label_97.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/vietnamese.png"))
         self.label_97.setScaledContents(True)
-        self.label_99 = QLabel(self.tab_small_fpc_insertion)
+        self.label_99 = QLabel(self.tab_led_fpc)
         self.label_99.setObjectName(u"label_99")
-        self.label_99.setGeometry(QRect(600, 590, 50, 50))
+        self.label_99.setGeometry(QRect(600, 740, 40, 40))
         self.label_99.setFont(font1)
-        self.label_99.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/warning.png"))
+        self.label_99.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/warning.png"))
         self.label_99.setScaledContents(True)
-        self.checkBox_5 = QCheckBox(self.tab_small_fpc_insertion)
+        self.checkBox_5 = QCheckBox(self.tab_led_fpc)
         self.checkBox_5.setObjectName(u"checkBox_5")
-        self.checkBox_5.setGeometry(QRect(18, 300, 151, 41))
+        self.checkBox_5.setGeometry(QRect(18, 320, 151, 41))
         self.checkBox_5.setFont(font2)
         self.checkBox_5.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.checkBox_5.setCheckable(True)
         self.checkBox_5.setChecked(True)
-        self.label_176 = QLabel(self.tab_small_fpc_insertion)
+        self.label_176 = QLabel(self.tab_led_fpc)
         self.label_176.setObjectName(u"label_176")
-        self.label_176.setGeometry(QRect(18, 350, 161, 40))
+        self.label_176.setGeometry(QRect(18, 370, 161, 40))
         palette40 = QPalette()
         palette40.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette40.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2421,13 +2421,13 @@ class Ui_MainWindow(object):
         self.label_176.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.comboBox = QComboBox(self.tab_small_fpc_insertion)
+        self.comboBox = QComboBox(self.tab_led_fpc)
         self.comboBox.setObjectName(u"comboBox")
-        self.comboBox.setGeometry(QRect(18, 200, 151, 30))
+        self.comboBox.setGeometry(QRect(18, 210, 180, 35))
         self.comboBox.setFont(font2)
-        self.label_64 = QLabel(self.tab_small_fpc_insertion)
+        self.label_64 = QLabel(self.tab_led_fpc)
         self.label_64.setObjectName(u"label_64")
-        self.label_64.setGeometry(QRect(18, 168, 151, 30))
+        self.label_64.setGeometry(QRect(18, 178, 151, 30))
         palette41 = QPalette()
         palette41.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette41.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2461,9 +2461,9 @@ class Ui_MainWindow(object):
         self.label_64.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_181 = QLabel(self.tab_small_fpc_insertion)
+        self.label_181 = QLabel(self.tab_led_fpc)
         self.label_181.setObjectName(u"label_181")
-        self.label_181.setGeometry(QRect(18, 400, 161, 40))
+        self.label_181.setGeometry(QRect(18, 420, 161, 40))
         palette42 = QPalette()
         palette42.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette42.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -2497,18 +2497,21 @@ class Ui_MainWindow(object):
         self.label_181.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.tabWidget.addTab(self.tab_small_fpc_insertion, "")
-        self.tab_5_token_fpc_insertion = QWidget()
-        self.tab_5_token_fpc_insertion.setObjectName(u"tab_5_token_fpc_insertion")
-        self.tab_5_token_fpc_insertion.setStyleSheet(u"QWidget {\n"
+        self.tabWidget.addTab(self.tab_led_fpc, "")
+        self.tab_tp_fpc = QWidget()
+        self.tab_tp_fpc.setObjectName(u"tab_tp_fpc")
+        self.tab_tp_fpc.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.pushButton_5 = QPushButton(self.tab_5_token_fpc_insertion)
+        self.pushButton_5 = QPushButton(self.tab_tp_fpc)
         self.pushButton_5.setObjectName(u"pushButton_5")
-        self.pushButton_5.setGeometry(QRect(18, 238, 151, 30))
+        self.pushButton_5.setGeometry(QRect(18, 234, 151, 30))
+        font11 = QFont()
+        font11.setPointSize(10)
+        font11.setBold(True)
         self.pushButton_5.setFont(font11)
-        self.label_35 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_35 = QLabel(self.tab_tp_fpc)
         self.label_35.setObjectName(u"label_35")
         self.label_35.setGeometry(QRect(408, 610, 191, 30))
         palette43 = QPalette()
@@ -2544,7 +2547,7 @@ class Ui_MainWindow(object):
         self.label_35.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_58 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_58 = QLabel(self.tab_tp_fpc)
         self.label_58.setObjectName(u"label_58")
         self.label_58.setGeometry(QRect(18, 570, 251, 30))
         palette44 = QPalette()
@@ -2580,18 +2583,18 @@ class Ui_MainWindow(object):
         self.label_58.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_10 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_10 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_10.setObjectName(u"graphicsView_10")
         self.graphicsView_10.setGeometry(QRect(180, 270, 350, 5))
         self.graphicsView_10.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: blue;\n"
 "    border: 2px solid blue;     \n"
 "}")
-        self.lineEdit_4 = QLineEdit(self.tab_5_token_fpc_insertion)
+        self.lineEdit_4 = QLineEdit(self.tab_tp_fpc)
         self.lineEdit_4.setObjectName(u"lineEdit_4")
         self.lineEdit_4.setGeometry(QRect(670, 10, 350, 30))
         self.lineEdit_4.setFont(font)
-        self.label_59 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_59 = QLabel(self.tab_tp_fpc)
         self.label_59.setObjectName(u"label_59")
         self.label_59.setGeometry(QRect(278, 650, 121, 30))
         palette45 = QPalette()
@@ -2627,10 +2630,10 @@ class Ui_MainWindow(object):
         self.label_59.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_11 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_11 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_11.setObjectName(u"graphicsView_11")
         self.graphicsView_11.setGeometry(QRect(900, 105, 450, 450))
-        self.label_61 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_61 = QLabel(self.tab_tp_fpc)
         self.label_61.setObjectName(u"label_61")
         self.label_61.setGeometry(QRect(278, 610, 121, 30))
         palette46 = QPalette()
@@ -2666,7 +2669,7 @@ class Ui_MainWindow(object):
         self.label_61.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_7 = QCheckBox(self.tab_5_token_fpc_insertion)
+        self.checkBox_7 = QCheckBox(self.tab_tp_fpc)
         self.checkBox_7.setObjectName(u"checkBox_7")
         self.checkBox_7.setGeometry(QRect(18, 50, 150, 20))
         self.checkBox_7.setFont(font2)
@@ -2674,7 +2677,7 @@ class Ui_MainWindow(object):
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.checkBox_7.setChecked(False)
-        self.label_62 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_62 = QLabel(self.tab_tp_fpc)
         self.label_62.setObjectName(u"label_62")
         self.label_62.setGeometry(QRect(518, 570, 131, 30))
         palette47 = QPalette()
@@ -2710,14 +2713,14 @@ class Ui_MainWindow(object):
         self.label_62.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_63 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_63 = QLabel(self.tab_tp_fpc)
         self.label_63.setObjectName(u"label_63")
         self.label_63.setGeometry(QRect(1070, 65, 271, 30))
         self.label_63.setFont(font1)
-        self.graphicsView_13 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_13 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_13.setObjectName(u"graphicsView_13")
         self.graphicsView_13.setGeometry(QRect(180, 105, 450, 450))
-        self.label_66 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_66 = QLabel(self.tab_tp_fpc)
         self.label_66.setObjectName(u"label_66")
         self.label_66.setGeometry(QRect(598, 610, 101, 30))
         palette48 = QPalette()
@@ -2753,7 +2756,7 @@ class Ui_MainWindow(object):
         self.label_66.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_67 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_67 = QLabel(self.tab_tp_fpc)
         self.label_67.setObjectName(u"label_67")
         self.label_67.setGeometry(QRect(1190, 610, 111, 30))
         palette49 = QPalette()
@@ -2789,27 +2792,27 @@ class Ui_MainWindow(object):
         self.label_67.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_68 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_68 = QLabel(self.tab_tp_fpc)
         self.label_68.setObjectName(u"label_68")
         self.label_68.setGeometry(QRect(1500, 0, 91, 71))
         self.label_68.setFont(font1)
         self.label_68.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_68.setScaledContents(True)
-        self.checkBox_8 = QCheckBox(self.tab_5_token_fpc_insertion)
+        self.checkBox_8 = QCheckBox(self.tab_tp_fpc)
         self.checkBox_8.setObjectName(u"checkBox_8")
         self.checkBox_8.setGeometry(QRect(18, 80, 220, 20))
         self.checkBox_8.setFont(font2)
         self.checkBox_8.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_69 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_69 = QLabel(self.tab_tp_fpc)
         self.label_69.setObjectName(u"label_69")
         self.label_69.setGeometry(QRect(1420, 650, 111, 111))
         self.label_69.setFont(font10)
         self.label_69.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_71 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_71 = QLabel(self.tab_tp_fpc)
         self.label_71.setObjectName(u"label_71")
         self.label_71.setGeometry(QRect(598, 650, 101, 30))
         palette50 = QPalette()
@@ -2845,7 +2848,7 @@ class Ui_MainWindow(object):
         self.label_71.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_72 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_72 = QLabel(self.tab_tp_fpc)
         self.label_72.setObjectName(u"label_72")
         self.label_72.setGeometry(QRect(408, 650, 181, 30))
         palette51 = QPalette()
@@ -2881,15 +2884,15 @@ class Ui_MainWindow(object):
         self.label_72.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.pushButton_6 = QPushButton(self.tab_5_token_fpc_insertion)
+        self.pushButton_6 = QPushButton(self.tab_tp_fpc)
         self.pushButton_6.setObjectName(u"pushButton_6")
-        self.pushButton_6.setGeometry(QRect(18, 140, 151, 24))
+        self.pushButton_6.setGeometry(QRect(18, 140, 151, 30))
         self.pushButton_6.setFont(font11)
-        self.label_73 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_73 = QLabel(self.tab_tp_fpc)
         self.label_73.setObjectName(u"label_73")
         self.label_73.setGeometry(QRect(305, 65, 191, 30))
         self.label_73.setFont(font1)
-        self.checkBox_9 = QCheckBox(self.tab_5_token_fpc_insertion)
+        self.checkBox_9 = QCheckBox(self.tab_tp_fpc)
         self.checkBox_9.setObjectName(u"checkBox_9")
         self.checkBox_9.setGeometry(QRect(18, 110, 130, 20))
         font12 = QFont()
@@ -2902,11 +2905,11 @@ class Ui_MainWindow(object):
 "}")
         self.checkBox_9.setCheckable(True)
         self.checkBox_9.setChecked(False)
-        self.label_74 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_74 = QLabel(self.tab_tp_fpc)
         self.label_74.setObjectName(u"label_74")
         self.label_74.setGeometry(QRect(500, 10, 161, 30))
         self.label_74.setFont(font)
-        self.label_75 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_75 = QLabel(self.tab_tp_fpc)
         self.label_75.setObjectName(u"label_75")
         self.label_75.setGeometry(QRect(1050, 680, 301, 50))
         palette52 = QPalette()
@@ -2942,7 +2945,7 @@ class Ui_MainWindow(object):
         self.label_75.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.label_76 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_76 = QLabel(self.tab_tp_fpc)
         self.label_76.setObjectName(u"label_76")
         self.label_76.setGeometry(QRect(1050, 610, 131, 30))
         palette53 = QPalette()
@@ -2978,7 +2981,7 @@ class Ui_MainWindow(object):
         self.label_76.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_77 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_77 = QLabel(self.tab_tp_fpc)
         self.label_77.setObjectName(u"label_77")
         self.label_77.setGeometry(QRect(408, 570, 108, 30))
         palette54 = QPalette()
@@ -3014,11 +3017,11 @@ class Ui_MainWindow(object):
         self.label_77.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_78 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_78 = QLabel(self.tab_tp_fpc)
         self.label_78.setObjectName(u"label_78")
         self.label_78.setGeometry(QRect(18, 10, 161, 30))
         self.label_78.setFont(font)
-        self.label_79 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_79 = QLabel(self.tab_tp_fpc)
         self.label_79.setObjectName(u"label_79")
         self.label_79.setGeometry(QRect(18, 650, 161, 30))
         palette55 = QPalette()
@@ -3054,14 +3057,14 @@ class Ui_MainWindow(object):
         self.label_79.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_10 = QCheckBox(self.tab_5_token_fpc_insertion)
+        self.checkBox_10 = QCheckBox(self.tab_tp_fpc)
         self.checkBox_10.setObjectName(u"checkBox_10")
         self.checkBox_10.setGeometry(QRect(18, 270, 158, 20))
         self.checkBox_10.setFont(font2)
         self.checkBox_10.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_82 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_82 = QLabel(self.tab_tp_fpc)
         self.label_82.setObjectName(u"label_82")
         self.label_82.setGeometry(QRect(278, 570, 111, 30))
         palette56 = QPalette()
@@ -3097,12 +3100,12 @@ class Ui_MainWindow(object):
         self.label_82.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_83 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_83 = QLabel(self.tab_tp_fpc)
         self.label_83.setObjectName(u"label_83")
         self.label_83.setGeometry(QRect(1065, 310, 131, 30))
         self.label_83.setFont(font1)
         self.label_83.setScaledContents(True)
-        self.label_84 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_84 = QLabel(self.tab_tp_fpc)
         self.label_84.setObjectName(u"label_84")
         self.label_84.setGeometry(QRect(18, 610, 151, 30))
         palette57 = QPalette()
@@ -3138,23 +3141,23 @@ class Ui_MainWindow(object):
         self.label_84.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_6 = QLineEdit(self.tab_5_token_fpc_insertion)
+        self.lineEdit_6 = QLineEdit(self.tab_tp_fpc)
         self.lineEdit_6.setObjectName(u"lineEdit_6")
         self.lineEdit_6.setGeometry(QRect(180, 10, 191, 30))
         self.lineEdit_6.setFont(font4)
-        self.label_87 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_87 = QLabel(self.tab_tp_fpc)
         self.label_87.setObjectName(u"label_87")
         self.label_87.setGeometry(QRect(350, 310, 131, 30))
         self.label_87.setFont(font1)
         self.label_87.setScaledContents(True)
-        self.graphicsView_17 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_17 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_17.setObjectName(u"graphicsView_17")
         self.graphicsView_17.setGeometry(QRect(180, 370, 450, 5))
         self.graphicsView_17.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.label_89 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_89 = QLabel(self.tab_tp_fpc)
         self.label_89.setObjectName(u"label_89")
         self.label_89.setGeometry(QRect(148, 700, 671, 50))
         palette58 = QPalette()
@@ -3190,7 +3193,7 @@ class Ui_MainWindow(object):
         self.label_89.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_90 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_90 = QLabel(self.tab_tp_fpc)
         self.label_90.setObjectName(u"label_90")
         self.label_90.setGeometry(QRect(18, 700, 131, 50))
         palette59 = QPalette()
@@ -3226,111 +3229,111 @@ class Ui_MainWindow(object):
         self.label_90.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_21 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_21 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_21.setObjectName(u"graphicsView_21")
         self.graphicsView_21.setGeometry(QRect(18, 690, 860, 5))
         self.graphicsView_21.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: white;\n"
 "    border: 2px solid white;     \n"
 "}")
-        self.label_94 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_94 = QLabel(self.tab_tp_fpc)
         self.label_94.setObjectName(u"label_94")
         self.label_94.setGeometry(QRect(1300, 20, 50, 30))
         self.label_94.setFont(font1)
-        self.label_94.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/english.png"))
+        self.label_94.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/english.png"))
         self.label_94.setScaledContents(True)
-        self.label_95 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_95 = QLabel(self.tab_tp_fpc)
         self.label_95.setObjectName(u"label_95")
         self.label_95.setGeometry(QRect(1410, 20, 50, 30))
         self.label_95.setFont(font1)
-        self.label_95.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/vietnamese.png"))
+        self.label_95.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/vietnamese.png"))
         self.label_95.setScaledContents(True)
-        self.radioButton = QRadioButton(self.tab_5_token_fpc_insertion)
+        self.radioButton = QRadioButton(self.tab_tp_fpc)
         self.radioButton.setObjectName(u"radioButton")
-        self.radioButton.setGeometry(QRect(1240, 20, 52, 30))
+        self.radioButton.setGeometry(QRect(1240, 20, 60, 30))
         self.radioButton.setFont(font2)
         self.radioButton.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.radioButton.setIconSize(QSize(16, 12))
         self.radioButton.setChecked(True)
-        self.radioButton_2 = QRadioButton(self.tab_5_token_fpc_insertion)
+        self.radioButton_2 = QRadioButton(self.tab_tp_fpc)
         self.radioButton_2.setObjectName(u"radioButton_2")
         self.radioButton_2.setGeometry(QRect(1360, 20, 50, 30))
         self.radioButton_2.setFont(font2)
         self.radioButton_2.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_98 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_98 = QLabel(self.tab_tp_fpc)
         self.label_98.setObjectName(u"label_98")
-        self.label_98.setGeometry(QRect(830, 700, 50, 50))
+        self.label_98.setGeometry(QRect(830, 700, 40, 40))
         self.label_98.setFont(font1)
-        self.label_98.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/warning.png"))
+        self.label_98.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/warning.png"))
         self.label_98.setScaledContents(True)
-        self.graphicsView_25 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_25 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_25.setObjectName(u"graphicsView_25")
         self.graphicsView_25.setGeometry(QRect(460, 240, 5, 70))
         self.graphicsView_25.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_26 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_26 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_26.setObjectName(u"graphicsView_26")
         self.graphicsView_26.setGeometry(QRect(460, 310, 100, 5))
         self.graphicsView_26.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_27 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_27 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_27.setObjectName(u"graphicsView_27")
         self.graphicsView_27.setGeometry(QRect(340, 240, 5, 75))
         self.graphicsView_27.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_28 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_28 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_28.setObjectName(u"graphicsView_28")
         self.graphicsView_28.setGeometry(QRect(240, 310, 100, 5))
         self.graphicsView_28.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_29 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_29 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_29.setObjectName(u"graphicsView_29")
         self.graphicsView_29.setGeometry(QRect(180, 500, 450, 5))
         self.graphicsView_29.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_30 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_30 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_30.setObjectName(u"graphicsView_30")
         self.graphicsView_30.setGeometry(QRect(240, 240, 5, 70))
         self.graphicsView_30.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_31 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_31 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_31.setObjectName(u"graphicsView_31")
         self.graphicsView_31.setGeometry(QRect(560, 240, 5, 75))
         self.graphicsView_31.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_32 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_32 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_32.setObjectName(u"graphicsView_32")
         self.graphicsView_32.setGeometry(QRect(240, 240, 100, 5))
         self.graphicsView_32.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.graphicsView_33 = QGraphicsView(self.tab_5_token_fpc_insertion)
+        self.graphicsView_33 = QGraphicsView(self.tab_tp_fpc)
         self.graphicsView_33.setObjectName(u"graphicsView_33")
         self.graphicsView_33.setGeometry(QRect(460, 240, 100, 5))
         self.graphicsView_33.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: yellow;\n"
 "    border: 2px solid yellow;     \n"
 "}")
-        self.checkBox_11 = QCheckBox(self.tab_5_token_fpc_insertion)
+        self.checkBox_11 = QCheckBox(self.tab_tp_fpc)
         self.checkBox_11.setObjectName(u"checkBox_11")
         self.checkBox_11.setGeometry(QRect(18, 300, 151, 41))
         self.checkBox_11.setFont(font2)
@@ -3339,7 +3342,7 @@ class Ui_MainWindow(object):
 "}")
         self.checkBox_11.setCheckable(True)
         self.checkBox_11.setChecked(True)
-        self.label_175 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_175 = QLabel(self.tab_tp_fpc)
         self.label_175.setObjectName(u"label_175")
         self.label_175.setGeometry(QRect(18, 350, 161, 40))
         palette60 = QPalette()
@@ -3375,11 +3378,11 @@ class Ui_MainWindow(object):
         self.label_175.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.comboBox_2 = QComboBox(self.tab_5_token_fpc_insertion)
+        self.comboBox_2 = QComboBox(self.tab_tp_fpc)
         self.comboBox_2.setObjectName(u"comboBox_2")
         self.comboBox_2.setGeometry(QRect(18, 200, 151, 30))
         self.comboBox_2.setFont(font2)
-        self.label_178 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_178 = QLabel(self.tab_tp_fpc)
         self.label_178.setObjectName(u"label_178")
         self.label_178.setGeometry(QRect(18, 168, 151, 30))
         palette61 = QPalette()
@@ -3415,7 +3418,7 @@ class Ui_MainWindow(object):
         self.label_178.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_180 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_180 = QLabel(self.tab_tp_fpc)
         self.label_180.setObjectName(u"label_180")
         self.label_180.setGeometry(QRect(18, 400, 161, 40))
         palette62 = QPalette()
@@ -3451,14 +3454,14 @@ class Ui_MainWindow(object):
         self.label_180.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_13 = QCheckBox(self.tab_5_token_fpc_insertion)
+        self.checkBox_13 = QCheckBox(self.tab_tp_fpc)
         self.checkBox_13.setObjectName(u"checkBox_13")
         self.checkBox_13.setGeometry(QRect(18, 440, 158, 81))
         self.checkBox_13.setFont(font2)
         self.checkBox_13.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_187 = QLabel(self.tab_5_token_fpc_insertion)
+        self.label_187 = QLabel(self.tab_tp_fpc)
         self.label_187.setObjectName(u"label_187")
         self.label_187.setGeometry(QRect(18, 520, 161, 51))
         palette63 = QPalette()
@@ -3494,83 +3497,83 @@ class Ui_MainWindow(object):
         self.label_187.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.tabWidget.addTab(self.tab_5_token_fpc_insertion, "")
-        self.tab_benzel_pwb_position = QWidget()
-        self.tab_benzel_pwb_position.setObjectName(u"tab_benzel_pwb_position")
-        self.tab_benzel_pwb_position.setStyleSheet(u"QWidget {\n"
+        self.tabWidget.addTab(self.tab_tp_fpc, "")
+        self.tab_bezel_pwb_position = QWidget()
+        self.tab_bezel_pwb_position.setObjectName(u"tab_bezel_pwb_position")
+        self.tab_bezel_pwb_position.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.radioButton_13 = QRadioButton(self.tab_benzel_pwb_position)
+        self.radioButton_13 = QRadioButton(self.tab_bezel_pwb_position)
         self.radioButton_13.setObjectName(u"radioButton_13")
-        self.radioButton_13.setGeometry(QRect(1240, 20, 52, 30))
+        self.radioButton_13.setGeometry(QRect(1240, 20, 60, 30))
         self.radioButton_13.setFont(font2)
         self.radioButton_13.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.radioButton_13.setIconSize(QSize(16, 12))
         self.radioButton_13.setChecked(True)
-        self.label_305 = QLabel(self.tab_benzel_pwb_position)
+        self.label_305 = QLabel(self.tab_bezel_pwb_position)
         self.label_305.setObjectName(u"label_305")
         self.label_305.setGeometry(QRect(1410, 20, 50, 30))
         self.label_305.setFont(font1)
-        self.label_305.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/vietnamese.png"))
+        self.label_305.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/vietnamese.png"))
         self.label_305.setScaledContents(True)
-        self.label_306 = QLabel(self.tab_benzel_pwb_position)
+        self.label_306 = QLabel(self.tab_bezel_pwb_position)
         self.label_306.setObjectName(u"label_306")
         self.label_306.setGeometry(QRect(550, 10, 161, 30))
         self.label_306.setFont(font)
-        self.label_307 = QLabel(self.tab_benzel_pwb_position)
+        self.label_307 = QLabel(self.tab_bezel_pwb_position)
         self.label_307.setObjectName(u"label_307")
         self.label_307.setGeometry(QRect(18, 10, 161, 30))
         self.label_307.setFont(font)
-        self.label_308 = QLabel(self.tab_benzel_pwb_position)
+        self.label_308 = QLabel(self.tab_bezel_pwb_position)
         self.label_308.setObjectName(u"label_308")
         self.label_308.setGeometry(QRect(1300, 20, 50, 30))
         self.label_308.setFont(font1)
-        self.label_308.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/english.png"))
+        self.label_308.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/english.png"))
         self.label_308.setScaledContents(True)
-        self.radioButton_14 = QRadioButton(self.tab_benzel_pwb_position)
+        self.radioButton_14 = QRadioButton(self.tab_bezel_pwb_position)
         self.radioButton_14.setObjectName(u"radioButton_14")
         self.radioButton_14.setGeometry(QRect(1360, 20, 50, 30))
         self.radioButton_14.setFont(font2)
         self.radioButton_14.setStyleSheet(u"QRadioButton {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.lineEdit_29 = QLineEdit(self.tab_benzel_pwb_position)
+        self.lineEdit_29 = QLineEdit(self.tab_bezel_pwb_position)
         self.lineEdit_29.setObjectName(u"lineEdit_29")
         self.lineEdit_29.setGeometry(QRect(720, 10, 350, 30))
         self.lineEdit_29.setFont(font)
-        self.label_309 = QLabel(self.tab_benzel_pwb_position)
+        self.label_309 = QLabel(self.tab_bezel_pwb_position)
         self.label_309.setObjectName(u"label_309")
         self.label_309.setGeometry(QRect(1500, 0, 91, 71))
         self.label_309.setFont(font1)
         self.label_309.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_309.setScaledContents(True)
-        self.lineEdit_30 = QLineEdit(self.tab_benzel_pwb_position)
+        self.lineEdit_30 = QLineEdit(self.tab_bezel_pwb_position)
         self.lineEdit_30.setObjectName(u"lineEdit_30")
         self.lineEdit_30.setGeometry(QRect(180, 10, 250, 30))
         self.lineEdit_30.setFont(font4)
-        self.graphicsView_49 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_49 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_49.setObjectName(u"graphicsView_49")
         self.graphicsView_49.setGeometry(QRect(720, 105, 220, 220))
-        self.pushButton_51 = QPushButton(self.tab_benzel_pwb_position)
+        self.pushButton_51 = QPushButton(self.tab_bezel_pwb_position)
         self.pushButton_51.setObjectName(u"pushButton_51")
         self.pushButton_51.setGeometry(QRect(18, 108, 190, 30))
         self.pushButton_51.setFont(font2)
-        self.label_311 = QLabel(self.tab_benzel_pwb_position)
+        self.label_311 = QLabel(self.tab_bezel_pwb_position)
         self.label_311.setObjectName(u"label_311")
         self.label_311.setGeometry(QRect(770, 190, 131, 30))
         self.label_311.setFont(font1)
         self.label_311.setScaledContents(True)
-        self.graphicsView_50 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_50 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_50.setObjectName(u"graphicsView_50")
         self.graphicsView_50.setGeometry(QRect(180, 190, 250, 250))
-        self.label_313 = QLabel(self.tab_benzel_pwb_position)
+        self.label_313 = QLabel(self.tab_bezel_pwb_position)
         self.label_313.setObjectName(u"label_313")
         self.label_313.setGeometry(QRect(640, 65, 361, 30))
         self.label_313.setFont(font3)
-        self.checkBox_26 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_26 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_26.setObjectName(u"checkBox_26")
         self.checkBox_26.setGeometry(QRect(18, 50, 150, 20))
         self.checkBox_26.setFont(font2)
@@ -3578,38 +3581,38 @@ class Ui_MainWindow(object):
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.checkBox_26.setChecked(False)
-        self.label_314 = QLabel(self.tab_benzel_pwb_position)
+        self.label_314 = QLabel(self.tab_bezel_pwb_position)
         self.label_314.setObjectName(u"label_314")
         self.label_314.setGeometry(QRect(220, 150, 171, 30))
         self.label_314.setFont(font1)
-        self.checkBox_27 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_27 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_27.setObjectName(u"checkBox_27")
         self.checkBox_27.setGeometry(QRect(18, 80, 220, 20))
         self.checkBox_27.setFont(font2)
         self.checkBox_27.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_51 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_51 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_51.setObjectName(u"graphicsView_51")
         self.graphicsView_51.setGeometry(QRect(1070, 105, 220, 220))
-        self.checkBox_28 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_28 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_28.setObjectName(u"checkBox_28")
         self.checkBox_28.setGeometry(QRect(18, 140, 158, 20))
         self.checkBox_28.setFont(font2)
         self.checkBox_28.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_315 = QLabel(self.tab_benzel_pwb_position)
+        self.label_315 = QLabel(self.tab_bezel_pwb_position)
         self.label_315.setObjectName(u"label_315")
         self.label_315.setGeometry(QRect(250, 290, 131, 30))
         self.label_315.setFont(font1)
         self.label_315.setScaledContents(True)
-        self.label_310 = QLabel(self.tab_benzel_pwb_position)
+        self.label_310 = QLabel(self.tab_bezel_pwb_position)
         self.label_310.setObjectName(u"label_310")
         self.label_310.setGeometry(QRect(1120, 190, 131, 30))
         self.label_310.setFont(font1)
         self.label_310.setScaledContents(True)
-        self.label_102 = QLabel(self.tab_benzel_pwb_position)
+        self.label_102 = QLabel(self.tab_bezel_pwb_position)
         self.label_102.setObjectName(u"label_102")
         self.label_102.setGeometry(QRect(18, 740, 131, 50))
         palette64 = QPalette()
@@ -3645,7 +3648,7 @@ class Ui_MainWindow(object):
         self.label_102.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.label_81 = QLabel(self.tab_benzel_pwb_position)
+        self.label_81 = QLabel(self.tab_bezel_pwb_position)
         self.label_81.setObjectName(u"label_81")
         self.label_81.setGeometry(QRect(600, 690, 101, 30))
         palette65 = QPalette()
@@ -3681,7 +3684,7 @@ class Ui_MainWindow(object):
         self.label_81.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_103 = QLabel(self.tab_benzel_pwb_position)
+        self.label_103 = QLabel(self.tab_bezel_pwb_position)
         self.label_103.setObjectName(u"label_103")
         self.label_103.setGeometry(QRect(150, 740, 441, 50))
         palette66 = QPalette()
@@ -3717,7 +3720,7 @@ class Ui_MainWindow(object):
         self.label_103.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_104 = QLabel(self.tab_benzel_pwb_position)
+        self.label_104 = QLabel(self.tab_bezel_pwb_position)
         self.label_104.setObjectName(u"label_104")
         self.label_104.setGeometry(QRect(18, 610, 251, 30))
         palette67 = QPalette()
@@ -3753,7 +3756,7 @@ class Ui_MainWindow(object):
         self.label_104.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_105 = QLabel(self.tab_benzel_pwb_position)
+        self.label_105 = QLabel(self.tab_bezel_pwb_position)
         self.label_105.setObjectName(u"label_105")
         self.label_105.setGeometry(QRect(280, 690, 121, 30))
         palette68 = QPalette()
@@ -3789,13 +3792,13 @@ class Ui_MainWindow(object):
         self.label_105.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_108 = QLabel(self.tab_benzel_pwb_position)
+        self.label_108 = QLabel(self.tab_bezel_pwb_position)
         self.label_108.setObjectName(u"label_108")
-        self.label_108.setGeometry(QRect(600, 740, 50, 50))
+        self.label_108.setGeometry(QRect(600, 740, 40, 40))
         self.label_108.setFont(font1)
-        self.label_108.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/warning.png"))
+        self.label_108.setPixmap(QPixmap(u"../../../../../BoardDefectChecker/resources/warning.png"))
         self.label_108.setScaledContents(True)
-        self.label_133 = QLabel(self.tab_benzel_pwb_position)
+        self.label_133 = QLabel(self.tab_bezel_pwb_position)
         self.label_133.setObjectName(u"label_133")
         self.label_133.setGeometry(QRect(18, 650, 151, 30))
         palette69 = QPalette()
@@ -3831,7 +3834,7 @@ class Ui_MainWindow(object):
         self.label_133.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_157 = QLabel(self.tab_benzel_pwb_position)
+        self.label_157 = QLabel(self.tab_bezel_pwb_position)
         self.label_157.setObjectName(u"label_157")
         self.label_157.setGeometry(QRect(280, 650, 121, 30))
         palette70 = QPalette()
@@ -3867,7 +3870,7 @@ class Ui_MainWindow(object):
         self.label_157.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_158 = QLabel(self.tab_benzel_pwb_position)
+        self.label_158 = QLabel(self.tab_bezel_pwb_position)
         self.label_158.setObjectName(u"label_158")
         self.label_158.setGeometry(QRect(280, 610, 111, 30))
         palette71 = QPalette()
@@ -3903,7 +3906,7 @@ class Ui_MainWindow(object):
         self.label_158.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_159 = QLabel(self.tab_benzel_pwb_position)
+        self.label_159 = QLabel(self.tab_bezel_pwb_position)
         self.label_159.setObjectName(u"label_159")
         self.label_159.setGeometry(QRect(410, 690, 181, 30))
         palette72 = QPalette()
@@ -3939,14 +3942,14 @@ class Ui_MainWindow(object):
         self.label_159.setStyleSheet(u"QLabel {\n"
 "    color: #23b5d8; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_23 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_23 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_23.setObjectName(u"graphicsView_23")
         self.graphicsView_23.setGeometry(QRect(18, 730, 630, 5))
         self.graphicsView_23.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: white;\n"
 "    border: 2px solid white;     \n"
 "}")
-        self.label_160 = QLabel(self.tab_benzel_pwb_position)
+        self.label_160 = QLabel(self.tab_bezel_pwb_position)
         self.label_160.setObjectName(u"label_160")
         self.label_160.setGeometry(QRect(520, 610, 131, 30))
         palette73 = QPalette()
@@ -3982,7 +3985,7 @@ class Ui_MainWindow(object):
         self.label_160.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_161 = QLabel(self.tab_benzel_pwb_position)
+        self.label_161 = QLabel(self.tab_bezel_pwb_position)
         self.label_161.setObjectName(u"label_161")
         self.label_161.setGeometry(QRect(600, 650, 101, 30))
         palette74 = QPalette()
@@ -4018,7 +4021,7 @@ class Ui_MainWindow(object):
         self.label_161.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_162 = QLabel(self.tab_benzel_pwb_position)
+        self.label_162 = QLabel(self.tab_bezel_pwb_position)
         self.label_162.setObjectName(u"label_162")
         self.label_162.setGeometry(QRect(410, 650, 191, 30))
         palette75 = QPalette()
@@ -4054,7 +4057,7 @@ class Ui_MainWindow(object):
         self.label_162.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
-        self.label_163 = QLabel(self.tab_benzel_pwb_position)
+        self.label_163 = QLabel(self.tab_bezel_pwb_position)
         self.label_163.setObjectName(u"label_163")
         self.label_163.setGeometry(QRect(18, 690, 161, 30))
         palette76 = QPalette()
@@ -4090,7 +4093,7 @@ class Ui_MainWindow(object):
         self.label_163.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_164 = QLabel(self.tab_benzel_pwb_position)
+        self.label_164 = QLabel(self.tab_bezel_pwb_position)
         self.label_164.setObjectName(u"label_164")
         self.label_164.setGeometry(QRect(410, 610, 108, 30))
         palette77 = QPalette()
@@ -4126,7 +4129,7 @@ class Ui_MainWindow(object):
         self.label_164.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_165 = QLabel(self.tab_benzel_pwb_position)
+        self.label_165 = QLabel(self.tab_bezel_pwb_position)
         self.label_165.setObjectName(u"label_165")
         self.label_165.setGeometry(QRect(1070, 650, 141, 30))
         palette78 = QPalette()
@@ -4162,7 +4165,7 @@ class Ui_MainWindow(object):
         self.label_165.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_166 = QLabel(self.tab_benzel_pwb_position)
+        self.label_166 = QLabel(self.tab_bezel_pwb_position)
         self.label_166.setObjectName(u"label_166")
         self.label_166.setGeometry(QRect(860, 650, 121, 30))
         palette79 = QPalette()
@@ -4198,14 +4201,14 @@ class Ui_MainWindow(object):
         self.label_166.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_167 = QLabel(self.tab_benzel_pwb_position)
+        self.label_167 = QLabel(self.tab_bezel_pwb_position)
         self.label_167.setObjectName(u"label_167")
         self.label_167.setGeometry(QRect(1335, 585, 61, 51))
         self.label_167.setFont(font8)
         self.label_167.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_168 = QLabel(self.tab_benzel_pwb_position)
+        self.label_168 = QLabel(self.tab_bezel_pwb_position)
         self.label_168.setObjectName(u"label_168")
         self.label_168.setGeometry(QRect(1210, 650, 121, 30))
         palette80 = QPalette()
@@ -4241,7 +4244,7 @@ class Ui_MainWindow(object):
         self.label_168.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_169 = QLabel(self.tab_benzel_pwb_position)
+        self.label_169 = QLabel(self.tab_bezel_pwb_position)
         self.label_169.setObjectName(u"label_169")
         self.label_169.setGeometry(QRect(720, 560, 251, 81))
         palette81 = QPalette()
@@ -4277,7 +4280,7 @@ class Ui_MainWindow(object):
         self.label_169.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_170 = QLabel(self.tab_benzel_pwb_position)
+        self.label_170 = QLabel(self.tab_bezel_pwb_position)
         self.label_170.setObjectName(u"label_170")
         self.label_170.setGeometry(QRect(720, 720, 301, 50))
         palette82 = QPalette()
@@ -4313,14 +4316,14 @@ class Ui_MainWindow(object):
         self.label_170.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.label_171 = QLabel(self.tab_benzel_pwb_position)
+        self.label_171 = QLabel(self.tab_bezel_pwb_position)
         self.label_171.setObjectName(u"label_171")
         self.label_171.setGeometry(QRect(1065, 690, 121, 111))
         self.label_171.setFont(font10)
         self.label_171.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_172 = QLabel(self.tab_benzel_pwb_position)
+        self.label_172 = QLabel(self.tab_bezel_pwb_position)
         self.label_172.setObjectName(u"label_172")
         self.label_172.setGeometry(QRect(1070, 560, 251, 81))
         palette83 = QPalette()
@@ -4356,7 +4359,7 @@ class Ui_MainWindow(object):
         self.label_172.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_173 = QLabel(self.tab_benzel_pwb_position)
+        self.label_173 = QLabel(self.tab_bezel_pwb_position)
         self.label_173.setObjectName(u"label_173")
         self.label_173.setGeometry(QRect(720, 650, 131, 30))
         palette84 = QPalette()
@@ -4392,14 +4395,14 @@ class Ui_MainWindow(object):
         self.label_173.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_174 = QLabel(self.tab_benzel_pwb_position)
+        self.label_174 = QLabel(self.tab_bezel_pwb_position)
         self.label_174.setObjectName(u"label_174")
         self.label_174.setGeometry(QRect(990, 585, 61, 51))
         self.label_174.setFont(font8)
         self.label_174.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_12 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_12 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_12.setObjectName(u"checkBox_12")
         self.checkBox_12.setGeometry(QRect(18, 170, 151, 41))
         self.checkBox_12.setFont(font2)
@@ -4408,7 +4411,7 @@ class Ui_MainWindow(object):
 "}")
         self.checkBox_12.setCheckable(True)
         self.checkBox_12.setChecked(True)
-        self.label_177 = QLabel(self.tab_benzel_pwb_position)
+        self.label_177 = QLabel(self.tab_bezel_pwb_position)
         self.label_177.setObjectName(u"label_177")
         self.label_177.setGeometry(QRect(18, 220, 161, 40))
         palette85 = QPalette()
@@ -4444,7 +4447,7 @@ class Ui_MainWindow(object):
         self.label_177.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.label_182 = QLabel(self.tab_benzel_pwb_position)
+        self.label_182 = QLabel(self.tab_bezel_pwb_position)
         self.label_182.setObjectName(u"label_182")
         self.label_182.setGeometry(QRect(18, 270, 161, 40))
         palette86 = QPalette()
@@ -4480,7 +4483,7 @@ class Ui_MainWindow(object):
         self.label_182.setStyleSheet(u"QLabel {\n"
 "    color: #25be7c; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_14 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_14 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_14.setObjectName(u"checkBox_14")
         self.checkBox_14.setGeometry(QRect(18, 310, 158, 81))
         self.checkBox_14.setFont(font2)
@@ -4488,39 +4491,39 @@ class Ui_MainWindow(object):
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
         self.checkBox_14.setChecked(True)
-        self.label_316 = QLabel(self.tab_benzel_pwb_position)
+        self.label_316 = QLabel(self.tab_bezel_pwb_position)
         self.label_316.setObjectName(u"label_316")
         self.label_316.setGeometry(QRect(1020, 65, 371, 30))
         self.label_316.setFont(font3)
-        self.graphicsView_52 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_52 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_52.setObjectName(u"graphicsView_52")
         self.graphicsView_52.setGeometry(QRect(1070, 335, 220, 220))
-        self.label_317 = QLabel(self.tab_benzel_pwb_position)
+        self.label_317 = QLabel(self.tab_bezel_pwb_position)
         self.label_317.setObjectName(u"label_317")
         self.label_317.setGeometry(QRect(1120, 420, 131, 30))
         self.label_317.setFont(font1)
         self.label_317.setScaledContents(True)
-        self.graphicsView_53 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_53 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_53.setObjectName(u"graphicsView_53")
         self.graphicsView_53.setGeometry(QRect(720, 335, 220, 220))
-        self.label_319 = QLabel(self.tab_benzel_pwb_position)
+        self.label_319 = QLabel(self.tab_bezel_pwb_position)
         self.label_319.setObjectName(u"label_319")
         self.label_319.setGeometry(QRect(770, 420, 131, 30))
         self.label_319.setFont(font1)
         self.label_319.setScaledContents(True)
-        self.label_320 = QLabel(self.tab_benzel_pwb_position)
+        self.label_320 = QLabel(self.tab_bezel_pwb_position)
         self.label_320.setObjectName(u"label_320")
         self.label_320.setGeometry(QRect(1380, 195, 221, 30))
         self.label_320.setFont(font3)
-        self.graphicsView_54 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_54 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_54.setObjectName(u"graphicsView_54")
         self.graphicsView_54.setGeometry(QRect(1340, 230, 220, 220))
-        self.label_321 = QLabel(self.tab_benzel_pwb_position)
+        self.label_321 = QLabel(self.tab_bezel_pwb_position)
         self.label_321.setObjectName(u"label_321")
         self.label_321.setGeometry(QRect(1390, 315, 131, 30))
         self.label_321.setFont(font1)
         self.label_321.setScaledContents(True)
-        self.label_183 = QLabel(self.tab_benzel_pwb_position)
+        self.label_183 = QLabel(self.tab_bezel_pwb_position)
         self.label_183.setObjectName(u"label_183")
         self.label_183.setGeometry(QRect(1340, 460, 151, 30))
         palette87 = QPalette()
@@ -4556,14 +4559,14 @@ class Ui_MainWindow(object):
         self.label_183.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.checkBox_15 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_15 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_15.setObjectName(u"checkBox_15")
         self.checkBox_15.setGeometry(QRect(18, 388, 158, 51))
         self.checkBox_15.setFont(font2)
         self.checkBox_15.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_184 = QLabel(self.tab_benzel_pwb_position)
+        self.label_184 = QLabel(self.tab_bezel_pwb_position)
         self.label_184.setObjectName(u"label_184")
         self.label_184.setGeometry(QRect(1340, 490, 221, 30))
         palette88 = QPalette()
@@ -4599,31 +4602,31 @@ class Ui_MainWindow(object):
         self.label_184.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_55 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_55 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_55.setObjectName(u"graphicsView_55")
         self.graphicsView_55.setGeometry(QRect(450, 190, 250, 250))
-        self.label_318 = QLabel(self.tab_benzel_pwb_position)
+        self.label_318 = QLabel(self.tab_bezel_pwb_position)
         self.label_318.setObjectName(u"label_318")
         self.label_318.setGeometry(QRect(490, 150, 171, 30))
         self.label_318.setFont(font1)
-        self.label_322 = QLabel(self.tab_benzel_pwb_position)
+        self.label_322 = QLabel(self.tab_bezel_pwb_position)
         self.label_322.setObjectName(u"label_322")
         self.label_322.setGeometry(QRect(520, 290, 131, 30))
         self.label_322.setFont(font1)
         self.label_322.setScaledContents(True)
-        self.pushButton_54 = QPushButton(self.tab_benzel_pwb_position)
+        self.pushButton_54 = QPushButton(self.tab_bezel_pwb_position)
         self.pushButton_54.setObjectName(u"pushButton_54")
         self.pushButton_54.setGeometry(QRect(180, 520, 250, 30))
         self.pushButton_54.setFont(font2)
-        self.pushButton_55 = QPushButton(self.tab_benzel_pwb_position)
+        self.pushButton_55 = QPushButton(self.tab_bezel_pwb_position)
         self.pushButton_55.setObjectName(u"pushButton_55")
         self.pushButton_55.setGeometry(QRect(450, 520, 250, 30))
         self.pushButton_55.setFont(font2)
-        self.comboBox_4 = QComboBox(self.tab_benzel_pwb_position)
+        self.comboBox_4 = QComboBox(self.tab_bezel_pwb_position)
         self.comboBox_4.setObjectName(u"comboBox_4")
         self.comboBox_4.setGeometry(QRect(180, 480, 250, 30))
         self.comboBox_4.setFont(font2)
-        self.label_185 = QLabel(self.tab_benzel_pwb_position)
+        self.label_185 = QLabel(self.tab_bezel_pwb_position)
         self.label_185.setObjectName(u"label_185")
         self.label_185.setGeometry(QRect(230, 448, 151, 30))
         palette89 = QPalette()
@@ -4659,7 +4662,7 @@ class Ui_MainWindow(object):
         self.label_185.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.label_186 = QLabel(self.tab_benzel_pwb_position)
+        self.label_186 = QLabel(self.tab_bezel_pwb_position)
         self.label_186.setObjectName(u"label_186")
         self.label_186.setGeometry(QRect(500, 448, 151, 30))
         palette90 = QPalette()
@@ -4695,25 +4698,25 @@ class Ui_MainWindow(object):
         self.label_186.setStyleSheet(u"QLabel {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.comboBox_5 = QComboBox(self.tab_benzel_pwb_position)
+        self.comboBox_5 = QComboBox(self.tab_bezel_pwb_position)
         self.comboBox_5.setObjectName(u"comboBox_5")
         self.comboBox_5.setGeometry(QRect(450, 480, 250, 30))
         self.comboBox_5.setFont(font2)
-        self.checkBox_16 = QCheckBox(self.tab_benzel_pwb_position)
+        self.checkBox_16 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_16.setObjectName(u"checkBox_16")
         self.checkBox_16.setGeometry(QRect(18, 440, 158, 30))
         self.checkBox_16.setFont(font2)
         self.checkBox_16.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
-        self.graphicsView_24 = QGraphicsView(self.tab_benzel_pwb_position)
+        self.graphicsView_24 = QGraphicsView(self.tab_bezel_pwb_position)
         self.graphicsView_24.setObjectName(u"graphicsView_24")
         self.graphicsView_24.setGeometry(QRect(18, 605, 630, 5))
         self.graphicsView_24.setStyleSheet(u"QGraphicsView {\n"
 "    background-color: white;\n"
 "    border: 2px solid white;     \n"
 "}")
-        self.label_179 = QLabel(self.tab_benzel_pwb_position)
+        self.label_179 = QLabel(self.tab_bezel_pwb_position)
         self.label_179.setObjectName(u"label_179")
         self.label_179.setGeometry(QRect(18, 470, 161, 51))
         palette91 = QPalette()
@@ -4749,33 +4752,33 @@ class Ui_MainWindow(object):
         self.label_179.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
-        self.tabWidget.addTab(self.tab_benzel_pwb_position, "")
-        self.tab_3 = QWidget()
-        self.tab_3.setObjectName(u"tab_3")
-        self.tab_3.setStyleSheet(u"QWidget {\n"
+        self.tabWidget.addTab(self.tab_bezel_pwb_position, "")
+        self.tab_robotic_arm = QWidget()
+        self.tab_robotic_arm.setObjectName(u"tab_robotic_arm")
+        self.tab_robotic_arm.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.label_38 = QLabel(self.tab_3)
+        self.label_38 = QLabel(self.tab_robotic_arm)
         self.label_38.setObjectName(u"label_38")
         self.label_38.setGeometry(QRect(1270, 0, 91, 71))
         self.label_38.setFont(font1)
         self.label_38.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_38.setScaledContents(True)
-        self.tabWidget.addTab(self.tab_3, "")
-        self.tab_2 = QWidget()
-        self.tab_2.setObjectName(u"tab_2")
-        self.tab_2.setStyleSheet(u"QWidget {\n"
+        self.tabWidget.addTab(self.tab_robotic_arm, "")
+        self.tab_operation_log = QWidget()
+        self.tab_operation_log.setObjectName(u"tab_operation_log")
+        self.tab_operation_log.setStyleSheet(u"QWidget {\n"
 "    background-color: #3b3c3c; /* Set your desired background color for this tab's content */\n"
 "	color: white\n"
 "}")
-        self.label_93 = QLabel(self.tab_2)
+        self.label_93 = QLabel(self.tab_operation_log)
         self.label_93.setObjectName(u"label_93")
         self.label_93.setGeometry(QRect(1270, 0, 91, 71))
         self.label_93.setFont(font1)
         self.label_93.setPixmap(QPixmap(u"../resources/sharp_logo.png"))
         self.label_93.setScaledContents(True)
-        self.tabWidget.addTab(self.tab_2, "")
+        self.tabWidget.addTab(self.tab_operation_log, "")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -4793,7 +4796,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Board Defect Checker - v1.0.2203", None))
         self.label_37.setText("")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), QCoreApplication.translate("MainWindow", u"AOI machine", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_aoi_machine), QCoreApplication.translate("MainWindow", u"AOI machine", None))
         self.label_36.setText("")
         self.checkBox_6.setText(QCoreApplication.translate("MainWindow", u"Display processed images", None))
         self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u"Open Camera Setting", None))
@@ -4906,7 +4909,7 @@ class Ui_MainWindow(object):
         self.radioButton_6.setText(QCoreApplication.translate("MainWindow", u"VIE", None))
         self.label_100.setText("")
         self.label_101.setText("")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_6_mounting), QCoreApplication.translate("MainWindow", u"FPC mounting machine", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_fpc_mounting_machine), QCoreApplication.translate("MainWindow", u"FPC mounting machine", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_optional_aoi), QCoreApplication.translate("MainWindow", u"Optional AOI checker", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"QC Staff ID:", None))
         self.lineEdit_2.setText("")
@@ -4919,7 +4922,7 @@ class Ui_MainWindow(object):
 "defect check result:", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"FPC fit \n"
 "defect check result:", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"--", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"NG", None))
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"Main camera connection status:", None))
         self.label_12.setText(QCoreApplication.translate("MainWindow", u"Config file loaded:", None))
         self.label_13.setText(QCoreApplication.translate("MainWindow", u"Detected part count:", None))
@@ -4933,11 +4936,11 @@ class Ui_MainWindow(object):
         self.label_21.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.label_22.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.label_23.setText(QCoreApplication.translate("MainWindow", u"Defect check result:", None))
-        self.label_24.setText(QCoreApplication.translate("MainWindow", u"--", None))
-        self.label_25.setText(QCoreApplication.translate("MainWindow", u"--", None))
-        self.label_26.setText(QCoreApplication.translate("MainWindow", u"Image display", None))
-        self.label_27.setText(QCoreApplication.translate("MainWindow", u"Image display", None))
-        self.label_29.setText(QCoreApplication.translate("MainWindow", u"Image display", None))
+        self.label_24.setText(QCoreApplication.translate("MainWindow", u"NG", None))
+        self.label_25.setText(QCoreApplication.translate("MainWindow", u"NG", None))
+        self.label_26.setText("")
+        self.label_27.setText("")
+        self.label_29.setText("")
         self.label_28.setText("")
         self.checkBox.setText(QCoreApplication.translate("MainWindow", u"Turn on counter", None))
         self.checkBox_2.setText(QCoreApplication.translate("MainWindow", u"Display processed images", None))
@@ -4945,9 +4948,9 @@ class Ui_MainWindow(object):
         self.lineEdit_3.setText("")
         self.checkBox_3.setText(QCoreApplication.translate("MainWindow", u"Use histogram", None))
         self.label_31.setText(QCoreApplication.translate("MainWindow", u"Processing time:", None))
-        self.label_32.setText(QCoreApplication.translate("MainWindow", u"--", None))
+        self.label_32.setText(QCoreApplication.translate("MainWindow", u"3.25 seconds", None))
         self.label_33.setText(QCoreApplication.translate("MainWindow", u"Processing time:", None))
-        self.label_34.setText(QCoreApplication.translate("MainWindow", u"--", None))
+        self.label_34.setText(QCoreApplication.translate("MainWindow", u"3.25 seconds", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Open Camera Setting", None))
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Start Video Streaming", None))
         self.checkBox_4.setText(QCoreApplication.translate("MainWindow", u"Lock options", None))
@@ -4967,7 +4970,7 @@ class Ui_MainWindow(object):
         self.label_64.setText(QCoreApplication.translate("MainWindow", u"Choose camera IP:", None))
         self.label_181.setText(QCoreApplication.translate("MainWindow", u"Gi\u1edbi h\u1ea1n \u1ed5 \u0111\u0129a tr\u1ed1ng: \n"
 "5GB", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_small_fpc_insertion), QCoreApplication.translate("MainWindow", u"LED FPC insertion checker", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_led_fpc), QCoreApplication.translate("MainWindow", u"LED FPC insertion checker", None))
         self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"Start Video Streaming", None))
         self.label_35.setText(QCoreApplication.translate("MainWindow", u"Detected NG part count:", None))
         self.label_58.setText(QCoreApplication.translate("MainWindow", u"Main camera connection status:", None))
@@ -5019,7 +5022,7 @@ class Ui_MainWindow(object):
 "(Panel can rotate\n"
 " freely)", None))
         self.label_187.setText(QCoreApplication.translate("MainWindow", u"--", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5_token_fpc_insertion), QCoreApplication.translate("MainWindow", u"TP FPC insertion checker", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_tp_fpc), QCoreApplication.translate("MainWindow", u"TP FPC insertion checker", None))
         self.radioButton_13.setText(QCoreApplication.translate("MainWindow", u"ENG", None))
         self.label_305.setText("")
         self.label_306.setText(QCoreApplication.translate("MainWindow", u"Part Number:", None))
@@ -5096,10 +5099,10 @@ class Ui_MainWindow(object):
         self.comboBox_5.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Camera IP", None))
         self.checkBox_16.setText(QCoreApplication.translate("MainWindow", u"Check bezel only", None))
         self.label_179.setText(QCoreApplication.translate("MainWindow", u"--", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_benzel_pwb_position), QCoreApplication.translate("MainWindow", u"Bezel - PWB position checker", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_bezel_pwb_position), QCoreApplication.translate("MainWindow", u"Bezel - PWB position checker", None))
         self.label_38.setText("")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QCoreApplication.translate("MainWindow", u"Detection log", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_robotic_arm), QCoreApplication.translate("MainWindow", u"Robotic arm", None))
         self.label_93.setText("")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Setting", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_operation_log), QCoreApplication.translate("MainWindow", u"Operation log", None))
     # retranslateUi
 

@@ -135,7 +135,7 @@ def run_learning_process(session_name: Optional[str] = None):
     """
     print("Starting Feature Learning Tool...")
     # --- Configuration ---
-    PROJECT_ROOT_ABS = r"D:\Working\BoardDefectChecker" # Adjust if needed
+    PROJECT_ROOT_ABS = r"C:\Work\Sharp\AOI\BoardDefectChecker" # Adjust if needed
     SAMPLE_IMAGE_DIR = r"C:\BoardDefectChecker\images\samples_for_learning" # Adjust if needed
     AI_MODEL_DIR = os.path.join(PROJECT_ROOT_ABS, "ai-models")
     CONFIG_OUTPUT_DIR = r"C:\BoardDefectChecker\ai-training-data"

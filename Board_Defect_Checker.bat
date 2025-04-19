@@ -1,6 +1,6 @@
 @echo off
 REM Change directory to your project folder (adjust the path as needed)
-cd /d "D:\Working\BoardDefectChecker"
+cd /d "C:\Work\Sharp\AOI\BoardDefectChecker"
 
 REM Activate the virtual environment (using the batch activation script)
 call .venv\Scripts\activate

@@ -18,6 +18,27 @@ import imagingcontrol4 as ic4
 class MainWindow(QMainWindow):
     def __init__(self, detection_log_worker):
         super().__init__()
+
+        # --- >> ADDED BLOCK for Window Icon (Using Absolute Path) << ---
+        self.setWindowTitle("Board Defect Checker - v.1.0.1904")  # Set your desired window title here
+        try:
+            # --- Use the specific absolute path provided ---
+            absolute_icon_path = r"C:\BoardDefectChecker\resources\software_icon.ico"  # Raw string for Windows path
+
+            if os.path.exists(absolute_icon_path):
+                # QIcon is already imported at the top of the file
+                app_icon = QIcon(absolute_icon_path)
+                self.setWindowIcon(app_icon)
+                print(f"Window icon set successfully from: {absolute_icon_path}")
+            else:
+                print(f"Warning: Icon file not found at the specified path: {absolute_icon_path}")
+
+        except Exception as e:
+            print(f"Error setting window icon: {e}")
+        # --- End of Added Block ---
+
+        self.display_widget = None
+        self.snap_worker = None
         self.current_connection_state = None
         self.ui = Ui_MainWindow()  # Assuming you have a setup method for the UI
         self.ui.setupUi(self)
@@ -127,7 +148,7 @@ class MainWindow(QMainWindow):
 
         # Initialize AI model runner
         self.small_fpc_ai_model_runner = SmallFPCFastImageSegmenter(model_type='x',
-                                                                    model_path="D:\\Working\\BoardDefectChecker\\ai-models\\",
+                                                                    model_path="C:\\Work\\BoardDefectChecker\\ai-models\\",
                                                                     angle_difference_threshold=1.2)
         self.model_manager = ModelManager()
 
@@ -194,7 +215,7 @@ class MainWindow(QMainWindow):
         self.main_lang_manager.set_language("en")
         print("Tab is now:", self.main_lang_manager.current_tab)
         print("Language is now:", self.main_lang_manager.current_language)
-        #self.apply_main_translations()
+        # self.apply_main_translations()
 
         # Radio buttons for language switching (radioButton_3 for ENG, radioButton_4 for VIE)
         self.ui.radioButton_3.toggled.connect(self.on_main_english_selected)
@@ -255,15 +276,16 @@ class MainWindow(QMainWindow):
                 self.current_connection_state if hasattr(self, 'current_connection_state') else False
             )
             # Update tab names for English
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Setting")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Detection log")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "AOI checking machine")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion),
-                                         "TOKEN FPC insertion checker")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_6_mounting), "FPC mounting machine")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_benzel_pwb_position),
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_operation_log), "Operation log")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_robotic_arm), "Robotic arm")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_aoi_machine), "AOI checking machine")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_tp_fpc),
+                                         "TP FPC insertion checker")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_fpc_mounting_machine),
+                                         "FPC mounting machine")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_bezel_pwb_position),
                                          "Bezel - PWB position checker")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion),
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_led_fpc),
                                          "LED FPC insertion checker")
 
     def on_main_vietnamese_selected(self, checked):
@@ -274,14 +296,19 @@ class MainWindow(QMainWindow):
                 self.current_connection_state if hasattr(self, 'current_connection_state') else False
             )
             # Update tab names for Vietnamese
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_2), "Cài đặt")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_3), "Nhật ký kiểm tra")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_4), "Máy kiểm AOI tự động")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_5_token_fpc_insertion), "Kiểm TOKEN FPC")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_6_mounting), "Máy gắn FPC tự động")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_benzel_pwb_position),
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_operation_log), "Nhật ký hoạt động")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_robotic_arm), "Cánh tay robot")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_aoi_machine), "Máy kiểm AOI tự động")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_tp_fpc),
+                                         "Kiểm TP FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_fpc_mounting_machine),
+                                         "Máy gắn FPC tự động")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_bezel_pwb_position),
                                          "Kiểm bẻ ngàm - dán PWB")
-            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_small_fpc_insertion), "Kiểm LED FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_led_fpc),
+                                         "Kiểm LED FPC")
+            self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_optional_aoi),
+                                         "Kiểm AOI tùy chọn")
 
     def start_video_streaming(self):
         if not self.snap_worker.running:
@@ -340,7 +367,7 @@ class MainWindow(QMainWindow):
             print("UI updated: Camera Disconnected")
 
             # Stop streaming if the camera is disconnected
-            if self.snap_worker.running:
+            if self.snap_worker is not None and self.snap_worker is not None and self.snap_worker.running:
                 self.snap_worker.stop()
                 print("Snap sink worker stopped")
 
