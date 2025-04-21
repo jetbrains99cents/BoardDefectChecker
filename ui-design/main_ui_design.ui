@@ -4273,7 +4273,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/left-turn-arrow.png</normaloff>../../../../../BoardDefectChecker/resources/left-turn-arrow.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/left-turn-arrow.png</normaloff>../../../BoardDefectChecker/resources/left-turn-arrow.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4296,7 +4296,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/right-turn-arrow.png</normaloff>../../../../../BoardDefectChecker/resources/right-turn-arrow.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/right-turn-arrow.png</normaloff>../../../BoardDefectChecker/resources/right-turn-arrow.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4543,7 +4543,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/up-left-turn.png</normaloff>../../../../../BoardDefectChecker/resources/up-left-turn.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/up-left-turn.png</normaloff>../../../BoardDefectChecker/resources/up-left-turn.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4566,7 +4566,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/down-right-turn.png</normaloff>../../../../../BoardDefectChecker/resources/down-right-turn.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/down-right-turn.png</normaloff>../../../BoardDefectChecker/resources/down-right-turn.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4639,7 +4639,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/reset.png</normaloff>../../../../../BoardDefectChecker/resources/reset.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/reset.png</normaloff>../../../BoardDefectChecker/resources/reset.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4687,7 +4687,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/stamping.png</normaloff>../../../../../BoardDefectChecker/resources/stamping.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/stamping.png</normaloff>../../../BoardDefectChecker/resources/stamping.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4735,7 +4735,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/gripper.png</normaloff>../../../../../BoardDefectChecker/resources/gripper.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/gripper.png</normaloff>../../../BoardDefectChecker/resources/gripper.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4783,7 +4783,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/hook.png</normaloff>../../../../../BoardDefectChecker/resources/hook.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/hook.png</normaloff>../../../BoardDefectChecker/resources/hook.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4856,7 +4856,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/open_connector.png</normaloff>../../../../../BoardDefectChecker/resources/open_connector.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/open_connector.png</normaloff>../../../BoardDefectChecker/resources/open_connector.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4904,7 +4904,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/close_connector.png</normaloff>../../../../../BoardDefectChecker/resources/close_connector.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/close_connector.png</normaloff>../../../BoardDefectChecker/resources/close_connector.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -4990,7 +4990,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -5016,7 +5016,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -5042,7 +5042,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -5068,7 +5068,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -5094,7 +5094,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -5114,7 +5114,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/hold_connector.png</normaloff>../../../../../BoardDefectChecker/resources/hold_connector.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/hold_connector.png</normaloff>../../../BoardDefectChecker/resources/hold_connector.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -5168,7 +5168,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -5636,7 +5636,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/stop.png</normaloff>../../../../../BoardDefectChecker/resources/stop.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/stop.png</normaloff>../../../BoardDefectChecker/resources/stop.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -6144,7 +6144,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../../../../BoardDefectChecker/resources/laser.png</normaloff>../../../../../BoardDefectChecker/resources/laser.png</iconset>
+        <normaloff>../../../BoardDefectChecker/resources/laser.png</normaloff>../../../BoardDefectChecker/resources/laser.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -6173,7 +6173,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/available.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/available.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -6281,7 +6281,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/vietnamese.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/vietnamese.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -6307,7 +6307,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/english.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/english.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -11938,7 +11938,7 @@ defect check result:</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/english.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/english.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -11964,7 +11964,7 @@ defect check result:</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/vietnamese.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/vietnamese.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -11990,7 +11990,7 @@ defect check result:</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/warning.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/warning.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -16994,7 +16994,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/english.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/english.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -17020,7 +17020,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/vietnamese.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/vietnamese.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -17103,7 +17103,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/warning.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/warning.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -18297,7 +18297,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/vietnamese.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/vietnamese.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -18363,7 +18363,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/english.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/english.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -19832,7 +19832,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../BoardDefectChecker/resources/warning.png</pixmap>
+       <pixmap>../../../BoardDefectChecker/resources/warning.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>

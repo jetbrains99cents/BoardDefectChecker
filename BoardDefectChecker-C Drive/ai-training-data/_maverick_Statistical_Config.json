@@ -1,0 +1,90 @@
+{
+  "target_objects": {
+    "bezel": {
+      "expected_evaluation_count": 1,
+      "total_samples_labeled": 33,
+      "feature_ranges": {
+        "area": [
+          13238.0,
+          43065.0
+        ],
+        "aspect_ratio": [
+          0.146,
+          0.277
+        ],
+        "larger_dim": [
+          486.845,
+          677.683
+        ],
+        "smaller_dim": [
+          85.006,
+          156.821
+        ],
+        "perimeter": [
+          880.627,
+          1807.631
+        ]
+      }
+    },
+    "copper_mark": {
+      "expected_evaluation_count": 2,
+      "total_samples_labeled": 67,
+      "feature_ranges": {
+        "area": [
+          1620.85,
+          3363.15
+        ],
+        "aspect_ratio": [
+          0.192,
+          0.331
+        ],
+        "larger_dim": [
+          99.805,
+          118.609
+        ],
+        "smaller_dim": [
+          20.219,
+          35.998
+        ],
+        "perimeter": [
+          234.104,
+          301.283
+        ]
+      }
+    }
+  },
+  "distance_constraints": {
+    "bezel-copper_mark": {
+      "range": [
+        40.184,
+        326.02
+      ],
+      "mean": 169.314,
+      "stddev": 52.317,
+      "count": 62
+    }
+  },
+  "overlap_rules": [
+    {
+      "objects": [
+        "bezel",
+        "copper_mark"
+      ],
+      "mode": "absolute"
+    },
+    {
+      "objects": [
+        "bezel",
+        "bezel"
+      ],
+      "mode": "absolute"
+    },
+    {
+      "objects": [
+        "copper_mark",
+        "copper_mark"
+      ],
+      "mode": "absolute"
+    }
+  ]
+}

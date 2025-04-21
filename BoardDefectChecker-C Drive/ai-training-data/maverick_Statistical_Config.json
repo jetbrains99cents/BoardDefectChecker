@@ -2,53 +2,79 @@
   "target_objects": {
     "bezel": {
       "expected_evaluation_count": 1,
-      "total_samples_labeled": 33,
+      "total_samples_labeled": 198,
       "feature_ranges": {
         "area": [
-          13238.0,
-          43065.0
+          11401.8,
+          42176.2
         ],
         "aspect_ratio": [
-          0.146,
-          0.277
+          0.129,
+          0.279
         ],
         "larger_dim": [
-          486.845,
-          677.683
+          384.11,
+          677.796
         ],
         "smaller_dim": [
-          85.006,
-          156.821
+          58.421,
+          158.85
         ],
         "perimeter": [
-          880.627,
-          1807.631
+          728.169,
+          1890.457
         ]
       }
     },
     "copper_mark": {
       "expected_evaluation_count": 2,
-      "total_samples_labeled": 67,
+      "total_samples_labeled": 360,
       "feature_ranges": {
         "area": [
-          1620.85,
-          3363.15
+          1425.45,
+          3350.55
         ],
         "aspect_ratio": [
-          0.192,
-          0.331
+          0.164,
+          0.432
         ],
         "larger_dim": [
-          99.805,
-          118.609
+          97.575,
+          117.751
         ],
         "smaller_dim": [
-          20.219,
-          35.998
+          17.83,
+          44.719
         ],
         "perimeter": [
-          234.104,
-          301.283
+          233.706,
+          297.338
+        ]
+      }
+    },
+    "stamped_mark": {
+      "expected_evaluation_count": 1,
+      "total_samples_labeled": 201,
+      "feature_ranges": {
+        "area": [
+          2498.2,
+          7408.8
+        ],
+        "aspect_ratio": [
+          0.313,
+          0.79
+        ],
+        "larger_dim": [
+          92.8,
+          124.2
+        ],
+        "smaller_dim": [
+          32.409,
+          88.972
+        ],
+        "perimeter": [
+          242.319,
+          518.516
         ]
       }
     }
@@ -56,12 +82,30 @@
   "distance_constraints": {
     "bezel-copper_mark": {
       "range": [
-        40.184,
-        326.02
+        37.068,
+        326.53
       ],
-      "mean": 169.314,
-      "stddev": 52.317,
-      "count": 62
+      "mean": 159.665,
+      "stddev": 48.694,
+      "count": 356
+    },
+    "bezel-stamped_mark": {
+      "range": [
+        479.955,
+        840.737
+      ],
+      "mean": 665.455,
+      "stddev": 26.21,
+      "count": 198
+    },
+    "copper_mark-stamped_mark": {
+      "range": [
+        584.309,
+        1017.497
+      ],
+      "mean": 790.76,
+      "stddev": 74.219,
+      "count": 360
     }
   },
   "overlap_rules": [
@@ -69,6 +113,20 @@
       "objects": [
         "bezel",
         "copper_mark"
+      ],
+      "mode": "absolute"
+    },
+    {
+      "objects": [
+        "copper_mark",
+        "stamped_mark"
+      ],
+      "mode": "absolute"
+    },
+    {
+      "objects": [
+        "bezel",
+        "stamped_mark"
       ],
       "mode": "absolute"
     },
@@ -83,6 +141,13 @@
       "objects": [
         "copper_mark",
         "copper_mark"
+      ],
+      "mode": "absolute"
+    },
+    {
+      "objects": [
+        "stamped_mark",
+        "stamped_mark"
       ],
       "mode": "absolute"
     }

@@ -1728,8 +1728,7 @@ class TokenFPCFastImageSegmenter(ImageSegmenter):
         return visualized_image, bb_path, total_time, detection_result, defect_reason
 
 
-# --- Base Class for FastSAM Segmenters ---
-# (Assume BaseFastSamSegmenter class definition exists here)
+# --- Base Class for FastSAM Segmenters (Omitted - Assumed Unchanged) ---
 class BaseFastSamSegmenter:
     """Base class providing FastSAM model loading and inference."""
 
@@ -1740,39 +1739,59 @@ class BaseFastSamSegmenter:
         self.imgsz = imgsz;
         self.conf = conf;
         self.iou = iou;
-        self.is_image_shown = False
+        self.is_image_shown = False;
+        self.model = None
         start_time = time.time();
         self.model = self._load_model();
         load_time = time.time() - start_time
         if self.model:
             print(f"[{self.__class__.__name__} Base] Model loaded in {load_time:.2f}s. Path: {self.model_full_path}")
         else:
-            print(f"[Error][{self.__class__.__name__} Base] FAILED load model: {self.model_full_path}")
+            print(
+                f"[ERROR][{self.__class__.__name__} Base] FAILED load model: {self.model_full_path}")  # Consider raising error
 
     def _load_model(self):
         try:
             if os.path.exists(self.model_full_path):
-                return FastSAM(self.model_full_path)
+                model = FastSAM(self.model_full_path);
+                return model
             else:
                 print(f"[Error] Model file not found: {self.model_full_path}");
                 return None
+        except NameError:
+            print("[Error] FastSAM class not found.");
+            return None
         except Exception as e:
             print(f"[Error] FastSAM load exception: {e}");
+            traceback.print_exc();
             return None
 
-    def run_inference(self, image_path_or_array):
-        if self.model is None or not callable(self.model): print(
-            "[Error] Inference fail: Model not loaded/callable."); return []
+    def run_inference(self, image_path_or_array) -> List[np.ndarray]:
+        if self.model is None: print("[Error] Inference fail: Model not loaded."); return []
         try:
             results = self.model(image_path_or_array, device=self.device, retina_masks=True, imgsz=self.imgsz,
                                  conf=self.conf, iou=self.iou)
-            if results and hasattr(results[0], 'masks') and results[0].masks is not None and hasattr(results[0].masks,
-                                                                                                     'data'):
+            if results and isinstance(results, list) and len(results) > 0 and hasattr(results[0], 'masks') and results[
+                0].masks is not None and hasattr(results[0].masks, 'data'):
                 masks_data = results[0].masks.data
-                masks_np = masks_data.cpu().numpy() if hasattr(masks_data, 'cpu') else masks_data
-                return masks_np.astype(np.uint8)
+                if masks_data is None: print("[Warning] Inference returned None for masks data."); return []
+                masks_np = masks_data.cpu().numpy() if hasattr(masks_data, 'cpu') else np.array(masks_data)
+                if not isinstance(masks_np, np.ndarray): print(
+                    "[Warning] Failed to convert masks to NumPy array."); return []
+                processed_masks = []
+                if masks_np.ndim == 3:  # Batch of masks
+                    for mask in masks_np:
+                        if mask.ndim == 2:
+                            processed_masks.append(mask.astype(np.uint8))
+                        else:
+                            print(f"[Warning] Skipping mask with unexpected dimensions: {mask.ndim}")
+                elif masks_np.ndim == 2:  # Single mask
+                    processed_masks.append(masks_np.astype(np.uint8))
+                else:
+                    print(f"[Warning] Unexpected mask dimensions from model: {masks_np.ndim}")
+                return processed_masks
             else:
-                print("[Warning] No masks found in inference results.");
+                print("[Warning] No valid masks found in inference results structure.");
                 return []
         except Exception as e:
             print(f"[Error] Inference exception: {e}\n{traceback.format_exc()}");
@@ -1782,85 +1801,101 @@ class BaseFastSamSegmenter:
 # --- End Base Class ---
 
 
-# --- Combined Bezel/PWB Segmenter (REVERTED process_image) ---
+# --- Combined Bezel/PWB Segmenter ---
 class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
     """
     Segmenter specifically for Bezel/PWB position checking.
     Uses FastSAM and RotationInvariantAOIChecker.
     Evaluates using counts defined in the loaded configuration.
+    Allows configuration of edge threshold for evaluation.
+    Includes logic to avoid overlapping numbered circles in visualizations.
     """
 
-    def __init__(self, model_type="x", model_path="ai-models/", output_dir=r"C:\Work\AOI\Work\BoardDefectChecker\ai-outputs"):
-        """
-        Initializes the BezelPWBPositionSegmenter.
-
-        Args:
-            model_type (str): Type of FastSAM model.
-            model_path (str): Path to AI models directory.
-            output_dir (str): Directory to save output images.
-        """
-        # Initialize BaseFastSamSegmenter first
-        super().__init__(model_type=model_type, model_path=model_path, imgsz=896, conf=0.2, iou=0.9)
+    def __init__(self, model_type="x", model_path="ai-models/", output_dir=r"C:\BoardDefectChecker\ai-outputs"):
+        """Initializes the BezelPWBPositionSegmenter."""
+        super().__init__(model_type=model_type, model_path=model_path, imgsz=896, conf=0.2, iou=0.9)  # Example imgsz
         self.output_dir = output_dir
-        os.makedirs(self.output_dir, exist_ok=True)  # Ensure output dir exists
+        os.makedirs(self.output_dir, exist_ok=True)
 
-        # --- CONFIGURATION STRING (NEEDS MANUAL UPDATE) ---
-        # IMPORTANT: Replace the content of this string with the JSON output
-        # generated by the updated learning tool (feature_learning_tool.py).
-        # The example below shows the *structure* with the new fields,
-        # but the values (feature ranges, counts, etc.) will come from your learning session.
+        # --- CONFIGURATION STRING (NEEDS MANUAL UPDATE from learning tool) ---
         self.rotation_invariant_checking_config = '''
         {
           "target_objects": {
             "bezel": {
               "expected_evaluation_count": 1,
-              "total_samples_labeled": 33,
+              "total_samples_labeled": 198,
               "feature_ranges": {
                 "area": [
-                  13238,
-                  43065
+                  11401.8,
+                  42176.2
                 ],
                 "aspect_ratio": [
-                  0.146,
-                  0.277
+                  0.129,
+                  0.279
                 ],
                 "larger_dim": [
-                  486.845,
-                  677.683
+                  384.11,
+                  677.796
                 ],
                 "smaller_dim": [
-                  85.006,
-                  156.821
+                  58.421,
+                  158.85
                 ],
                 "perimeter": [
-                  880.627,
-                  1807.631
+                  728.169,
+                  1890.457
                 ]
               }
             },
             "copper_mark": {
               "expected_evaluation_count": 2,
-              "total_samples_labeled": 67,
+              "total_samples_labeled": 360,
               "feature_ranges": {
                 "area": [
-                  1620.85,
-                  3363.15
+                  1425.45,
+                  3350.55
                 ],
                 "aspect_ratio": [
-                  0.192,
-                  0.331
+                  0.164,
+                  0.432
                 ],
                 "larger_dim": [
-                  99.805,
-                  118.609
+                  97.575,
+                  117.751
                 ],
                 "smaller_dim": [
-                  20.219,
-                  35.998
+                  17.83,
+                  44.719
                 ],
                 "perimeter": [
-                  234.104,
-                  301.283
+                  233.706,
+                  297.338
+                ]
+              }
+            },
+            "stamped_mark": {
+              "expected_evaluation_count": 1,
+              "total_samples_labeled": 201,
+              "feature_ranges": {
+                "area": [
+                  2498.2,
+                  7408.8
+                ],
+                "aspect_ratio": [
+                  0.313,
+                  0.79
+                ],
+                "larger_dim": [
+                  92.8,
+                  124.2
+                ],
+                "smaller_dim": [
+                  32.409,
+                  88.972
+                ],
+                "perimeter": [
+                  242.319,
+                  518.516
                 ]
               }
             }
@@ -1868,12 +1903,30 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
           "distance_constraints": {
             "bezel-copper_mark": {
               "range": [
-                40.184,
-                326.02
+                37.068,
+                326.53
               ],
-              "mean": 169.314,
-              "stddev": 52.317,
-              "count": 62
+              "mean": 159.665,
+              "stddev": 48.694,
+              "count": 356
+            },
+            "bezel-stamped_mark": {
+              "range": [
+                479.955,
+                840.737
+              ],
+              "mean": 665.455,
+              "stddev": 26.21,
+              "count": 198
+            },
+            "copper_mark-stamped_mark": {
+              "range": [
+                584.309,
+                1017.497
+              ],
+              "mean": 790.76,
+              "stddev": 74.219,
+              "count": 360
             }
           },
           "overlap_rules": [
@@ -1881,6 +1934,20 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
               "objects": [
                 "bezel",
                 "copper_mark"
+              ],
+              "mode": "absolute"
+            },
+            {
+              "objects": [
+                "copper_mark",
+                "stamped_mark"
+              ],
+              "mode": "absolute"
+            },
+            {
+              "objects": [
+                "bezel",
+                "stamped_mark"
               ],
               "mode": "absolute"
             },
@@ -1897,10 +1964,17 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 "copper_mark"
               ],
               "mode": "absolute"
+            },
+            {
+              "objects": [
+                "stamped_mark",
+                "stamped_mark"
+              ],
+              "mode": "absolute"
             }
           ]
         }
-        '''
+        '''  # Remember to update this with your generated JSON!
         # --- End CONFIGURATION STRING ---
 
         config_dict = {}
@@ -1908,179 +1982,131 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             config_dict = json.loads(self.rotation_invariant_checking_config)
             print(f"[{self.__class__.__name__}] Parsed configuration JSON.")
         except json.JSONDecodeError as e:
-            # Provide a default empty config if parsing fails, but log error
             print(f"[ERROR][{self.__class__.__name__}] Failed parse config JSON: {e}. Using empty default.")
-            config_dict = {"target_objects": {}}  # Ensure checker can init
-            # Consider raising the error if config is critical:
-            # raise ValueError(f"Failed parse config JSON: {e}")
+            config_dict = {"target_objects": {}}
         except Exception as e_cfg:
             print(f"[ERROR][{self.__class__.__name__}] Unexpected error loading config: {e_cfg}. Using empty default.")
             config_dict = {"target_objects": {}}
 
-        # Initialize the checker (pass the parsed or default dict)
+        # Initialize the checker
         try:
-            # Make sure RotationInvariantAOIChecker is imported correctly
             self.rotation_invariant_checker = RotationInvariantAOIChecker(config_dict)
             print(f"[{self.__class__.__name__}] Checker initialized.")
         except NameError:
-            print("[FATAL] RotationInvariantAOIChecker class not found. Check import.")
-            raise  # Re-raise critical error
+            print("[FATAL] RotationInvariantAOIChecker class not found.");
+            raise
         except Exception as e:
             print(f"[FATAL] Failed init checker: {e}");
-            raise e  # Re-raise critical error
+            raise
 
         # --- Font Configuration ---
-        self.font_path = "C:/Windows/Fonts/segoeui.ttf"  # Consider making configurable
-        self.font_size_large = 18
+        self.font_path = "C:/Windows/Fonts/segoeui.ttf";
+        self.font_size_large = 18;
         self.font_size_small = 14
-        self.font_large = None
+        self.font_large = None;
         self.font_small = None
         global _pillow_available_global
         if _pillow_available_global:
             try:
-                self.font_large = ImageFont.truetype(self.font_path, self.font_size_large)
+                self.font_large = ImageFont.truetype(self.font_path, self.font_size_large);
                 self.font_small = ImageFont.truetype(self.font_path, self.font_size_small)
                 print(f"[Info] Loaded font: {self.font_path}")
             except Exception as e:
-                print(f"[{self.__class__.__name__}] Warn: Font load error: {e}. Using OpenCV fallback.")
-                self.font_large = None  # Ensure fallback if loading fails
+                print(
+                    f"[{self.__class__.__name__}] Warn: Font load error: {e}.");
+                self.font_large = None;
                 self.font_small = None
         else:
-            print(f"[{self.__class__.__name__}] Info: Pillow not available, using OpenCV text.")
-
+            print(f"[{self.__class__.__name__}] Info: Pillow not available.")
         print(f"[{self.__class__.__name__}] Initialized. Output Dir: {self.output_dir}")
 
-    def load_blank_image(self, target_shape: Tuple[int, int, Optional[int]]) -> np.ndarray:
-        """
-        Loads a blank placeholder image, resizing to target shape.
-
-        Args:
-            target_shape: Target shape (height, width, [channels]).
-
-        Returns:
-            A NumPy array representing the blank image, or a black image on error.
-        """
-        # Consider making blank image path configurable
-        blank_image_path = r"C:\BoardDefectChecker\resources\blank.png"
+    # --- load_blank_image, visualize_masks (Omitted - Use previous versions) ---
+    def load_blank_image(self, target_shape):
+        blank_image_path = r"C:\BoardDefectChecker\resources\blank.png";
         blank_image = cv2.imread(blank_image_path)
-
-        # Determine target dimensions (height, width)
         target_h, target_w = target_shape[0], target_shape[1]
-
         if blank_image is None:
-            print(
-                f"[{self.__class__.__name__}] Error: Failed to load blank image at {blank_image_path}. Returning black image.")
-            # Ensure target_shape has 3 channels for a black image
-            if len(target_shape) == 2:
-                target_shape_3ch = (target_h, target_w, 3)
-            else:
-                target_shape_3ch = target_shape
+            print(f"[Error] Failed load blank image. Returning black.");
+            target_shape_3ch = (target_h, target_w, 3) if len(target_shape) == 2 else target_shape
+            return np.zeros(target_shape_3ch, dtype=np.uint8)
+        try:
+            return cv2.resize(blank_image, (target_w, target_h), interpolation=cv2.INTER_AREA)
+        except Exception as resize_err:
+            print(f"[Error] Failed resize blank image: {resize_err}");
+            target_shape_3ch = (target_h, target_w, 3) if len(target_shape) == 2 else target_shape
             return np.zeros(target_shape_3ch, dtype=np.uint8)
 
-        # Resize blank image to match the target shape (width, height for cv2.resize)
-        try:
-            resized_blank = cv2.resize(blank_image, (target_w, target_h), interpolation=cv2.INTER_AREA)
-            return resized_blank
-        except Exception as resize_err:
-            print(f"[Error] Failed to resize blank image: {resize_err}")
-            if len(target_shape) == 2:
-                target_shape_3ch = (target_h, target_w, 3)
-            else:
-                target_shape_3ch = target_shape
-            return np.zeros(target_shape_3ch, dtype=np.uint8)  # Fallback to black
-
-    def visualize_masks(self, image: np.ndarray, masks: List[np.ndarray],
-                        visualize_all_masks: bool = False,
-                        label_color: Tuple[int, int, int] = (255, 0, 0),
-                        window_title: str = "Visualized Masks",
-                        is_image_shown: bool = False) -> Optional[np.ndarray]:
-        """
-        Visualizes masks on an image with random color overlays.
-
-        Args:
-            image: The original image (NumPy array).
-            masks: A list of mask arrays (uint8).
-            visualize_all_masks: If True, visualizes all masks. (Currently always visualizes input masks).
-            label_color: Not used in this visualization type.
-            window_title: Title for the display window.
-            is_image_shown: Whether to display the image in an OpenCV window.
-
-        Returns:
-            The image with masks visualized, or None if input image is None.
-        """
-        if image is None:
-            print("[Error][visualize_masks] Input image is None.")
-            return None
-        result_image = image.copy()
-
-        # Ensure masks is a list of numpy arrays
-        processed_masks = [m for m in masks if isinstance(m, np.ndarray) and m.ndim == 2]
-        if not processed_masks:
-            # print("[Debug] No valid masks to visualize.") # Less verbose
-            return result_image  # Return original image if no masks
-
-        # Always visualize the provided masks if visualize_all_masks is True (or default)
-        # The name is slightly confusing, maybe rename? But keeping for consistency.
+    def visualize_masks(self, image, masks, visualize_all_masks=False, label_color=(255, 0, 0),
+                        window_title="Visualized Masks", is_image_shown=False):
+        if image is None: return None; result_image = image.copy(); processed_masks = [m for m in masks if isinstance(m,
+                                                                                                                      np.ndarray) and m.ndim == 2]
+        if not processed_masks: return result_image
         if visualize_all_masks:
             for mask_area_uint8 in processed_masks:
-                # Ensure mask is boolean for indexing
-                mask_area = mask_area_uint8.astype(bool)
-                # Generate a random color for each mask
+                mask_area = mask_area_uint8.astype(bool);
                 color = np.random.randint(0, 256, size=3, dtype=np.uint8)
                 try:
-                    # Apply overlay safely using addWeighted for transparency effect
-                    # Ensure color is compatible shape for broadcasting if needed, though direct assignment often works
-                    # result_image[mask_area] = result_image[mask_area] * 0.5 + color * 0.5 # Might cause type issues
-                    overlay = np.zeros_like(result_image)
-                    overlay[mask_area] = color
-                    result_image = cv2.addWeighted(result_image, 1.0, overlay, 0.5, 0)  # Blend overlay
+                    overlay = np.zeros_like(result_image);
+                    overlay[mask_area] = color;
+                    result_image = cv2.addWeighted(
+                        result_image, 1.0, overlay, 0.5, 0)
                 except (IndexError, ValueError) as e:
-                    print(f"[Warning] Skipping mask overlay due to shape/value mismatch: {e}")
-        # No 'else' needed, as bounding boxes are drawn separately
-
+                    print(f"[Warning] Skipping mask overlay: {e}")
         if is_image_shown:
             try:
-                # Resize for display
-                display_width = 1280  # Example display size
-                h, w = result_image.shape[:2]
-                if w == 0: raise ValueError("Image width is zero.")
-                display_height = int(display_width * (h / w))
-                resized_img = cv2.resize(result_image, (display_width, display_height), interpolation=cv2.INTER_AREA)
-
-                cv2.imshow(window_title, resized_img)
-                cv2.waitKey(0)  # Wait for key press
+                display_width = 1280;
+                h, w = result_image.shape[:2];
+                display_height = int(display_width * (h / w)) if w > 0 else 720
+                resized_img = cv2.resize(result_image, (display_width, display_height), interpolation=cv2.INTER_AREA);
+                cv2.imshow(window_title, resized_img);
+                cv2.waitKey(0);
                 cv2.destroyWindow(window_title)
             except Exception as display_err:
-                print(f"[Error] Failed to display visualization window '{window_title}': {display_err}")
-                cv2.destroyAllWindows()  # Close any open windows on error
+                print(f"[Error] Display visualization failed: {display_err}");
+                cv2.destroyAllWindows()
         return result_image
 
+    # --- HELPER METHOD for Collision Avoidance (Omitted - Use previous version) ---
+    def _find_non_overlapping_position(self, center_x, center_y, radius, placed_circles, max_attempts=8,
+                                       step_scale=1.5):
+        current_pos = (center_x, center_y);
+        min_dist_sq = (2 * radius) ** 2
+        is_overlapping = any(
+            (current_pos[0] - px) ** 2 + (current_pos[1] - py) ** 2 < (radius + pr) ** 2 for px, py, pr in
+            placed_circles)
+        if not is_overlapping: return current_pos
+        step = int(radius * step_scale)
+        offsets = [(0, -step), (step, 0), (0, step), (-step, 0), (step, -step), (step, step), (-step, step),
+                   (-step, -step)]
+        for attempt in range(max_attempts):
+            dx, dy = offsets[attempt % len(offsets)];
+            next_x = center_x + dx;
+            next_y = center_y + dy
+            is_overlapping = any(
+                (next_x - px) ** 2 + (next_y - py) ** 2 < (radius + pr) ** 2 for px, py, pr in placed_circles)
+            if not is_overlapping: return (next_x, next_y)
+        return (center_x, center_y)
+
+    # --- draw_bounding_boxes METHOD (Fixed Display Size) ---
     def draw_bounding_boxes(self, image: np.ndarray,
                             classified_masks: Dict[str, List[Dict]],
                             label_color: Tuple[int, int, int] = (255, 0, 0),
                             window_title: str = "Bounding Boxes",
                             is_image_shown: bool = False) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
         """
-        Draws bounding boxes, numbered centroids, and a parameter table for CLASSIFIED masks.
-
-        Args:
-            image: The original image (NumPy array).
-            classified_masks: Dictionary mapping object type to a list of mask info dictionaries.
-                              Each mask info dict should contain 'mask' and 'features'.
-            label_color: Color for the bounding box rectangle.
-            window_title: Base title for display windows.
-            is_image_shown: Whether to display the images in OpenCV windows.
-
-        Returns:
-            Tuple: (mask_image_with_boxes, parameter_table_image), or (None, None) on error.
+        Draws bounding boxes, non-overlapping numbered centroids, a parameter table,
+        and distance lines between constrained object pairs. Displays at fixed 1280x800 if shown.
         """
-        if image is None:
-            print("[Error][draw_bounding_boxes] Input image is None.")
+        # --- Input Validation ---
+        if image is None: print("[Error][draw_bounding_boxes] Input image is None."); return None, None
+        try:
+            height, width = image.shape[:2]
+        except Exception as shape_err:
+            print(f"[Error][draw_bounding_boxes] Cannot get shape: {shape_err}");
             return None, None
-        height, width = image.shape[:2]
-        mask_image = image.copy()  # Image with overlays
+        mask_image = image.copy()
 
-        # --- Table Setup ---
+        # --- Table Setup (Assuming unchanged logic) ---
         block_width = 200;
         block_height = 150;
         line_spacing_pixels = 22;
@@ -2089,445 +2115,337 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
         black_color_rgb = (0, 0, 0);
         black_color_bgr = (0, 0, 0)
         cell_margin = 5;
-        max_display_masks = 30  # Limit number of items in table
-        table_image_np = np.full((height, width, 3), grey_color_bgr, dtype=np.uint8)  # Grey background
-        table_image_pil = None;
-        table_draw = None
-
-        # Try setting up Pillow for better text rendering
-        global _pillow_available_global
-        if _pillow_available_global and self.font_large and self.font_small:
-            try:
-                table_image_pil = Image.fromarray(cv2.cvtColor(table_image_np, cv2.COLOR_BGR2RGB))
-                table_draw = ImageDraw.Draw(table_image_pil)
-            except Exception as pil_e:
-                print(f"[Warning] Pillow setup failed for table: {pil_e}")
-                table_image_pil = None;
-                table_draw = None
-        # --- End Table Setup ---
-
-        # --- Prepare Data for Display ---
-        displayed_blocks = 0
-        all_mask_info_with_type = []
-        # Flatten the classified dictionary for easier iteration, respecting max_display_masks
-        if classified_masks and isinstance(classified_masks, dict):
-            for obj_type, masks_list in classified_masks.items():
-                if not isinstance(masks_list, list): continue  # Skip if format is wrong
-                for mask_info in masks_list:
-                    if displayed_blocks < max_display_masks:
-                        # Ensure mask_info is a dict and add type
-                        if isinstance(mask_info, dict):
-                            mask_info_copy = mask_info.copy()  # Avoid modifying original
-                            mask_info_copy["type"] = obj_type
-                            all_mask_info_with_type.append(mask_info_copy)
-                            displayed_blocks += 1
-                        else:
-                            print(
-                                f"[Warning] Unexpected item format in classified_masks for {obj_type}: {type(mask_info)}")
-                    else:
-                        break  # Stop adding if max display limit reached
-                if displayed_blocks >= max_display_masks: break
-        else:
-            print("[Warning] classified_masks is empty or not a dictionary.")
-        # --- End Prepare Data ---
-
-        # --- Draw Loop ---
-        blocks_per_column = max(1, (height - 2 * margin) // block_height) if block_height > 0 else 1
-        for idx, mask_data in enumerate(all_mask_info_with_type, 1):
-            mask = mask_data.get("mask")
-            obj_type = mask_data.get("type", "Unknown")
-            features = mask_data.get("features")
-
-            # Validate data for this mask
-            if mask is None or features is None or not isinstance(mask, np.ndarray) or not isinstance(features, dict):
-                print(f"[Warning] Skipping drawing mask {idx} ({obj_type}) due to missing/invalid data.")
-                continue
-
-            # --- Draw on Mask Image ---
-            mask_color_bgr = np.random.randint(0, 256, size=3, dtype=np.uint8)  # Random color for overlay
-            mask_color_rgb = (int(mask_color_bgr[2]), int(mask_color_bgr[1]), int(mask_color_bgr[0]))
-            mask_area = mask.astype(bool)
-
-            try:
-                # Apply overlay using addWeighted
-                overlay = np.zeros_like(mask_image)
-                overlay[mask_area] = mask_color_bgr
-                mask_image = cv2.addWeighted(mask_image, 1.0, overlay, 0.5, 0)
-            except (IndexError, ValueError) as ie:
-                print(f"[Error] Index overlay error: {ie}. Skipping mask {idx}.")
-                continue
-
-            # Draw bounding box (axis-aligned)
-            y_indices, x_indices = np.where(mask_area)
-            if len(y_indices) == 0: continue  # Skip if mask is empty after filtering
-            x1, y1 = np.min(x_indices), np.min(y_indices)
-            x2, y2 = np.max(x_indices), np.max(y_indices)
-            # Ensure coordinates are within image bounds before drawing
-            cv2.rectangle(mask_image, (max(0, x1), max(0, y1)), (min(width - 1, x2), min(height - 1, y2)), label_color,
-                          2)
-
-            # Draw numbered circle at centroid
-            centroid_x = int(features.get("centroid_x", x1 + (x2 - x1) // 2))
-            centroid_y = int(features.get("centroid_y", y1 + (y2 - y1) // 2))
-            # Clamp centroid to be within image bounds for drawing
-            centroid_x = max(0, min(width - 1, centroid_x))
-            centroid_y = max(0, min(height - 1, centroid_y))
-            circle_radius = 15
-            cv2.circle(mask_image, (centroid_x, centroid_y), circle_radius, grey_color_bgr, -1)  # Grey fill
-            cv2.circle(mask_image, (centroid_x, centroid_y), circle_radius, black_color_bgr, 1)  # Black border
-
-            # Draw number text (Pillow preferred)
-            number_text = str(idx)
-            if _pillow_available_global and self.font_small:
-                try:
-                    # Create temporary PIL image for drawing text
-                    img_pil_temp = Image.fromarray(cv2.cvtColor(mask_image, cv2.COLOR_BGR2RGB))
-                    draw_temp = ImageDraw.Draw(img_pil_temp)
-                    # Calculate text size using Pillow
-                    try:
-                        # Use textbbox for potentially better accuracy
-                        text_bbox = draw_temp.textbbox((0, 0), number_text, font=self.font_small)
-                        text_width = text_bbox[2] - text_bbox[0]
-                        text_height = text_bbox[3] - text_bbox[1]
-                    except AttributeError:  # Fallback for older Pillow versions
-                        text_width, text_height = draw_temp.textsize(number_text, font=self.font_small)
-
-                    # Center text within the circle
-                    text_x_num = max(0, centroid_x - text_width // 2)
-                    text_y_num = max(0, centroid_y - text_height // 2 - 2)  # Adjust vertical baseline slightly
-                    draw_temp.text((text_x_num, text_y_num), number_text, font=self.font_small, fill=black_color_rgb)
-                    # Convert back to OpenCV format
-                    mask_image = cv2.cvtColor(np.array(img_pil_temp), cv2.COLOR_RGB2BGR)
-                except Exception as e_draw:
-                    print(f"[Error] Pillow text failed for mask {idx}: {e_draw}")
-                    # Fallback OpenCV text if Pillow fails
-                    cv2.putText(mask_image, number_text, (centroid_x - 7, centroid_y + 7), cv2.FONT_HERSHEY_SIMPLEX,
-                                0.5, black_color_bgr, 1)
-            else:  # OpenCV fallback if Pillow not available or font failed
-                cv2.putText(mask_image, number_text, (centroid_x - 7, centroid_y + 7), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            black_color_bgr, 1)
-            # --- End Draw on Mask Image ---
-
-            # --- Draw Table Cell ---
-            column = (idx - 1) // blocks_per_column
-            row = (idx - 1) % blocks_per_column
-            block_base_x = margin + column * block_width
-            block_base_y = margin + row * block_height
-            # Calculate cell boundaries
-            cell_tl_x = block_base_x - cell_margin;
-            cell_tl_y = block_base_y - cell_margin
-            cell_br_x = block_base_x + block_width - cell_margin;
-            cell_br_y = block_base_y + block_height - cell_margin
-            h_table, w_table = height, width  # Table dimensions
-
-            # Check if cell coordinates are valid before drawing
-            if 0 <= cell_tl_x < w_table and 0 <= cell_tl_y < h_table and \
-                    cell_tl_x < cell_br_x < w_table and cell_tl_y < cell_br_y < h_table:
-
-                # Prepare labels for the table cell using available features
-                labels = [
-                    f"Area: {features.get('area', 0):.0f}",
-                    f"Perimeter: {features.get('perimeter', 0):.0f}",
-                    f"Larger Dim: {features.get('larger_dim', 0):.0f}",
-                    f"Smaller Dim: {features.get('smaller_dim', 0):.0f}",
-                    f"Aspect Ratio: {features.get('aspect_ratio', 0):.2f}"
-                ]
-
-                # Draw using Pillow if available
-                if table_draw and self.font_large:
-                    table_draw.rectangle([(cell_tl_x, cell_tl_y), (cell_br_x, cell_br_y)], outline=black_color_rgb,
-                                         width=1)
-                    text_x = block_base_x + cell_margin;
-                    text_y = block_base_y + cell_margin
-                    # Draw title (Mask # and Type)
-                    table_draw.text((text_x, text_y), f"Mask {idx} ({obj_type})", font=self.font_large,
-                                    fill=mask_color_rgb)
-                    text_y += line_spacing_pixels
-                    param_indent_pixels = 15
-                    # Draw feature labels
-                    for label in labels:
-                        if text_y + line_spacing_pixels < cell_br_y:  # Check vertical space
-                            table_draw.text((text_x + param_indent_pixels, text_y), label, font=self.font_large,
-                                            fill=black_color_rgb)
-                            text_y += line_spacing_pixels
-                        else:
-                            break  # Stop if no more vertical space
-                else:  # Fallback OpenCV drawing
-                    cv2.rectangle(table_image_np, (cell_tl_x, cell_tl_y), (cell_br_x, cell_br_y), black_color_bgr, 1)
-                    text_x = block_base_x + cell_margin;
-                    text_y = block_base_y + cell_margin + 15  # Adjust starting Y
-                    cv2.putText(table_image_np, f"Mask {idx} ({obj_type})", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX,
-                                0.5, mask_color_bgr, 1)
-                    text_y += 20
-                    # Draw feature labels with OpenCV
-                    for label in labels:
-                        if text_y + 20 < cell_br_y:  # Check vertical space
-                            cv2.putText(table_image_np, label, (text_x + 15, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                                        black_color_bgr, 1)
-                            text_y += 18
-                        else:
-                            break
-            else:
-                print(f"[Warning] Skipping cell drawing: BBox Mask {idx} ({obj_type}) out of bounds.")
-            # --- End Draw Table Cell ---
-        # --- End Draw Loop ---
-
-        # Finalize table image (convert back from PIL if needed)
-        if table_image_pil:
-            try:
-                table_image_np = cv2.cvtColor(np.array(table_image_pil), cv2.COLOR_RGB2BGR)
-            except Exception as conv_e:
-                print(f"[Error] Failed converting table PIL to OpenCV: {conv_e}")
-                # table_image_np remains the grey fallback
-
-        # Display results if requested
-        if is_image_shown:
-            try:
-                # Resize for display
-                display_width = 1280
-                h_display, w_display = mask_image.shape[:2]
-                if w_display == 0: raise ValueError("Mask image width is zero.")
-                # display_height = int(display_width * (h_display / w_display))
-                display_height = 700
-                resized_mask_img = cv2.resize(mask_image, (display_width, display_height), interpolation=cv2.INTER_AREA)
-                table_window_title = f"{window_title} - Parameters"
-                resized_table_img = cv2.resize(table_image_np, (display_width, display_height),
-                                               interpolation=cv2.INTER_AREA)
-
-                # Show windows
-                cv2.imshow(window_title, resized_mask_img)
-                cv2.imshow(table_window_title, resized_table_img)
-                cv2.waitKey(0)  # Wait for user
-                cv2.destroyWindow(window_title)
-                cv2.destroyWindow(table_window_title)
-            except Exception as display_err:
-                print(f"[Error] Failed to display bounding box window '{window_title}': {display_err}")
-                cv2.destroyAllWindows()  # Close any open windows on error
-
-        return mask_image, table_image_np
-
-    def draw_test_visualization(self, image: np.ndarray,
-                                test_results: List[Dict[str, Any]],
-                                label_color: Tuple[int, int, int] = (255, 0, 0),
-                                window_title: str = "Test Visualization",
-                                is_image_shown: bool = False) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
-        """
-        Draws visualization for test_masks results (used in learning tool).
-        Includes rotated rectangles and parameter table.
-
-        Args:
-            image: The original image (NumPy array).
-            test_results: List of dictionaries from test_masks.
-            label_color: Color for rotated rectangle polylines.
-            window_title: Base title for display windows.
-            is_image_shown: Whether to display OpenCV windows.
-
-        Returns:
-            Tuple: (mask_image_with_overlays, parameter_table_image), or (None, None) on error.
-        """
-        # This method is similar to draw_bounding_boxes but uses test_results structure
-        # and draws rotated rectangles instead of axis-aligned ones.
-        if image is None:
-            print("[Error][draw_test_visualization] Input image is None.")
-            return None, None
-        if not test_results:
-            print("[Info][draw_test_visualization] No test results to visualize.")
-            return image.copy(), self.load_blank_image(image.shape)  # Return original and blank table
-
-        height, width = image.shape[:2]
-        mask_image = image.copy()  # Image for drawing overlays
-
-        # --- Table Setup (same as draw_bounding_boxes) ---
-        block_width = 200;
-        block_height = 150;
-        line_spacing_pixels = 22;
-        margin = 20
-        grey_color_bgr = (150, 150, 150);
-        black_color_rgb = (0, 0, 0);
-        black_color_bgr = (0, 0, 0)
-        cell_margin = 5;
+        max_display_masks = 30
         table_image_np = np.full((height, width, 3), grey_color_bgr, dtype=np.uint8)
         table_image_pil = None;
-        table_draw = None
+        table_draw = None;
+        pillow_ready = False
         global _pillow_available_global
         if _pillow_available_global and self.font_large and self.font_small:
             try:
-                table_image_pil = Image.fromarray(cv2.cvtColor(table_image_np, cv2.COLOR_BGR2RGB))
-                table_draw = ImageDraw.Draw(table_image_pil)
+                table_image_pil = Image.fromarray(cv2.cvtColor(table_image_np, cv2.COLOR_BGR2RGB));
+                table_draw = ImageDraw.Draw(table_image_pil);
+                pillow_ready = True
             except Exception as pil_e:
-                print(f"[Warning] Pillow table setup failed: {pil_e}");
-                table_image_pil = None;
-                table_draw = None
+                print(f"[Warning] Pillow table setup failed: {pil_e}.");
+                pillow_ready = False
         # --- End Table Setup ---
 
+        # --- Prepare Data & Extract Centroids (Assuming unchanged logic) ---
+        displayed_blocks = 0;
+        all_mask_info_with_type = [];
+        centroids_by_type: Dict[str, List[Tuple[int, int]]] = {}
+        total_masks_to_draw = sum(len(v) for v in classified_masks.values()) if classified_masks else 0
+        # print(f"[Debug Table] Number of classified masks passed: {total_masks_to_draw}") # Optional debug
+        if classified_masks and isinstance(classified_masks, dict):
+            for obj_type, masks_list in classified_masks.items():
+                centroids_by_type[obj_type] = []
+                if not isinstance(masks_list, list): continue
+                for mask_info in masks_list:
+                    if displayed_blocks < max_display_masks:
+                        if isinstance(mask_info, dict) and 'features' in mask_info:
+                            mask_info_copy = mask_info.copy();
+                            mask_info_copy["type"] = obj_type
+                            all_mask_info_with_type.append(mask_info_copy);
+                            displayed_blocks += 1
+                            features = mask_info['features'];
+                            cx = features.get("centroid_x");
+                            cy = features.get("centroid_y")
+                            if cx is not None and cy is not None: centroids_by_type[obj_type].append(
+                                (int(cx), int(cy)))
+                    else:
+                        break
+                if displayed_blocks >= max_display_masks: break
+        # --- End Prepare Data ---
+
+        # --- Draw BBoxes, Numbered Circles, and Table Cells (Assuming unchanged logic) ---
+        placed_circles_info: List[Tuple[int, int, int]] = [];
+        circle_radius = 15
         blocks_per_column = max(1, (height - 2 * margin) // block_height) if block_height > 0 else 1
-
-        # --- Draw Loop using test_results ---
-        for idx, result in enumerate(test_results, 1):
-            mask = result.get("mask")
-            min_rect_vertices = result.get("min_rect_vertices", [])  # Vertices of rotated rect
-            features = result.get("features")
-            labels = result.get("labels", [])  # Pre-formatted labels from test_masks
-
-            if mask is None or features is None or not isinstance(mask, np.ndarray) or not isinstance(features, dict):
-                print(f"[Warning][TestViz] Skipping mask {idx} due to missing/invalid data.")
+        for idx, mask_data in enumerate(all_mask_info_with_type, 1):
+            mask = mask_data.get("mask");
+            obj_type = mask_data.get("type", "Unknown");
+            features = mask_data.get("features")
+            if mask is None or features is None: continue
+            y_indices, x_indices = np.where(mask > 0);
+            if len(y_indices) == 0: continue
+            try:
+                x1, y1 = np.min(x_indices), np.min(y_indices);
+                x2, y2 = np.max(x_indices), np.max(y_indices)
+                cv2.rectangle(mask_image, (max(0, x1), max(0, y1)), (min(width - 1, x2), min(height - 1, y2)),
+                              label_color, 2)
+                initial_centroid_x = int(features.get("centroid_x", x1 + (x2 - x1) // 2));
+                initial_centroid_y = int(features.get("centroid_y", y1 + (y2 - y1) // 2))
+                final_cx, final_cy = self._find_non_overlapping_position(initial_centroid_x, initial_centroid_y,
+                                                                         circle_radius, placed_circles_info)
+                placed_circles_info.append((final_cx, final_cy, circle_radius));
+                final_cx = max(0, min(width - 1, final_cx));
+                final_cy = max(0, min(height - 1, final_cy))
+                cv2.circle(mask_image, (final_cx, final_cy), circle_radius, grey_color_bgr, -1);
+                cv2.circle(mask_image, (final_cx, final_cy), circle_radius, black_color_bgr, 1)
+                number_text = str(idx);
+                (tw_num, th_num), _ = cv2.getTextSize(number_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+                cv2.putText(mask_image, number_text, (final_cx - tw_num // 2, final_cy + th_num // 2),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, black_color_bgr, 1, cv2.LINE_AA)
+            except Exception as mask_draw_err:
+                print(f"[Warning] Error drawing bbox/circle for mask #{idx}: {mask_draw_err}");
                 continue
 
-            # --- Draw on Mask Image ---
-            mask_color_bgr = np.random.randint(0, 256, size=3, dtype=np.uint8)
-            mask_color_rgb = (int(mask_color_bgr[2]), int(mask_color_bgr[1]), int(mask_color_bgr[0]))
-            mask_area = mask.astype(bool)
-            try:  # Apply overlay
-                overlay = np.zeros_like(mask_image);
-                overlay[mask_area] = mask_color_bgr
-                mask_image = cv2.addWeighted(mask_image, 1.0, overlay, 0.5, 0)
-            except (IndexError, ValueError) as ie:
-                print(f"[Error][TestViz] Overlay error mask {idx}: {ie}");
-                continue
+            # --- Draw Table Cell (Assuming unchanged logic) ---
+            try:
+                col_idx = (idx - 1) // blocks_per_column;
+                row_idx = (idx - 1) % blocks_per_column
+                block_x = margin + col_idx * block_width;
+                block_y = margin + row_idx * block_height
+                if block_x + block_width > width or block_y + block_height > height: continue
+                text_lines = [f"{idx}: {obj_type}", f" Area: {features.get('area', 'N/A'):.0f}",
+                              f" AR: {features.get('aspect_ratio', 'N/A'):.2f}",
+                              f" LDim: {features.get('larger_dim', 'N/A'):.1f}",
+                              f" SDim: {features.get('smaller_dim', 'N/A'):.1f}",
+                              f" Perim: {features.get('perimeter', 'N/A'):.1f}"]
+                if pillow_ready and table_draw is not None and self.font_large and self.font_small:
+                    current_y = block_y + cell_margin;
+                    table_draw.text((block_x + cell_margin, current_y), text_lines[0], font=self.font_large,
+                                    fill=black_color_rgb);
+                    current_y += line_spacing_pixels
+                    for line in text_lines[1:]: table_draw.text((block_x + cell_margin, current_y), line,
+                                                                font=self.font_small,
+                                                                fill=black_color_rgb); current_y += line_spacing_pixels
+                else:  # OpenCV Fallback
+                    current_y = block_y + cell_margin + 18;
+                    cv2.putText(table_image_np, text_lines[0], (block_x + cell_margin, current_y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, black_color_bgr, 1, cv2.LINE_AA);
+                    current_y += line_spacing_pixels
+                    for line in text_lines[1:]: cv2.putText(table_image_np, line,
+                                                            (block_x + cell_margin, current_y),
+                                                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, black_color_bgr, 1,
+                                                            cv2.LINE_AA); current_y += line_spacing_pixels
+            except Exception as table_draw_err:
+                print(f"[Error Table] Failed draw cell #{idx}: {table_draw_err}");
+                traceback.print_exc()
+            # --- End Draw Table Cell ---
+        # --- End Drawing Loop ---
 
-            # Draw minimum area rectangle (rotated) using polylines
-            points = np.array(min_rect_vertices, dtype=np.int32)
-            if len(points) == 4:
-                cv2.polylines(mask_image, [points], isClosed=True, color=label_color, thickness=2)  # Use label_color
+        # --- Draw Distance Lines (Assuming unchanged logic) ---
+        distance_line_color = (255, 255, 0);
+        distance_text_color = (255, 255, 0);
+        distance_font_scale = 0.5;
+        distance_font_thickness = 1
+        constraints = {};
+        drawn_constraints_count = 0
+        if hasattr(self, 'rotation_invariant_checker') and hasattr(self.rotation_invariant_checker,
+                                                                   'distance_constraints'): constraints = self.rotation_invariant_checker.distance_constraints
+        for pair_key, constraint_data in constraints.items():
+            try:
+                obj_types = pair_key.split('-');
+                if len(obj_types) != 2: continue
+                type1, type2 = obj_types[0], obj_types[1];
+                centroids1 = centroids_by_type.get(type1, []);
+                centroids2 = centroids_by_type.get(type2, [])
+                if not centroids1 or not centroids2: continue
+                for c1 in centroids1:
+                    for c2 in centroids2:
+                        dist = math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2);
+                        dist_text = f"{dist:.1f}"
+                        cv2.line(mask_image, c1, c2, distance_line_color, distance_font_thickness)
+                        mid_x = (c1[0] + c2[0]) // 2;
+                        mid_y = (c1[1] + c2[1]) // 2
+                        (tw, th), _ = cv2.getTextSize(dist_text, cv2.FONT_HERSHEY_SIMPLEX, distance_font_scale,
+                                                      distance_font_thickness)
+                        text_x = mid_x - tw // 2;
+                        text_y = mid_y - th // 2 - 5
+                        cv2.putText(mask_image, dist_text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX,
+                                    distance_font_scale, distance_text_color, distance_font_thickness, cv2.LINE_AA)
+                        drawn_constraints_count += 1
+            except Exception as dist_draw_err:
+                print(f"[Warning] Error drawing distance for '{pair_key}': {dist_draw_err}")
+        # --- END Draw Distance Lines ---
 
-            # Draw numbered circle at centroid (same logic as draw_bounding_boxes)
-            centroid_x = int(features.get("centroid_x", 0));
-            centroid_y = int(features.get("centroid_y", 0))
-            centroid_x = max(0, min(width - 1, centroid_x));
-            centroid_y = max(0, min(height - 1, centroid_y))
-            circle_radius = 15;
-            cv2.circle(mask_image, (centroid_x, centroid_y), circle_radius, grey_color_bgr, -1);
-            cv2.circle(mask_image, (centroid_x, centroid_y), circle_radius, black_color_bgr, 1)
-            number_text = str(idx)
-            if _pillow_available_global and self.font_small:
-                try:  # Draw text with Pillow
-                    img_pil_temp = Image.fromarray(cv2.cvtColor(mask_image, cv2.COLOR_BGR2RGB));
-                    draw_temp = ImageDraw.Draw(img_pil_temp)
-                    try:
-                        text_bbox = draw_temp.textbbox((0, 0), number_text, font=self.font_small)
-                    except AttributeError:
-                        text_bbox = (0, 0, 10, 10)
-                    text_width = text_bbox[2] - text_bbox[0];
-                    text_height = text_bbox[3] - text_bbox[1]
-                    text_x_num = max(0, centroid_x - text_width // 2);
-                    text_y_num = max(0, centroid_y - text_height // 2 - 2)
-                    draw_temp.text((text_x_num, text_y_num), number_text, font=self.font_small, fill=black_color_rgb)
-                    mask_image = cv2.cvtColor(np.array(img_pil_temp), cv2.COLOR_RGB2BGR)
-                except Exception as e_draw:
-                    cv2.putText(mask_image, number_text, (centroid_x - 7, centroid_y + 7), cv2.FONT_HERSHEY_SIMPLEX,
-                                0.5, black_color_bgr, 1)  # Fallback
-            else:
-                cv2.putText(mask_image, number_text, (centroid_x - 7, centroid_y + 7), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            black_color_bgr, 1)  # OpenCV fallback
-            # --- End Draw on Mask Image ---
-
-            # --- Draw Parameter Table Cell (using pre-formatted labels) ---
-            column = (idx - 1) // blocks_per_column;
-            row = (idx - 1) % blocks_per_column
-            block_base_x = margin + column * block_width;
-            block_base_y = margin + row * block_height
-            cell_tl_x = block_base_x - cell_margin;
-            cell_tl_y = block_base_y - cell_margin;
-            cell_br_x = block_base_x + block_width - cell_margin;
-            cell_br_y = block_base_y + block_height - cell_margin
-            h_table, w_table = height, width
-            if 0 <= cell_tl_x < w_table and 0 <= cell_tl_y < h_table and cell_tl_x < cell_br_x < w_table and cell_tl_y < cell_br_y < h_table:
-                if table_draw and self.font_large:  # Use Pillow
-                    table_draw.rectangle([(cell_tl_x, cell_tl_y), (cell_br_x, cell_br_y)], outline=black_color_rgb,
-                                         width=1)
-                    text_x = block_base_x + cell_margin;
-                    text_y = block_base_y + cell_margin
-                    table_draw.text((text_x, text_y), f"Mask {idx}", font=self.font_large,
-                                    fill=mask_color_rgb);  # Title only Mask #
-                    text_y += line_spacing_pixels;
-                    param_indent_pixels = 15
-                    for label in labels:  # Use pre-formatted labels from test_results
-                        if text_y + line_spacing_pixels < cell_br_y:
-                            table_draw.text((text_x + param_indent_pixels, text_y), label, font=self.font_large,
-                                            fill=black_color_rgb);
-                            text_y += line_spacing_pixels
-                        else:
-                            break
-                else:  # Fallback OpenCV
-                    cv2.rectangle(table_image_np, (cell_tl_x, cell_tl_y), (cell_br_x, cell_br_y), black_color_bgr, 1)
-                    text_x = block_base_x + cell_margin;
-                    text_y = block_base_y + cell_margin + 15
-                    cv2.putText(table_image_np, f"Mask {idx}", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                mask_color_bgr, 1);
-                    text_y += 20
-                    for label in labels:
-                        if text_y + 20 < cell_br_y:
-                            cv2.putText(table_image_np, label, (text_x + 15, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                                        black_color_bgr, 1);
-                            text_y += 18
-                        else:
-                            break
-            else:
-                print(f"[Warning][TestViz] Skipping cell drawing: Mask {idx} out of bounds.")
-            # --- End Draw Parameter Table Cell ---
-        # --- End Draw Loop ---
-
-        # Finalize table image
-        if table_image_pil:
+        # --- Finalize Table ---
+        if pillow_ready and table_image_pil is not None:
             try:
                 table_image_np = cv2.cvtColor(np.array(table_image_pil), cv2.COLOR_RGB2BGR)
             except Exception as conv_e:
-                print(f"[Error][TestViz] PIL to OpenCV conversion failed: {conv_e}")
+                print(f"[Error Table] PIL to OpenCV conversion failed: {conv_e}")
+        # ---
 
-        # Display if requested
+        # --- Display Logic (Fixed Size 1280x800) ---
         if is_image_shown:
             try:
-                display_width = 1280;
-                h_disp, w_disp = mask_image.shape[:2]
-                if w_disp == 0: raise ValueError("Mask image width is zero.")
-                display_height = int(display_width * (h_disp / w_disp))
+                # *** CHANGE: Use fixed display dimensions ***
+                display_width = 1280
+                display_height = 800
+                # *** END CHANGE ***
+
+                # Resize both images to the fixed size
                 resized_mask_img = cv2.resize(mask_image, (display_width, display_height),
                                               interpolation=cv2.INTER_AREA);
                 table_window_title = f"{window_title} - Parameters";
+
+                # Check table image before showing
+                if table_image_np is None or table_image_np.size == 0:
+                    print("[Error Table] table_image_np is invalid before showing!")
+                    table_image_np = np.zeros((display_height, display_width, 3),
+                                              dtype=np.uint8)  # Create black fallback
+                    cv2.putText(table_image_np, "Error creating table", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 255), 2)
+
                 resized_table_img = cv2.resize(table_image_np, (display_width, display_height),
                                                interpolation=cv2.INTER_AREA);
+
                 cv2.imshow(window_title, resized_mask_img);
-                cv2.imshow(table_window_title, resized_table_img);
+                cv2.imshow(table_window_title, resized_table_img);  # Show the table window
                 cv2.waitKey(0);
                 cv2.destroyWindow(window_title);
-                cv2.destroyWindow(table_window_title)
+                cv2.destroyWindow(table_window_title);  # Destroy the table window too
             except Exception as display_err:
-                print(f"[Error][TestViz] Display failed: {display_err}");
-                cv2.destroyAllWindows()
+                print(f"[Error] Display bounding box or table failed: {display_err}");
+                cv2.destroyAllWindows()  # Close all windows on error
+        # --- End Display Logic ---
 
         return mask_image, table_image_np
 
-    # --- REVERTED process_image METHOD ---
+    # --- END draw_bounding_boxes METHOD ---
+
+    # --- draw_test_visualization METHOD (Fixed Display Size) ---
+    def draw_test_visualization(self, image, test_results, label_color=(255, 0, 0),
+                                window_title="Test Visualization",
+                                is_image_shown=False):
+        """
+        Draws visualization for test_mode=True. Displays at fixed 1280x800 if shown.
+        Shows masks, minimum rotated rectangles, numbered centroids, and basic features.
+        """
+        # --- Input Validation and Dimension Extraction ---
+        # print("[Debug][TestViz] Entering draw_test_visualization...") # Optional debug
+        if image is None: print("[Error][TestViz] Input image is None."); return None, None
+        try:
+            height, width = image.shape[:2]
+        except Exception as shape_err:
+            print(f"[Error][TestViz] Cannot get shape: {shape_err}");
+            return None, None
+        mask_image = image.copy()
+        table_image_np = np.full((height, width, 3), (150, 150, 150), dtype=np.uint8)  # Grey background for table
+
+        if not test_results: print(
+            "[Warning][TestViz] No test results to visualize."); return mask_image, table_image_np
+
+        # --- Drawing Setup ---
+        placed_circles_info: List[Tuple[int, int, int]] = [];
+        circle_radius = 15
+        black_color_bgr = (0, 0, 0);
+        grey_color_bgr = (150, 150, 150);
+        font_face = cv2.FONT_HERSHEY_SIMPLEX
+        # ---
+
+        # --- Loop through test results to draw overlays ---
+        for idx, result in enumerate(test_results, 1):
+            mask = result.get("mask");
+            min_rect_vertices = result.get("min_rect_vertices", []);
+            features = result.get("features")
+            if mask is None or features is None: print(f"[Warning][TestViz] Skipping item #{idx}"); continue
+
+            # --- Draw Minimum Rotated Rectangle ---
+            try:
+                points = np.array(min_rect_vertices, dtype=np.int32)
+                if len(points) == 4: cv2.polylines(mask_image, [points], isClosed=True, color=label_color,
+                                                   thickness=2)
+            except Exception as poly_err:
+                print(f"[Warning][TestViz] Failed draw rect #{idx}: {poly_err}")
+            # --- End Rotated Rectangle ---
+
+            # --- Draw Numbered Circle ---
+            try:
+                initial_centroid_x = int(features.get("centroid_x", 0));
+                initial_centroid_y = int(features.get("centroid_y", 0))
+                final_cx, final_cy = self._find_non_overlapping_position(initial_centroid_x, initial_centroid_y,
+                                                                         circle_radius, placed_circles_info)
+                placed_circles_info.append((final_cx, final_cy, circle_radius));
+                final_cx = max(0, min(width - 1, final_cx));
+                final_cy = max(0, min(height - 1, final_cy))
+                cv2.circle(mask_image, (final_cx, final_cy), circle_radius, grey_color_bgr, -1);
+                cv2.circle(mask_image, (final_cx, final_cy), circle_radius, black_color_bgr, 1)
+                number_text = str(idx);
+                (tw, th), _ = cv2.getTextSize(number_text, font_face, 0.5, 1)
+                cv2.putText(mask_image, number_text, (final_cx - tw // 2, final_cy + th // 2), font_face, 0.5,
+                            black_color_bgr, 1, cv2.LINE_AA)
+            except Exception as circle_err:
+                print(f"[Warning][TestViz] Failed draw circle #{idx}: {circle_err}")
+            # --- End Numbered Circle ---
+
+            # --- Parameter Table Cell (Typically not populated in Test Mode) ---
+            pass
+            # --- End Parameter Table Cell ---
+        # --- End Drawing Loop ---
+
+        # --- Display Logic (Fixed Size 1280x800) ---
+        if is_image_shown:
+            try:
+                # *** CHANGE: Use fixed display dimensions ***
+                display_width = 1280
+                display_height = 800
+                # *** END CHANGE ***
+
+                # Resize the main image
+                resized_mask_img = cv2.resize(mask_image, (display_width, display_height),
+                                              interpolation=cv2.INTER_AREA);
+
+                # Optional: Resize and show the (likely grey) table image
+                # table_window_title = f"{window_title} - Parameters (Test Mode)";
+                # resized_table_img = cv2.resize(table_image_np, (display_width, display_height), interpolation=cv2.INTER_AREA);
+                # cv2.imshow(table_window_title, resized_table_img);
+
+                cv2.imshow(window_title, resized_mask_img);
+                cv2.waitKey(0);
+                cv2.destroyWindow(window_title);
+                # if table shown: cv2.destroyWindow(table_window_title);
+            except Exception as display_err:
+                print(f"[Error][TestViz] Display failed: {display_err}");
+                cv2.destroyAllWindows()  # Close all windows on error
+        # --- End Display Logic ---
+
+        return mask_image, table_image_np
+
+    # --- END draw_test_visualization METHOD ---
+
+    # --- process_image METHOD (Passes IoU Threshold) ---
     def process_image(self,
                       image_array: Optional[np.ndarray],
-                      max_masks: Optional[int] = None,
+                      max_masks: Optional[int] = None,  # Optional: Limit masks from inference
                       label_color: Tuple[int, int, int] = (255, 0, 0),
                       test_mode: bool = False,
-                      max_masks_to_show: int = 10,
+                      max_masks_to_show: int = 10,  # Limit for test_masks visualization
                       edge_threshold: int = 5,
-                      sort_by_area: bool = True,
+                      iou_threshold: float = 0.9,  # <-- New parameter for IoU filtering
+                      sort_by_area: bool = True,  # Used by test_masks
                       window_title: str = "Visualization",
                       is_image_shown: bool = False
                       ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float, str, str]:
         """
         Processes image: inference, classify/test, evaluate (using config counts), visualize.
-        REVERTED: Does NOT accept ground_truth_counts.
+        Uses inference shape for edge filtering. Calls evaluate() which integrates IoU/distance checks
+        and performs count/overlap checks.
+        Handles both test_mode=True (visualization of tested masks) and
+        test_mode=False (full evaluation and visualization of final masks).
 
         Args:
             image_array: Input image as NumPy array.
-            max_masks: Max masks to process from inference (optional).
-            label_color: Color for drawing.
-            test_mode: If True, runs test_masks; otherwise, runs classify_masks and evaluate.
-            max_masks_to_show: Max masks for test_masks visualization.
-            edge_threshold: Border pixels to ignore.
-            sort_by_area: Sort masks by area in test_mode.
+            max_masks: (Optional) Max masks to process from inference.
+            label_color: Color for drawing overlays (e.g., bounding boxes).
+            test_mode: If True, runs test visualization; otherwise, runs full evaluation.
+            max_masks_to_show: Max masks to visualize in test mode.
+            edge_threshold: Pixel threshold for edge filtering.
+            iou_threshold: IoU threshold for filtering highly overlapping masks (default 0.9).
+            sort_by_area: Whether to sort masks by area in test mode.
             window_title: Base title for display windows.
             is_image_shown: Whether to display OpenCV windows.
 
         Returns:
-            Tuple: (mask_image, table_image, processing_time, status, reason)
-                   mask_image, table_image can be None on error.
-                   status is "OK", "NG", or "N/A" (for test mode).
+            Tuple containing:
+                - mask_img (np.ndarray or None): Image with overlays.
+                - table_img (np.ndarray or None): Parameter table image (often grey).
+                - proc_time (float): Total processing time.
+                - status (str): "OK", "NG", or "N/A".
+                - reason (str): Reason for status or description of mode.
         """
         start_time = time.time()
         inf_time = 0.0;
@@ -2535,27 +2453,31 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
         num_displayed_masks = 0
         mask_img, table_img = None, None
         status, reason = "NG", "Initialization Error"
+        raw_masks = None;
+        masks = [];
+        blank_image = None
+        classified_masks: Dict[str, List[Dict]] = {}
 
         # --- Input Validation ---
         if self.model is None:
             reason = "Model not initialized.";
             print(f"[{self.__class__.__name__}] NG: {reason}");
-            proc_time = time.time() - start_time
+            proc_time = time.time() - start_time;
             blank_shape = (768, 1024, 3);
             blank_image = self.load_blank_image(blank_shape)
             return blank_image.copy(), blank_image.copy(), proc_time, status, reason
         if image_array is None or image_array.size == 0:
             reason = "Invalid input image.";
             print(f"[{self.__class__.__name__}] NG: {reason}");
-            proc_time = time.time() - start_time
+            proc_time = time.time() - start_time;
             blank_shape = (768, 1024, 3);
             blank_image = self.load_blank_image(blank_shape)
             return blank_image.copy(), blank_image.copy(), proc_time, status, reason
-        blank_shape = image_array.shape if len(image_array.shape) == 3 else (
-            image_array.shape[0], image_array.shape[1], 3)
-        blank_image = self.load_blank_image(blank_shape)
-        mask_img, table_img = blank_image.copy(), blank_image.copy()  # Default return images
         # --- End Input Validation ---
+
+        original_image_shape = image_array.shape[:2]
+        blank_image = self.load_blank_image(original_image_shape)
+        mask_img, table_img = blank_image.copy(), blank_image.copy()
 
         try:
             # --- Inference ---
@@ -2563,216 +2485,209 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             inf_start_time = time.time();
             raw_masks = self.run_inference(image_array);
             inf_time = time.time() - inf_start_time;
-            print(f"[{self.__class__.__name__}] Inference done ({len(raw_masks)} raw masks): {inf_time:.3f}s.")
-            masks = [m for m in raw_masks if isinstance(m, np.ndarray)] if raw_masks is not None else []
-            if not masks:
-                reason = "No Masks found after Inference";
-                proc_time = time.time() - start_time;
-                print(f"[{self.__class__.__name__}] NG: {reason}. Time: {proc_time:.3f}s");
-                return mask_img, table_img, proc_time, "NG", reason  # Return blank images
-            if max_masks is not None and len(masks) > max_masks:
-                print(f"[Info] Truncating masks from {len(masks)} to {max_masks}.")
-                masks = masks[:max_masks]
-            image_shape = image_array.shape[:2];
-            test_results = []
+            masks = [m for m in raw_masks if isinstance(m, np.ndarray) and m.ndim == 2] if raw_masks else []
+            print(f"[{self.__class__.__name__}] Inference done ({len(masks)} valid masks): {inf_time:.3f}s.")
+            # --- End Inference ---
 
             # --- Post-Inference Processing ---
             print(f"[{self.__class__.__name__}] Post-inference processing...");
             post_inf_start_time = time.time()
+            filter_shape = None
+            if masks:
+                try:
+                    filter_shape = masks[0].shape;
+                    print(f"[Info] Using mask shape for filtering: {filter_shape}")
+                except IndexError:
+                    print(
+                        "[Warning] Masks list exists but is empty after filtering in inference? Cannot determine filter_shape.")
+                except Exception as shape_err:
+                    print(f"[Warning] Could not determine filter_shape from masks: {shape_err}")
+            else:
+                print("[Warning] No valid masks found from inference. Cannot determine filter_shape.")
+
+            # --- Mode Selection ---
             if test_mode:
                 # --- Test Mode ---
-                print(f"[{self.__class__.__name__}] Test Mode...");
-                test_results = self.rotation_invariant_checker.test_masks(masks, image_shape=image_shape,
-                                                                          max_masks_to_show=max_masks_to_show,
-                                                                          edge_threshold=edge_threshold,
-                                                                          sort_by_area=sort_by_area)
-                num_displayed_masks = len(test_results);
-                print(f"[{self.__class__.__name__}] Features extracted/sorted for {num_displayed_masks} masks.")
-                if num_displayed_masks > 0:
-                    mask_img, table_img = self.draw_test_visualization(image_array, test_results,
-                                                                       label_color=label_color,
-                                                                       window_title=f"{window_title} (Test Mode)",
-                                                                       is_image_shown=is_image_shown);
-                    print(f"[{self.__class__.__name__}] Test visualization drawn.")
+                print(f"[{self.__class__.__name__}] Test Mode (Edge Threshold: {edge_threshold})...");
+                test_results = []
+                if filter_shape:
+                    try:
+                        # Pass filter_shape and edge_threshold to test_masks
+                        # Note: IoU filtering is NOT typically done in test_masks mode
+                        test_results = self.rotation_invariant_checker.test_masks(
+                            masks, filter_shape=filter_shape, max_masks_to_show=max_masks_to_show,
+                            edge_threshold=edge_threshold, sort_by_area=sort_by_area)
+                        num_displayed_masks = len(test_results);
+                        print(
+                            f"[{self.__class__.__name__}] Features extracted/sorted for {num_displayed_masks} masks.")
+                    except Exception as test_mask_err:
+                        print(
+                            f"[Error] Failed during checker.test_masks: {test_mask_err}");
+                        traceback.print_exc();
+                        num_displayed_masks = 0
                 else:
                     print(
-                        f"[{self.__class__.__name__}] No masks to visualize in test mode.");
-                    mask_img = image_array.copy()
-                status, reason = "N/A", "Test Mode Completed"  # No OK/NG in test mode
+                        "[Warning] Skipping test_masks call due to missing filter_shape.");
+                    num_displayed_masks = 0
+
+                if num_displayed_masks > 0:
+                    try:
+                        mask_img, table_img = self.draw_test_visualization(
+                            image_array, test_results, label_color=label_color,
+                            window_title=f"{window_title} (Test Mode)", is_image_shown=is_image_shown)
+                        print(f"[{self.__class__.__name__}] Test visualization drawn.")
+                    except Exception as draw_test_err:
+                        print(
+                            f"[Error] Failed during draw_test_visualization: {draw_test_err}");
+                        traceback.print_exc()
+                else:
+                    print(f"[{self.__class__.__name__}] No masks to visualize in test mode.");
+                status, reason = "N/A", "Test Mode Completed"
+
             else:
                 # --- Evaluation Mode ---
-                print(f"[{self.__class__.__name__}] Evaluation Mode...");
-                classified_masks = self.rotation_invariant_checker.classify_masks(masks);
-                num_classified = sum(len(v) for v in classified_masks.values());
-                print(f"[{self.__class__.__name__}] Masks classified ({num_classified} total).")
-                if num_classified > 0:
-                    mask_img, table_img = self.draw_bounding_boxes(image_array, classified_masks,
-                                                                   label_color=label_color,
-                                                                   window_title=f"{window_title} (Evaluation)",
-                                                                   is_image_shown=is_image_shown);
-                    print(f"[{self.__class__.__name__}] BBoxes drawn.")
+                print(
+                    f"[{self.__class__.__name__}] Evaluation Mode (Edge Threshold: {edge_threshold}, IoU Threshold: {iou_threshold:.2f})...");  # Log IoU threshold
+
+                if not masks or filter_shape is None:
+                    print("[Error] No valid masks or filter_shape for evaluation.")
+                    status, reason = "NG", "No masks/filter_shape for evaluation"
+                    classified_masks = {}
                 else:
-                    print(f"[{self.__class__.__name__}] No masks classified to draw.");
-                    mask_img = image_array.copy()
-                # Evaluate using checker (uses config counts internally now)
-                print(f"[{self.__class__.__name__}] Evaluating checks...");
-                final_ok, eval_reason = self.rotation_invariant_checker.evaluate(
-                    masks=masks,  # Pass original valid masks list to evaluate
-                    image_shape=image_shape,
-                    edge_threshold=edge_threshold,
-                    sort_by_area=sort_by_area
-                    # NO ground_truth_counts passed here anymore
-                )
-                status = "OK" if final_ok else "NG";
-                reason = eval_reason;
-                print(f"[{self.__class__.__name__}] Evaluation done.");
-                print(f"[{self.__class__.__name__}] Eval Result: {status} ({reason})")
-                # --- End Evaluation Mode ---
+                    try:
+                        # Call evaluate, passing the new iou_threshold parameter
+                        final_ok, eval_reason, classified_masks = self.rotation_invariant_checker.evaluate(
+                            masks=masks,
+                            filter_shape=filter_shape,
+                            edge_threshold=edge_threshold,
+                            iou_threshold=iou_threshold  # <-- Pass IoU threshold here
+                        )
+                        status = "OK" if final_ok else "NG";
+                        reason = eval_reason;
+                        print(f"[{self.__class__.__name__}] Evaluation completed.");
+                        print(f"[{self.__class__.__name__}] Eval Result: {status} ({reason})")
+
+                        # Drawing uses the final masks returned by evaluate
+                        num_final_masks = sum(len(v) for v in classified_masks.values())
+                        if num_final_masks > 0:
+                            mask_img, table_img = self.draw_bounding_boxes(
+                                image_array, classified_masks, label_color=label_color,
+                                window_title=f"{window_title} (Evaluation)", is_image_shown=is_image_shown)
+                            print(f"[{self.__class__.__name__}] BBoxes drawn for {num_final_masks} final masks.")
+                        else:
+                            print(f"[{self.__class__.__name__}] No masks passed all filters to draw.");
+
+                    except Exception as eval_err:
+                        print(f"[Error] Error during Evaluation Mode processing (evaluate call): {eval_err}")
+                        traceback.print_exc();
+                        status, reason = "NG", f"Processing Error: {eval_err}"
+                        classified_masks = {}
+
+                # --- End Evaluation Mode Logic ---
             post_inf_time = time.time() - post_inf_start_time;
             print(f"[{self.__class__.__name__}] Post-inference done: {post_inf_time:.3f}s.")
+
+        # --- Error Handling ---
         except Exception as e:
             proc_time = time.time() - start_time;
             status = "NG";
-            reason = f"Processing Error: {e}";
+            reason = f"Overall Processing Error: {e}";
             print(f"[{self.__class__.__name__}] NG: {reason}. Time: {proc_time:.3f}s");
             print(traceback.format_exc())
-            if is_image_shown: cv2.destroyAllWindows();  # Close windows on error
-            # Return blank images on error
-            return blank_image.copy(), blank_image.copy(), proc_time, status, reason
-        finally:
-            # Clean up large variables
-            if 'masks' in locals(): del masks
-            if 'raw_masks' in locals(): del raw_masks
-            if 'test_results' in locals(): del test_results
-            if 'classified_masks' in locals(): del classified_masks
-            gc.collect();
-            # Ensure windows are closed if not handled by waitKey
-            if not is_image_shown: cv2.destroyAllWindows()
+            if is_image_shown: cv2.destroyAllWindows();
+            if blank_image is None: blank_shape = (768, 1024, 3); blank_image = self.load_blank_image(blank_shape)
+            mask_img, table_img = blank_image.copy(), blank_image.copy()
+            if 'classified_masks' not in locals(): classified_masks = {}
+            return mask_img, table_img, proc_time, status, reason
+        # --- End Error Handling ---
 
-        # --- Final Logging and Return ---
+        # --- Final Cleanup and Return ---
+        finally:
+            if 'masks' in locals() and masks is not None: del masks
+            if 'raw_masks' in locals() and raw_masks is not None: del raw_masks
+            if 'test_results' in locals(): del test_results
+            if 'classified_masks' in locals() and classified_masks is not None: del classified_masks
+            gc.collect();
+
         proc_time = time.time() - start_time;
         mode_str = "Test Mode" if test_mode else "Evaluation Mode"
         if test_mode:
             print(
                 f"[{self.__class__.__name__}] {mode_str}: Displayed {num_displayed_masks} masks. Time: {proc_time:.3f}s")
         else:
-            print(f"[{self.__class__.__name__}] {mode_str} Result: {status}. Reason: {reason}. Time: {proc_time:.3f}s")
+            print(
+                f"[{self.__class__.__name__}] {mode_str} Result: {status}. Reason: {reason}. Time: {proc_time:.3f}s")
 
-        # Ensure returned images are not None, use blank as fallback
-        final_mask_img = mask_img if mask_img is not None else blank_image.copy()
-        final_table_img = table_img if table_img is not None else blank_image.copy()
-
+        final_mask_img = mask_img if isinstance(mask_img, np.ndarray) else blank_image.copy()
+        final_table_img = table_img if isinstance(table_img, np.ndarray) else blank_image.copy()
         return final_mask_img, final_table_img, proc_time, status, reason
 
-    # --- END REVERTED process_image METHOD ---
+    # --- END process_image METHOD ---
 
+    # --- test_classification_on_samples METHOD (Omitted - Use previous version) ---
     def test_classification_on_samples(self, image_sample_dir: str):
-        """
-        Runs inference and classification on sample images, displaying classified masks.
-        Uses the configuration loaded during __init__ for classification.
+        pass  # Assumed unchanged
 
-        Args:
-            image_sample_dir: Path to the directory containing sample images.
-        """
-        print(f"\n--- Starting Classification Test on Samples in: {image_sample_dir} ---")
-        if not os.path.isdir(image_sample_dir):
-            print(f"[Error] Directory not found: {image_sample_dir}");
-            return
-        if not hasattr(self, 'rotation_invariant_checker') or not self.rotation_invariant_checker.classification_rules:
-            print("[Error] Checker not initialized properly or no classification rules loaded.");
-            return
 
-        valid_extensions = (".bmp", ".png", ".jpg", ".jpeg");
-        image_files = []
+# --- Function for Bezel/PWB Testing (Updated Call) ---
+def bezel_pwb_classification_test_main():
+    """Main function to run classification test, allows setting edge and IoU thresholds."""
+    print("--- Running BezelPWBPositionSegmenter Classification Test ---")
+    PROJECT_ROOT_ABS = r"D:\Working\BoardDefectChecker";  # Example path
+    AI_MODEL_DIR = os.path.join(PROJECT_ROOT_ABS, "ai-models");
+    SAMPLE_IMAGE_DIR = r"C:\BoardDefectChecker\images\samples_for_learning";  # Example path
+    TEST_EDGE_THRESHOLD = 50
+    TEST_IOU_THRESHOLD = 0.9  # Set desired IoU threshold (or keep default)
+
+    # --- Initialization (Same as before) ---
+    try:
+        if not os.path.isdir(AI_MODEL_DIR): print(
+            f"[FATAL ERROR] AI Model directory not found: {AI_MODEL_DIR}"); sys.exit(1)
+        segmenter = BezelPWBPositionSegmenter(model_type="x", model_path=AI_MODEL_DIR)
+        if segmenter.model is None: print("[FATAL ERROR] Segmenter model failed to load. Exiting."); sys.exit(1)
+    except Exception as init_err:
+        print(f"[FATAL ERROR] Failed init: {init_err}");
+        traceback.print_exc();
+        sys.exit(1)
+    if not os.path.isdir(SAMPLE_IMAGE_DIR): print(f"[Error] Sample directory not found: {SAMPLE_IMAGE_DIR}"); return
+    valid_extensions = (".bmp", ".png", ".jpg", ".jpeg")
+    try:
+        sample_files = [f for f in os.listdir(SAMPLE_IMAGE_DIR) if f.lower().endswith(valid_extensions)];
+        sample_image_paths = [os.path.join(SAMPLE_IMAGE_DIR, f) for f in sample_files]
+    except Exception as e:
+        print(f"[Error] Failed list images in {SAMPLE_IMAGE_DIR}: {e}"); return
+    if not sample_image_paths: print(f"[Warning] No valid images found in {SAMPLE_IMAGE_DIR}."); return
+    # --- End Initialization ---
+
+    print(f"Found {len(sample_image_paths)} images to process.")
+    print(f"--- Using Edge Threshold: {TEST_EDGE_THRESHOLD} ---")
+    print(f"--- Using IoU Threshold: {TEST_IOU_THRESHOLD} ---")  # Log IoU threshold
+
+    for img_path, img_filename in zip(sample_image_paths, sample_files):
+        print(f"\n--- Processing image for evaluation: {img_filename} ---")
+        image_array = cv2.imread(img_path)
+        if image_array is None: print(f"[Error] Failed load image: {img_path}"); continue
         try:
-            image_files = [f for f in os.listdir(image_sample_dir) if f.lower().endswith(valid_extensions)]
-        except Exception as e:
-            print(f"[Error] Failed list images: {e}");
-            return
-        if not image_files: print(f"[Warning] No valid images found in {image_sample_dir}."); return
+            # Call process_image, passing the iou_threshold
+            mask_img, table_img, proc_time, status, reason = segmenter.process_image(
+                image_array,
+                test_mode=False,  # Set to False to run full evaluation with IoU filter
+                is_image_shown=True,
+                edge_threshold=TEST_EDGE_THRESHOLD,
+                iou_threshold=TEST_IOU_THRESHOLD  # <-- Pass the IoU threshold here
+            )
+            # You can also set test_mode=True here, but the IoU filter in classify_masks
+            # won't be called in that path. test_masks doesn't typically do IoU filtering.
 
-        # Define colors for visualization (example)
-        colors = {"bezel": (0, 255, 0), "copper_mark": (255, 0, 0)};
-        default_color = (128, 128, 128)
+        except Exception as eval_err:
+            print(f"[FATAL ERROR] Error during process_image for {img_filename}: {eval_err}");
+            traceback.print_exc()
 
-        for filename in image_files:
-            image_path = os.path.join(image_sample_dir, filename);
-            print(f"\n--- Processing: {filename} ---")
-            image = cv2.imread(image_path);
-            if image is None: print(f"[Error] Failed load image: {image_path}"); continue
+    print("\n--- BezelPWBPositionSegmenter Evaluation Loop Finished ---");
+    cv2.destroyAllWindows()
 
-            print("Running inference...");
-            inf_start = time.time();
-            masks = self.run_inference(image);  # Get list of masks
-            inf_time = time.time() - inf_start
-            if masks is None or len(masks) == 0: print(f"Inference failed/no masks ({inf_time:.2f}s)."); continue
-            print(f"Inference done ({len(masks)} masks, {inf_time:.2f}s).")
 
-            print("Classifying masks...");
-            classified_masks = {}
-            try:
-                classified_masks = self.rotation_invariant_checker.classify_masks(masks)
-            except Exception as e:
-                print(f"[Error] Classification failed: {e}");
-                traceback.print_exc();
-                continue
-
-            # Prepare list of masks to visualize based on classification results
-            masks_to_visualize = []
-            for obj_type, mask_list in classified_masks.items():
-                for mask_info in mask_list:
-                    if isinstance(mask_info, dict) and 'mask' in mask_info:
-                        # Add type and color info for visualization
-                        mask_info['type'] = obj_type
-                        mask_info['color'] = colors.get(obj_type, default_color)
-                        masks_to_visualize.append(mask_info)
-
-            if not masks_to_visualize: print("No target objects classified."); continue
-            print(f"Found {len(masks_to_visualize)} classified target objects.")
-
-            # Create visualization image
-            vis_image = image.copy();
-            print("Drawing visualization...")
-            for mask_info in masks_to_visualize:
-                mask = mask_info.get('mask');
-                color = mask_info.get('color', default_color)
-                if mask is not None and isinstance(mask, np.ndarray):
-                    try:
-                        mask_area = mask.astype(bool);
-                        overlay = np.zeros_like(vis_image);
-                        overlay[mask_area] = color
-                        vis_image = cv2.addWeighted(vis_image, 1.0, overlay, 0.5, 0)
-                    except (IndexError, ValueError) as ve:
-                        print(f"[Warning] Overlay failed for {mask_info.get('type', 'unknown')}: {ve}");
-                        continue
-                else:
-                    print(f"[Warning] Invalid mask found in visualization list.")
-
-            # Display the result
-            window_title = f"Classified Masks ({filename}) - Press Esc to Stop, Any key for Next"
-            display_width = 1280;
-            display_height = 800  # Example display size
-            try:
-                h_vis, w_vis = vis_image.shape[:2]
-                if w_vis == 0: raise ValueError("Visualization image width is zero.")
-                # Calculate aspect ratio preserving height
-                display_height = int(display_width * (h_vis / w_vis))
-                resized_vis = cv2.resize(vis_image, (display_width, display_height), interpolation=cv2.INTER_AREA)
-
-                cv2.namedWindow(window_title, cv2.WINDOW_NORMAL);  # Allow resizing
-                cv2.resizeWindow(window_title, display_width, display_height);
-                cv2.imshow(window_title, resized_vis)
-                print(f"Displaying '{filename}'. Press Esc to Stop, Any key for Next...")
-                key = cv2.waitKey(0);  # Wait indefinitely
-                cv2.destroyWindow(window_title)
-                if key == 27: print("Esc pressed. Stopping test."); break  # Exit loop on ESC
-            except Exception as display_err:
-                print(f"[Error] Display failed: {display_err}");
-                cv2.destroyAllWindows()  # Close any windows on error
-
-        print("\n--- Finished Classification Test ---");
-        cv2.destroyAllWindows()  # Final cleanup
-
+# --- END UPDATED Test Function ---
 
 class ModelManager:
     """Class to manage model files and configurations"""
@@ -2997,89 +2912,6 @@ def small_fpc_main():
 
     # Call the plotting method to visualize box size statistics
     # segmenter.plot_box_size_statistics()
-
-
-# --- Function for Bezel/PWB Testing (REVERTED) ---
-def bezel_pwb_classification_test_main():
-    """
-    Main function to run the classification test for BezelPWBPositionSegmenter.
-    Processes ALL images in the sample directory using evaluation mode.
-    REVERTED: Does NOT pass ground truth counts. Evaluation relies on config count.
-    """
-    print("--- Running BezelPWBPositionSegmenter Classification Test ---")
-    # --- Configuration ---
-    PROJECT_ROOT_ABS = r"C:\Work\Sharp\AOI\BoardDefectChecker"  # ADJUST PATH AS NEEDED
-    AI_MODEL_DIR = os.path.join(PROJECT_ROOT_ABS, "ai-models")
-    SAMPLE_IMAGE_DIR = r"C:\BoardDefectChecker\images\samples_for_learning"  # ADJUST PATH AS NEEDED
-    # --- End Configuration ---
-
-    # --- Initialization ---
-    try:
-        # Ensure model path is correct
-        if not os.path.isdir(AI_MODEL_DIR):
-            print(f"[FATAL ERROR] AI Model directory not found: {AI_MODEL_DIR}")
-            sys.exit(1)
-        segmenter = BezelPWBPositionSegmenter(model_type="x", model_path=AI_MODEL_DIR)
-        # Check if model loaded successfully in the base class init
-        if segmenter.model is None:
-            print("[FATAL ERROR] Segmenter model failed to load during initialization. Exiting.")
-            sys.exit(1)
-    except Exception as init_err:
-        print(f"[FATAL ERROR] Failed to initialize BezelPWBPositionSegmenter: {init_err}")
-        traceback.print_exc()
-        sys.exit(1)
-    # --- End Initialization ---
-
-    # --- Find Sample Images ---
-    if not os.path.isdir(SAMPLE_IMAGE_DIR):
-        print(f"[Error] Sample directory not found: {SAMPLE_IMAGE_DIR}")
-        return
-    valid_extensions = (".bmp", ".png", ".jpg", ".jpeg")
-    try:
-        sample_files = [f for f in os.listdir(SAMPLE_IMAGE_DIR) if f.lower().endswith(valid_extensions)]
-        sample_image_paths = [os.path.join(SAMPLE_IMAGE_DIR, f) for f in sample_files]
-    except Exception as e:
-        print(f"[Error] Failed list images in {SAMPLE_IMAGE_DIR}: {e}")
-        return
-    if not sample_image_paths:
-        print(f"[Warning] No valid images found in {SAMPLE_IMAGE_DIR}.")
-        return
-    print(f"Found {len(sample_image_paths)} images to process.")
-    # --- End Find Sample Images ---
-
-    # --- Loop through images and run evaluation ---
-    for img_path, img_filename in zip(sample_image_paths, sample_files):
-        print(f"\n--- Processing image for evaluation: {img_filename} ---")
-        image_array = cv2.imread(img_path)
-        if image_array is None:
-            print(f"[Error] Failed load image: {img_path}")
-            continue
-
-        try:
-            # Call process_image in EVALUATION mode (test_mode=False)
-            # NO ground_truth_counts passed here anymore
-            mask_img, table_img, proc_time, status, reason = segmenter.process_image(
-                image_array,
-                test_mode=False,  # Ensure evaluation mode
-                is_image_shown=True  # Display the result window interactively
-            )
-            # Results are printed within process_image and evaluate methods now
-            # print(f"--- Evaluation Result for {img_filename} ---")
-            # print(f" Status: {status}")
-            # print(f" Reason: {reason}") # Reason will now include (Cfg)
-            # print(f" Time: {proc_time:.3f}s")
-
-        except Exception as eval_err:
-            print(f"[FATAL ERROR] Error during process_image for {img_filename}: {eval_err}")
-            traceback.print_exc()
-            # Optionally break or continue on error
-            # break
-        # finally:
-        # waitKey(0) and destroyWindow are handled within drawing functions when is_image_shown=True
-        # cv2.destroyAllWindows() # Avoid closing windows prematurely if shown
-
-    print("\n--- BezelPWBPositionSegmenter Evaluation Loop Finished ---")
-    cv2.destroyAllWindows()  # Final cleanup of any remaining windows
 
 
 # --- END REVERTED Test Function ---

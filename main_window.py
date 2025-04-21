@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
 
         # Initialize AI model runner
         self.small_fpc_ai_model_runner = SmallFPCFastImageSegmenter(model_type='x',
-                                                                    model_path="C:\\Work\\BoardDefectChecker\\ai-models\\",
+                                                                    model_path="D:\\Working\\BoardDefectChecker\\ai-models\\",
                                                                     angle_difference_threshold=1.2)
         self.model_manager = ModelManager()
 
