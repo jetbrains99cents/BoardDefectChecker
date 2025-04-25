@@ -37,7 +37,7 @@ class BezelPWBProcessingWorker(QThread):
     processing_finished = Signal(object, object, object, object, str, str, float, float, str, str)
 
     def __init__(self, bezel_pwb_ai_model, unused_model, left_input_path, right_input_path,
-                 detection_log_worker, part_number, staff_id, is_counter_turned_on, is_show_images=False):
+                 detection_log_worker, part_number, staff_id, is_counter_turned_on, is_show_images=False, is_pwb_check_enabled=True):
         super().__init__()
         self.bezel_pwb_ai_model = bezel_pwb_ai_model
         self.left_input_path = left_input_path
@@ -49,26 +49,45 @@ class BezelPWBProcessingWorker(QThread):
         self.is_show_images = is_show_images
         self.processor = BezelPWBPositionImageProcessor()
         self.processor.is_images_shown = self.is_show_images
+        self.is_pwb_check_enabled = is_pwb_check_enabled
 
     def run(self):
+        # MODIFIED: Removed the visualize_all_masks keyword argument.
+        # The processor instance (self.processor) already has its
+        # is_images_shown attribute set correctly in the worker's __init__,
+        # and the processor's process_image method uses that internal attribute.
         result = self.processor.process_image(
-            self.bezel_pwb_ai_model, None, self.left_input_path, self.right_input_path,
-            visualize_all_masks=self.is_show_images
+            self.bezel_pwb_ai_model,
+            None,  # unused_model placeholder
+            self.left_input_path,
+            self.right_input_path,
+            self.is_pwb_check_enabled
+            # No explicit keyword args needed here anymore,
+            # as the processor handles passing relevant params down via **kwargs
+            # and uses its own self.is_images_shown state.
         )
-        if result is None or len(result) != 10:
-            self.processing_finished.emit(None, None, None, None, "NG", "NG", 0.0, 0.0, "NG", "Processing failed")
-            print("Result is None or length of result is not equal to 10. Processing failed")
+
+        # Check if the result is valid (should be a tuple of 10 elements)
+        if result is None or not isinstance(result, tuple) or len(result) != 10:
+            # Emit None for all image objects and NG status if processing failed
+            self.processing_finished.emit(None, None, None, None, "NG", "NG", 0.0, 0.0, "NG",
+                                          "Processing failed or returned invalid data")
+            print("[Worker] Result is None or length/type is incorrect. Emitting failure signal.")
             return
 
-        (left_bezel_vis, right_bezel_vis, left_pwb_vis, right_pwb_vis,
+        # Unpack the 10 results correctly
+        (left_mask_img, right_mask_img, left_annotated_pwb_img, right_annotated_pwb_img,
          left_result, right_result, left_time, right_time, final_result, defect_reason) = result
 
+        # Emit the results via the signal
         self.processing_finished.emit(
-            left_bezel_vis, right_bezel_vis, left_pwb_vis, right_pwb_vis,
+            left_mask_img, right_mask_img, left_annotated_pwb_img, right_annotated_pwb_img,
             left_result, right_result, left_time, right_time, final_result, defect_reason
         )
 
+        # Log the result if the counter is enabled
         if self.is_counter_turned_on and self.detection_log_worker:
+            print(f"[Worker] Logging result - Final: {final_result}, Left: {left_result}, Right: {right_result}")
             self.detection_log_worker.log_bezel_pwb_detection_result(
                 part_serial_number=self.part_number,
                 left_result=left_result,
@@ -76,6 +95,10 @@ class BezelPWBProcessingWorker(QThread):
                 left_image_path=self.left_input_path,
                 right_image_path=self.right_input_path
             )
+        elif not self.is_counter_turned_on:
+            print("[Worker] Counter is off. Skipping logging.")
+        elif self.detection_log_worker is None:
+            print("[Worker] Detection log worker is None. Skipping logging.")
 
 
 class ProcessingDialog(QDialog):

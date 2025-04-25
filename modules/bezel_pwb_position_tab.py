@@ -1,7 +1,9 @@
+import re
 from datetime import datetime
 import os
 import cv2
 import psutil
+import numpy as np
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import Qt, QTimer, QThread, Slot
 from PySide6.QtWidgets import QMessageBox
@@ -11,6 +13,8 @@ from modules.ai_models import BezelPWBPositionSegmenter
 from modules.language import SimpleLanguageManager
 from modules.disk_space_monitoring import DiskSpaceMonitor
 from modules.processing_working import BezelPWBProcessingWorker, ProcessingDialog
+
+from typing import List, Dict, Tuple, Any, Optional
 
 
 class BezelPWBTabController:
@@ -29,6 +33,7 @@ class BezelPWBTabController:
         self.is_counter_turned_on = False
         self.is_processed_images_shown = False
         self.is_options_locked = False
+        self.is_pwb_check_enabled = True
         self.current_connection_state = False
         self.last_selected_index_left = None
         self.last_selected_index_right = None
@@ -82,6 +87,7 @@ class BezelPWBTabController:
         self.ui.radioButton_14.toggled.connect(self.on_vietnamese_selected)
         self.ui.lineEdit_30.returnPressed.connect(self.update_staff_id)
         self.ui.lineEdit_29.returnPressed.connect(self.handle_part_number_return_pressed)
+        self.ui.checkBox_16.stateChanged.connect(self.toggle_pwb_check)
 
         self.ui.radioButton_13.setText("ENG")
         self.ui.radioButton_14.setText("VIE")
@@ -518,6 +524,57 @@ class BezelPWBTabController:
             self.ui.checkBox_15.setEnabled(True)
             self.ui.checkBox_16.setEnabled(True)
 
+    # --- Method to toggle PWB check state (MODIFIED) ---
+    def toggle_pwb_check(self, state):
+        """
+        Toggles the PWB check based on the checkbox state.
+        Checked (state=2) means PWB check is DISABLED (False).
+        Unchecked (state=0) means PWB check is ENABLED (True).
+        Updates the internal state and shows a translated message directly defined here.
+        """
+        # Reverse the logic: checked (state=2) means DISABLED (False)
+        self.is_pwb_check_enabled = (state != 2) # True if unchecked, False if checked
+
+        # --- MODIFICATION: Define translations directly ---
+        title = "PWB Check Status" # Default English title
+        status_message = ""
+        lang = "en" # Default language
+
+        # Try to get current language from manager if it exists
+        if hasattr(self, 'lang_manager') and self.lang_manager is not None:
+            lang = self.lang_manager.current_language
+
+        # Set title and message based on language and state
+        if lang == "vi":
+            title = "Trạng thái kiểm PWB"
+            if self.is_pwb_check_enabled:
+                status_message = "Kiểm PWB được BẬT."
+            else:
+                status_message = "Kiểm PWB bị TẮT."
+        else: # Default to English
+            title = "PWB Check Status"
+            if self.is_pwb_check_enabled:
+                status_message = "PWB check is ENABLED."
+            else:
+                status_message = "PWB check is DISABLED."
+        # --- END MODIFICATION ---
+
+        print(f"[BezelPWB] PWB Check toggled. New state: {'ENABLED' if self.is_pwb_check_enabled else 'DISABLED'} (Lang: {lang})")
+        QMessageBox.information(None, title, status_message) # Show the determined message
+
+        # Optional: Check if options are locked and potentially revert UI state
+        # if hasattr(self, 'is_options_locked') and self.is_options_locked:
+        #     locked_message_default_en = "Options are locked."
+        #     locked_message_default_vi = "Các tùy chọn đã bị khóa."
+        #     locked_message = locked_message_default_vi if lang == "vi" else locked_message_default_en
+        #     # Note: No fetching needed here either if embedding directly
+        #     QMessageBox.information(None, "Info", locked_message)
+        #     # Find the checkbox widget (replace checkBox_15 if needed)
+        #     # pwb_checkbox = self.ui.checkBox_15
+        #     # pwb_checkbox.blockSignals(True) # Prevent recursive signals
+        #     # pwb_checkbox.setChecked(not self.is_pwb_check_enabled) # Revert UI to match actual state
+        #     # pwb_checkbox.blockSignals(False)
+
     # Staff ID and Part Number
     def update_staff_id(self):
         staff_id = self.ui.lineEdit_30.text().strip()
@@ -645,7 +702,8 @@ class BezelPWBTabController:
             part_number=part_number,
             staff_id=staff_id,
             is_counter_turned_on=self.is_counter_turned_on,
-            is_show_images=self.is_processed_images_shown
+            is_show_images=self.is_processed_images_shown,
+            is_pwb_check_enabled=self.is_pwb_check_enabled
         )
 
         self.processing_dialog = ProcessingDialog(None)
@@ -654,61 +712,307 @@ class BezelPWBTabController:
         self.processing_worker.start()
         self.processing_dialog.exec()
 
-    def on_processing_finished(self, left_bezel_vis, right_bezel_vis, left_pwb_vis, right_pwb_vis,
-                               left_result, right_result, left_time, right_time, final_result, defect_reason):
-        """Handle the processing results and update the UI."""
-        # Display only "NG" or "OK" for left, right, and final results
-        self.ui.label_174.setText(left_result)  # Left result (NG or OK)
-        self.ui.label_167.setText(right_result)  # Right result (NG or OK)
-        self.ui.label_166.setText(f"{left_time:.2f} seconds")
-        self.ui.label_168.setText(f"{right_time:.2f} seconds")
-        self.ui.label_171.setText(final_result)  # Final result (NG or OK)
-        self.ui.label_103.setText(defect_reason if defect_reason else "No defects")  # Defect reason
+    # Define the path to the blank image as a class attribute or constant
+    BLANK_IMAGE_PATH = r"C:\BoardDefectChecker\resources\blank.png"
 
-        # Update styles based on results
-        self.ui.label_174.setStyleSheet("color: #25be7c;" if left_result == "OK" else "color: #be2b25;")
-        self.ui.label_167.setStyleSheet("color: #25be7c;" if right_result == "OK" else "color: #be2b25;")
-        self.ui.label_171.setStyleSheet("color: #25be7c;" if final_result == "OK" else "color: #be2b25;")
-
-        # Display left_vis on label_311
-        if left_bezel_vis is not None:
-            h, w, c = left_bezel_vis.shape
-            q_img = QImage(left_bezel_vis.data, w, h, c * w, QImage.Format_RGB888)
-            pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-            self.ui.label_311.setGeometry(720, 105, 220, 220)  # Position at (720, 105), size 220x220
-            self.ui.label_311.setPixmap(pixmap)
-            self.ui.label_311.setScaledContents(True)
+    # --- UPDATED HELPER METHOD ---
+    def _parse_and_translate_reason(self, reason: Optional[str], side: str) -> str:
+        """
+        Parses the technical reason string and returns a user-friendly,
+        translated message that ALWAYS includes the side ('left'/'right' or 'trái'/'phải').
+        Handles None or empty string as non-error cases.
+        """
+        # Ensure lang_manager is initialized and accessible
+        if not hasattr(self, 'lang_manager') or self.lang_manager is None:
+            print("[Error][Reason Parse] Language manager not available.")
+            lang = "en"  # Fallback to English
         else:
-            print("[Warning] Left processed image (left_bezel_vis) is None")
-            self.ui.label_311.setText("No Image")
+            lang = self.lang_manager.current_language
 
-        # Display right_vis on label_310 with corrected coordinates
-        if right_bezel_vis is not None:
-            h, w, c = right_bezel_vis.shape
-            q_img = QImage(right_bezel_vis.data, w, h, c * w, QImage.Format_RGB888)
-            pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-            self.ui.label_310.setGeometry(1070, 105, 220, 220)  # Corrected to (1070, 105), size 220x220
-            self.ui.label_310.setPixmap(pixmap)
-            self.ui.label_310.setScaledContents(True)
+        side_vi = "trái" if side == "left" else "phải"
+        side_en = side
+
+        # --- Translations for object types ---
+        object_translations_vi = {
+            "copper_mark": "dấu đồng",  # Simplified
+            "bezel": "ngàm",
+            "stamped_mark": "dấu dập",
+            "pwb": "mạch PWB",  # Simplified
+            "part": ""  # Removed fallback word
+        }
+        object_translations_en = {
+            "copper_mark": "copper mark",
+            "bezel": "bezel",
+            "stamped_mark": "stamped mark",
+            "pwb": "PWB",
+            "part": ""  # Removed fallback word
+        }
+
+        # Default/Fallback message (includes side)
+        default_reason_vi = f"Lỗi không xác định bên {side_vi}"
+        default_reason_en = f"Unknown error on {side_en}"
+
+        # --- MODIFICATION: Handle OK cases first, including empty string ---
+        if reason is None or reason == "" or reason == "OK" or reason.startswith("OK:"):
+            # Handle specific OK reason from evaluate if PWB check was skipped
+            if isinstance(reason, str) and "[Stamped Mark Skipped]" in reason:
+                # Return the specific message including the side
+                return f"Kiểm PWB bị tắt bên {side_vi}" if lang == "vi" else f"PWB Check Disabled on {side_en}"
+            # Standard OK case or empty reason - return empty string
+            return ""
+        # --- END MODIFICATION ---
+
+        # Handle non-string reasons (already covered by the check above, but keep for safety)
+        if not isinstance(reason, str):
+            print(f"[Warning][Reason Parse] Reason is not a string: {reason}")
+            return default_reason_vi if lang == "vi" else default_reason_en
+
+        # --- PWB/Internal Geometry Errors ---
+        if reason.startswith("InternalGeom_NG:") or reason.startswith("InternalGeom_Error:"):
+            pwb_term_vi = object_translations_vi.get("pwb", "PWB")
+            # Ensure side is included
+            return f"Lỗi vị trí dán {pwb_term_vi} bên {side_vi}" if lang == "vi" else f"PWB position error on {side_en}"
+
+        # --- Evaluation Errors (from checker.evaluate) ---
+        if reason.startswith("Eval_NG:"):
+            # Count Check Error
+            if "Count_NG(Cfg): Expected" in reason:
+                match = re.search(r"Expected \d+ '(\w+)'", reason)
+                obj_type_en = match.group(1) if match else "part"
+                if lang == "vi":
+                    obj_type_display = object_translations_vi.get(obj_type_en, obj_type_en)
+                    # Ensure side is included, removed "đối tượng"
+                    return f"Bị thiếu {obj_type_display} bên {side_vi}"
+                else:
+                    obj_type_display_en = object_translations_en.get(obj_type_en, obj_type_en)
+                    # Ensure side is included, removed "part"
+                    return f"Missing {obj_type_display_en} on {side_en}".replace("  ",
+                                                                                 " ").strip()  # Avoid double spaces if obj_type is empty
+            # Overlap Check Error
+            elif "Overlap_NG:" in reason:
+                bezel_term_vi = object_translations_vi.get("bezel", "Bezel")
+                # Ensure side is included
+                return f"{bezel_term_vi} bị chồng lấn bên {side_vi}" if lang == "vi" else f"Bezel overlaps on {side_en}"
+            # Classification/Filtering Errors
+            elif "No masks passed" in reason or "Unexpected error during integrated classification" in reason:
+                # Ensure side is included
+                return f"Lỗi phân loại bên {side_vi}" if lang == "vi" else f"Classification error on {side_en}"
+            # Fallback for unhandled Eval_NG
+            else:
+                print(f"[Warning][Reason Parse] Unhandled Eval_NG reason: {reason}")
+                # Ensure side is included
+                return f"Lỗi đánh giá bên {side_vi}" if lang == "vi" else f"Evaluation error on {side_en}"
+
+        # --- Initial Processing Errors (from ai_model.process_image) ---
+        elif "Model not initialized" in reason or "Invalid input image" in reason or "Overall Processing Error" in reason:
+            # Ensure side is included
+            return f"Lỗi xử lý ảnh bên {side_vi}" if lang == "vi" else f"Image processing error on {side_en}"
+
+        # --- Fallback for any other unexpected string ---
         else:
-            print("[Warning] Right processed image (right_bezel_vis) is None")
-            self.ui.label_310.setText("No Image")
+            # This block should ideally not be reached now for empty strings
+            print(f"[Warning][Reason Parse] Unhandled reason format: {reason}")
+            # Default message already includes side
+            return default_reason_vi if lang == "vi" else default_reason_en
 
-        # Handle optional display of processed images if checkbox is checked
-        if self.is_processed_images_shown:
-            for img, label in [
-                (left_pwb_vis, self.ui.label_319),
-                (right_pwb_vis, self.ui.label_317),
-            ]:
-                if img is not None:
-                    h, w, c = img.shape
-                    q_img = QImage(img.data, w, h, c * w, QImage.Format_RGB888)
-                    pixmap = QPixmap.fromImage(q_img).scaled(250, 250, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-                    label.setPixmap(pixmap)
-                    label.setScaledContents(True)
+    # --- UPDATED SLOT METHOD ---
+    @Slot(object, object, object, object, str, str, float, float, str, str)  # Keep 10 arguments
+    def on_processing_finished(self, left_mask_img, right_mask_img, left_annotated_pwb_img, right_annotated_pwb_img,
+                               left_result, right_result, left_time, right_time, final_result,
+                               defect_reason_raw):  # Receive combined reason
+        """
+        Handle the processing results, parse the combined reason, translate, update UI text and colors.
+        """
+        print("[BezelPWB] Processing finished signal received.")
+        print(f"  Left Result Raw: {left_result}, Right Result Raw: {right_result}, Final Raw: {final_result}")
+        print(f"  Defect Reason Raw (Combined): {defect_reason_raw}")
+        print(f"  Left Time: {left_time:.3f}s, Right Time: {right_time:.3f}s")
+        # ... (log image types) ...
 
-        # Explicitly update the counter after processing
+        # --- Update Time Labels with Language ---
+        if hasattr(self, 'lang_manager') and self.lang_manager is not None:
+            time_unit = " giây" if self.lang_manager.current_language == "vi" else " seconds"
+        else:
+            time_unit = " seconds"
+            print("[Warning][UI Update] Language manager not found, defaulting time unit to 'seconds'.")
+        self.ui.label_166.setText(f"{left_time:.2f}{time_unit}")  # Left time
+        self.ui.label_168.setText(f"{right_time:.2f}{time_unit}")  # Right time
+
+        # --- Update Status Labels and Styles ---
+        self.ui.label_174.setText(left_result)
+        self.ui.label_167.setText(right_result)
+        self.ui.label_171.setText(final_result)
+        ok_style = "color: #25be7c;"  # Green
+        ng_style = "color: #be2b25;"  # Red
+        self.ui.label_174.setStyleSheet(ok_style if left_result == "OK" else ng_style)
+        self.ui.label_167.setStyleSheet(ok_style if right_result == "OK" else ng_style)
+        self.ui.label_171.setStyleSheet(ok_style if final_result == "OK" else ng_style)
+
+        # --- Parse and Translate Defect Reason ---
+        final_defect_reason_display = ""
+        # *** Still using simulation for individual reasons - needs fixing upstream ***
+        # This simulation logic needs to be replaced if individual reasons are passed
+        simulated_left_reason = None
+        simulated_right_reason = None
+        if isinstance(defect_reason_raw, str):
+            parts = defect_reason_raw.split(";")
+            for part in parts:
+                part = part.strip()
+                if part.startswith("Left:"):
+                    simulated_left_reason = part.replace("Left:", "").strip()
+                elif part.startswith("Right:"):
+                    simulated_right_reason = part.replace("Right:", "").strip()
+            # Handle case where only one reason is present without prefix
+            if len(parts) == 1 and not parts[0].startswith("Left:") and not parts[0].startswith("Right:"):
+                if left_result == "NG":
+                    simulated_left_reason = parts[0]
+                elif right_result == "NG":
+                    simulated_right_reason = parts[0]
+                else:
+                    simulated_left_reason = parts[0]  # Assign to left if both OK but reason exists
+
+        left_reason_parsed = self._parse_and_translate_reason(simulated_left_reason, "left")
+        right_reason_parsed = self._parse_and_translate_reason(simulated_right_reason, "right")
+
+        # Combine parsed reasons for display
+        reasons_list = [r for r in [left_reason_parsed, right_reason_parsed] if r]  # Filter out empty strings
+
+        if not reasons_list:  # If both sides were OK and no special OK reason (like skipped PWB)
+            if hasattr(self, 'lang_manager') and self.lang_manager is not None:
+                final_defect_reason_display = "Không phát hiện bất thường vị trí" if self.lang_manager.current_language == "vi" else "No position defect found"
+            else:
+                final_defect_reason_display = "No position defect found"
+        else:
+            final_defect_reason_display = "; ".join(reasons_list)
+
+        self.ui.label_103.setText(final_defect_reason_display)
+        # Set defect reason label color based on the overall final_result
+        self.ui.label_103.setStyleSheet(ok_style if final_result == "OK" else ng_style)
+        # --- END MODIFICATION ---
+
+        # --- Display Images (Mask and PWB/Blank) ---
+        # (Image display logic remains the same)
+        # Display Left Mask Image
+        if left_mask_img is not None and isinstance(left_mask_img, np.ndarray):
+            try:
+                if len(left_mask_img.shape) == 2:
+                    display_img_left = cv2.cvtColor(left_mask_img, cv2.COLOR_GRAY2RGB)
+                elif left_mask_img.shape[2] == 4:
+                    display_img_left = cv2.cvtColor(left_mask_img, cv2.COLOR_BGRA2RGB)
+                elif left_mask_img.shape[2] == 3:
+                    display_img_left = cv2.cvtColor(left_mask_img, cv2.COLOR_BGR2RGB)
+                else:
+                    raise ValueError("Unsupported image channel count")
+                h, w, c = display_img_left.shape
+                q_img = QImage(display_img_left.data, w, h, c * w, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                self.ui.label_311.setGeometry(720, 105, 220, 220)
+                self.ui.label_311.setPixmap(pixmap)
+                self.ui.label_311.setScaledContents(True)
+                self.ui.label_311.setText("")
+            except Exception as e:
+                print(f"[Error][UI] Failed to display left mask image: {e}"); self.ui.label_311.setText(
+                    "Display Error"); self.ui.label_311.setPixmap(QPixmap())
+        else:
+            print("[Warning] Left mask image is None"); self.ui.label_311.setText(
+                "No Image"); self.ui.label_311.setPixmap(QPixmap())
+
+        # Display Right Mask Image
+        if right_mask_img is not None and isinstance(right_mask_img, np.ndarray):
+            try:
+                if len(right_mask_img.shape) == 2:
+                    display_img_right = cv2.cvtColor(right_mask_img, cv2.COLOR_GRAY2RGB)
+                elif right_mask_img.shape[2] == 4:
+                    display_img_right = cv2.cvtColor(right_mask_img, cv2.COLOR_BGRA2RGB)
+                elif right_mask_img.shape[2] == 3:
+                    display_img_right = cv2.cvtColor(right_mask_img, cv2.COLOR_BGR2RGB)
+                else:
+                    raise ValueError("Unsupported image channel count")
+                h, w, c = display_img_right.shape
+                q_img = QImage(display_img_right.data, w, h, c * w, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                self.ui.label_310.setGeometry(1070, 105, 220, 220)
+                self.ui.label_310.setPixmap(pixmap)
+                self.ui.label_310.setScaledContents(True)
+                self.ui.label_310.setText("")
+            except Exception as e:
+                print(f"[Error][UI] Failed to display right mask image: {e}"); self.ui.label_310.setText(
+                    "Display Error"); self.ui.label_310.setPixmap(QPixmap())
+        else:
+            print("[Warning] Right mask image is None"); self.ui.label_310.setText(
+                "No Image"); self.ui.label_310.setPixmap(QPixmap())
+
+        # Display Left Annotated PWB Image or Blank
+        target_label_left_pwb = self.ui.label_319
+        target_label_left_pwb.setGeometry(720, 335, 220, 220)
+        if left_annotated_pwb_img is not None and isinstance(left_annotated_pwb_img, np.ndarray):
+            try:
+                if len(left_annotated_pwb_img.shape) == 2:
+                    display_pwb_left = cv2.cvtColor(left_annotated_pwb_img, cv2.COLOR_GRAY2RGB)
+                elif left_annotated_pwb_img.shape[2] == 4:
+                    display_pwb_left = cv2.cvtColor(left_annotated_pwb_img, cv2.COLOR_BGRA2RGB)
+                elif left_annotated_pwb_img.shape[2] == 3:
+                    display_pwb_left = cv2.cvtColor(left_annotated_pwb_img, cv2.COLOR_BGR2RGB)
+                else:
+                    raise ValueError("Unsupported image channel count")
+                h, w, c = display_pwb_left.shape
+                q_img = QImage(display_pwb_left.data, w, h, c * w, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                target_label_left_pwb.setPixmap(pixmap)
+                target_label_left_pwb.setScaledContents(True)
+                target_label_left_pwb.setText("")
+            except Exception as e:
+                print(f"[Error][UI] Failed to display left PWB image: {e}"); target_label_left_pwb.setText(
+                    "PWB Error"); target_label_left_pwb.setPixmap(QPixmap())
+        else:
+            print("[Info][UI] Left annotated PWB image is None. Displaying blank.")
+            blank_pixmap = QPixmap(self.BLANK_IMAGE_PATH)
+            if not blank_pixmap.isNull():
+                target_label_left_pwb.setPixmap(blank_pixmap.scaled(220, 220, Qt.IgnoreAspectRatio,
+                                                                    Qt.SmoothTransformation)); target_label_left_pwb.setScaledContents(
+                    True); target_label_left_pwb.setText("")
+            else:
+                print(
+                    f"[Error][UI] Failed to load blank image: {self.BLANK_IMAGE_PATH}"); target_label_left_pwb.setText(
+                    "Blank Missing"); target_label_left_pwb.setPixmap(QPixmap())
+
+        # Display Right Annotated PWB Image or Blank
+        target_label_right_pwb = self.ui.label_317
+        target_label_right_pwb.setGeometry(1070, 335, 220, 220)
+        if right_annotated_pwb_img is not None and isinstance(right_annotated_pwb_img, np.ndarray):
+            try:
+                if len(right_annotated_pwb_img.shape) == 2:
+                    display_pwb_right = cv2.cvtColor(right_annotated_pwb_img, cv2.COLOR_GRAY2RGB)
+                elif right_annotated_pwb_img.shape[2] == 4:
+                    display_pwb_right = cv2.cvtColor(right_annotated_pwb_img, cv2.COLOR_BGRA2RGB)
+                elif right_annotated_pwb_img.shape[2] == 3:
+                    display_pwb_right = cv2.cvtColor(right_annotated_pwb_img, cv2.COLOR_BGR2RGB)
+                else:
+                    raise ValueError("Unsupported image channel count")
+                h, w, c = display_pwb_right.shape
+                q_img = QImage(display_pwb_right.data, w, h, c * w, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                target_label_right_pwb.setPixmap(pixmap)
+                target_label_right_pwb.setScaledContents(True)
+                target_label_right_pwb.setText("")
+            except Exception as e:
+                print(f"[Error][UI] Failed to display right PWB image: {e}"); target_label_right_pwb.setText(
+                    "PWB Error"); target_label_right_pwb.setPixmap(QPixmap())
+        else:
+            print("[Info][UI] Right annotated PWB image is None. Displaying blank.")
+            blank_pixmap = QPixmap(self.BLANK_IMAGE_PATH)
+            if not blank_pixmap.isNull():
+                target_label_right_pwb.setPixmap(blank_pixmap.scaled(220, 220, Qt.IgnoreAspectRatio,
+                                                                     Qt.SmoothTransformation)); target_label_right_pwb.setScaledContents(
+                    True); target_label_right_pwb.setText("")
+            else:
+                print(
+                    f"[Error][UI] Failed to load blank image: {self.BLANK_IMAGE_PATH}"); target_label_right_pwb.setText(
+                    "Blank Missing"); target_label_right_pwb.setPixmap(QPixmap())
+
+        # Explicitly update the counter display after processing results are handled
         self.update_detected_result_count()
+        print("[BezelPWB] UI updated with processing results.")
 
     # Counter Methods
     def update_detected_result_count(self):

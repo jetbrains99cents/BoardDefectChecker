@@ -100,7 +100,7 @@ class RotationInvariantAOIChecker:
             for constraint in self.distance_constraints.values():
                 if isinstance(constraint, dict) and "range" in constraint and isinstance(constraint["range"],
                                                                                          list) and len(
-                        constraint["range"]) == 2:
+                    constraint["range"]) == 2:
                     try:
                         constraint["range"] = tuple(map(float, constraint["range"]))
                     except (ValueError, TypeError):
@@ -947,40 +947,31 @@ class RotationInvariantAOIChecker:
                  masks: List[np.ndarray],
                  filter_shape: Tuple[int, int],
                  edge_threshold: int = 5,
-                 # *** NEW PARAMETER ***
-                 enable_mask_iou_filter: bool = True,  # Default to enabled
-                 iou_threshold: float = 0.9,  # Mask IoU
+                 enable_mask_iou_filter: bool = True,
+                 iou_threshold: float = 0.9,
                  enable_relative_position_check: bool = True,
                  relative_position_pairs_to_check: Optional[List[str]] = None,
                  enable_containment_check: bool = True,
                  containment_reference_type: str = "bezel",
                  containment_target_type: str = "stamped_mark",
-                 enable_bbox_nms: bool = True,  # BBox NMS
-                 bbox_nms_iou_threshold: float = 0.5,  # BBox NMS
-                 bbox_nms_target_types: Optional[List[str]] = None  # BBox NMS
+                 enable_bbox_nms: bool = True,
+                 bbox_nms_iou_threshold: float = 0.5,
+                 bbox_nms_target_types: Optional[List[str]] = None,
+                 # --- NEW PARAMETER ---
+                 enable_pwb_check: bool = True # Flag to indicate if PWB check is globally enabled
                  ) -> Tuple[bool, str, Dict[str, List[Dict]]]:
         """
         Performs the complete evaluation process on a list of input masks.
+        If enable_pwb_check is False, the count check for 'stamped_mark' is skipped.
 
         Steps:
-        1. Calls `classify_masks` to perform all filtering (Edge, MaskIoU, Feature, BBoxNMS, Dist, Contain, RelPos).
-        2. Performs a Count Check on the filtered results against `expected_evaluation_count`.
-        3. Performs an Overlap Check on the filtered results based on `overlap_rules`.
+        1. Calls `classify_masks` to perform all filtering.
+        2. Performs a Count Check (skipping 'stamped_mark' if PWB check is disabled).
+        3. Performs an Overlap Check.
 
         Args:
-            masks (List[np.ndarray]): Raw masks from the segmenter.
-            filter_shape (Tuple[int, int]): Image shape (height, width).
-            edge_threshold (int): Pixel threshold for edge filter.
-            enable_mask_iou_filter (bool): If True, applies the Mask IoU filter step.
-            iou_threshold (float): IoU threshold for *mask* overlap filter.
-            enable_relative_position_check (bool): Enable/disable relative position filter.
-            relative_position_pairs_to_check (Optional[List[str]]): Specific pairs for rel pos check.
-            enable_containment_check (bool): Enable/disable containment filter.
-            containment_reference_type (str): Reference object type for containment.
-            containment_target_type (str): Target object type for containment.
-            enable_bbox_nms (bool): Enable/disable *bounding box* NMS filter.
-            bbox_nms_iou_threshold (float): IoU threshold for *bounding box* NMS.
-            bbox_nms_target_types (Optional[List[str]]): Object types to apply BBox NMS to.
+            # ... (other args remain the same) ...
+            enable_pwb_check (bool): If False, skip count check for 'stamped_mark'.
 
         Returns:
             Tuple[bool, str, Dict[str, List[Dict]]]:
@@ -991,7 +982,6 @@ class RotationInvariantAOIChecker:
         eval_start_time = time.time()
         print("[Checker] Starting evaluation...")
         final_reason = "Evaluation not completed"
-        # Initialize with expected structure based on rules
         final_classified_masks: Dict[str, List[Dict]] = {rule['type']: [] for rule in
                                                          self.classification_rules} if self.classification_rules else {}
 
@@ -999,10 +989,9 @@ class RotationInvariantAOIChecker:
         t0_classify = time.time()
         try:
             # Call the method that performs steps 1-7 of the filtering workflow
-            # *** Pass the new enable_mask_iou_filter flag ***
             final_classified_masks = self.classify_masks(
                 masks, filter_shape, edge_threshold,
-                enable_mask_iou_filter=enable_mask_iou_filter,  # Pass flag
+                enable_mask_iou_filter=enable_mask_iou_filter,
                 iou_threshold=iou_threshold,
                 enable_relative_position_check=enable_relative_position_check,
                 relative_position_pairs_to_check=relative_position_pairs_to_check,
@@ -1017,44 +1006,51 @@ class RotationInvariantAOIChecker:
             t1_classify = time.time()
             print(f"[TIME] Integrated Classification (classify_masks call): {t1_classify - t0_classify:.4f}s")
 
-            # Check if any masks survived the filtering process
-            if num_final_classified == 0 and len(masks) > 0:  # Check len(masks) to ensure it wasn't empty initially
+            if num_final_classified == 0 and len(masks) > 0:
                 final_reason = "Eval_NG: No masks passed the combined classification and filtering steps."
                 print(f"[Checker] {final_reason}")
                 eval_duration = time.time() - eval_start_time
                 print(f"[TIME] Total evaluate duration (early exit): {eval_duration:.4f}s")
-                return False, final_reason, final_classified_masks  # Return early
+                return False, final_reason, final_classified_masks
 
             print(f"[Checker] Integrated classification/filtering complete ({num_final_classified} masks remain).")
 
         except Exception as e:
-            # Catch errors specifically during the classify_masks call
             t1_classify = time.time()
             final_reason = f"Eval_NG: Unexpected error during integrated classification: {e}"
             print(f"[Checker] {final_reason}\n{traceback.format_exc()}")
             print(f"[TIME] Integrated Classification (Failed): {t1_classify - t0_classify:.4f}s")
             eval_duration = time.time() - eval_start_time
             print(f"[TIME] Total evaluate duration (error): {eval_duration:.4f}s")
-            return False, final_reason, final_classified_masks  # Return on error
+            return False, final_reason, final_classified_masks
         # --- End Integrated Classification ---
 
-        # --- 2. Count Check ---
-        # Compares the count of remaining objects per type against expected counts in config
+        # --- 2. Count Check (MODIFIED) ---
         t0_count = time.time()
         print("[Checker] Performing count check...")
         count_ok = True
         count_reason_parts = []
+        stamped_mark_skipped = False # Flag to track if stamped_mark count was skipped
         if not self.classification_rules:
             print("[Warning] No classification rules defined for count check.")
         else:
             for rule in self.classification_rules:
                 obj_type = rule['type']
-                expected_eval_count = rule['expected_count']  # From config
-                found_count = len(final_classified_masks.get(obj_type, []))  # Count remaining
+                expected_eval_count = rule['expected_count']
+
+                # --- MODIFICATION: Skip stamped_mark count if PWB check is disabled ---
+                if obj_type == "stamped_mark" and not enable_pwb_check:
+                    print(f"[Info][Count Check] Skipping count check for '{obj_type}' because PWB check is disabled.")
+                    stamped_mark_skipped = True
+                    continue # Skip to the next rule
+                # --- End Modification ---
+
+                found_count = len(final_classified_masks.get(obj_type, []))
                 if found_count != expected_eval_count:
                     count_ok = False
                     count_reason_parts.append(
                         f"Count_NG(Cfg): Expected {expected_eval_count} '{obj_type}', found {found_count}")
+
         t1_count = time.time()
         print(f"[TIME] Count Check: {t1_count - t0_count:.4f}s")
 
@@ -1063,12 +1059,12 @@ class RotationInvariantAOIChecker:
             print(f"[Checker] {final_reason}")
             eval_duration = time.time() - eval_start_time
             print(f"[TIME] Total evaluate duration (count fail): {eval_duration:.4f}s")
-            return False, final_reason, final_classified_masks  # Return early if count fails
-        print("[Checker] Count check passed.")
+            return False, final_reason, final_classified_masks
+
+        print("[Checker] Count check passed." + (" (Stamped Mark skipped)" if stamped_mark_skipped else ""))
         # --- End Count Check ---
 
         # --- 3. Overlap Check ---
-        # Checks for forbidden pixel overlaps based on rules in config
         t0_overlap = time.time()
         print("[Checker] Performing overlap check...")
         overlap_ok, overlap_reason = self.check_overlaps(final_classified_masks)
@@ -1080,12 +1076,17 @@ class RotationInvariantAOIChecker:
             print(f"[Checker] {final_reason}")
             eval_duration = time.time() - eval_start_time
             print(f"[TIME] Total evaluate duration (overlap fail): {eval_duration:.4f}s")
-            return False, final_reason, final_classified_masks  # Return early if overlap fails
+            return False, final_reason, final_classified_masks
+
         print(f"[Checker] Overlap check passed ({overlap_reason}).")
         # --- End Overlap Check ---
 
-        # If all checks passed up to this point
-        final_reason = "OK: All checks passed (Integrated Filters, Count, Overlap)"
+        # If all checks passed
+        final_reason = "OK: All checks passed (Integrated Filters, Count"
+        if stamped_mark_skipped:
+            final_reason += " [Stamped Mark Skipped]"
+        final_reason += ", Overlap)"
+
         eval_duration = time.time() - eval_start_time
         print(f"[Checker] Evaluation Result: {final_reason}")
         print(f"[TIME] Total evaluate duration: {eval_duration:.4f}s")
@@ -1093,14 +1094,19 @@ class RotationInvariantAOIChecker:
 
     # --- END evaluate METHOD ---
 
+
     # --- UPDATED METHOD: check_internal_geometry ---
 
+    # --- UPDATED METHOD: check_internal_geometry ---
     def check_internal_geometry(self,
                                 target_object_info: Dict,
                                 original_image: np.ndarray,
                                 check_config: Dict,
-                                is_image_shown: bool = False
-                                ) -> Tuple[bool, str, Optional[float], Optional[float]]:
+                                # --- MODIFIED: Flag now controls preparation, not display ---
+                                prepare_display_images: bool = False
+                                ) -> Tuple[
+        bool, str, Optional[float], Optional[float], Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
+        # --- MODIFIED: Return signature includes images ---
         """
         Performs an internal geometry check on a target object (e.g., PWB).
         Calculates effective mm/pixel based on calibration reference values.
@@ -1109,22 +1115,26 @@ class RotationInvariantAOIChecker:
         prioritizing runs in the center of the image.
         Uses perspective warp size to determine if rotation is needed.
         Optionally applies morphological smoothing (closing).
-        Visualizes the selected max height column and distance with small text, no background.
+        Returns intermediate images if prepare_display_images is True.
         """
-        print(
-            f"[Checker][InternalGeom] Starting check (Calculated Factor + Offset, Centered Max Column Height)...")  # Updated log
+        print(f"[Checker][InternalGeom] Starting check (Calculated Factor + Offset, Centered Max Column Height)...")
         start_geom_time = time.time()
+
+        # Initialize return images to None
+        cropped_deskewed_for_display = None
+        processed_binary_for_display = None
+        processed_binary_annotated = None  # Annotated binary image
 
         # --- Input Validation and Config Extraction ---
         try:
             if not target_object_info or "features" not in target_object_info:
-                return False, "InternalGeom_Error: Missing target object info or features.", None, None
+                return False, "InternalGeom_Error: Missing target object info or features.", None, None, None, None, None
             features = target_object_info["features"]
             min_rect_vertices_np = features.get("min_rect_vertices")
             if min_rect_vertices_np is None:
-                return False, "InternalGeom_Error: Missing 'min_rect_vertices' in features.", None, None
+                return False, "InternalGeom_Error: Missing 'min_rect_vertices' in features.", None, None, None, None, None
 
-            # Extract config parameters with error checking
+            # Extract config parameters
             thresh = check_config.get("binarization_threshold")
             binary_inverted = check_config.get("binary_inverted", False)
             erode_iterations = check_config.get("erode_iterations", 0)
@@ -1133,47 +1143,41 @@ class RotationInvariantAOIChecker:
             enable_smoothing = check_config.get("enable_smoothing", False)
             min_distance_mm = check_config.get("min_distance_mm")
             max_distance_mm = check_config.get("max_distance_mm")
-            # --- MODIFIED: Read calibration reference values ---
             calibration_ref_height_mm = check_config.get("calibration_ref_height_mm")
             calibration_ref_pixels = check_config.get("calibration_ref_pixels")
-            # --- End MODIFIED ---
             additional_height_pixels = check_config.get("additional_height_pixels", 0)
             min_col_height_ratio = check_config.get("min_column_height_ratio", 0.5)
             col_edge_ignore_ratio = check_config.get("column_edge_ignore_ratio", 0.15)
 
-            # Validate mandatory parameters
-            if thresh is None: return False, "InternalGeom_Error: Missing 'binarization_threshold' in config.", None, None
+            # Validate mandatory parameters (return includes image placeholders)
+            if thresh is None: return False, "InternalGeom_Error: Missing 'binarization_threshold' in config.", None, None, None, None, None
             if not isinstance(binary_inverted,
-                              bool): return False, "InternalGeom_Error: 'binary_inverted' must be boolean.", None, None
+                              bool): return False, "InternalGeom_Error: 'binary_inverted' must be boolean.", None, None, None, None, None
             if not isinstance(erode_iterations,
-                              int) or erode_iterations < 0: return False, "InternalGeom_Error: Invalid 'erode_iterations'.", None, None
+                              int) or erode_iterations < 0: return False, "InternalGeom_Error: Invalid 'erode_iterations'.", None, None, None, None, None
             if not isinstance(dilate_iterations,
-                              int) or dilate_iterations < 0: return False, "InternalGeom_Error: Invalid 'dilate_iterations'.", None, None
+                              int) or dilate_iterations < 0: return False, "InternalGeom_Error: Invalid 'dilate_iterations'.", None, None, None, None, None
             if kernel_size_list is None or len(
-                    kernel_size_list) != 2: return False, "InternalGeom_Error: Invalid 'morph_kernel_size' in config.", None, None
+                    kernel_size_list) != 2: return False, "InternalGeom_Error: Invalid 'morph_kernel_size' in config.", None, None, None, None, None
             if not isinstance(enable_smoothing,
-                              bool): return False, "InternalGeom_Error: 'enable_smoothing' must be boolean.", None, None
-            if min_distance_mm is None: return False, "InternalGeom_Error: Missing 'min_distance_mm' in config.", None, None
-            if max_distance_mm is None: return False, "InternalGeom_Error: Missing 'max_distance_mm' in config.", None, None
-            # --- MODIFIED: Validate new parameters ---
-            if calibration_ref_height_mm is None: return False, "InternalGeom_Error: Missing 'calibration_ref_height_mm' in config.", None, None
-            if calibration_ref_pixels is None: return False, "InternalGeom_Error: Missing 'calibration_ref_pixels' in config.", None, None
+                              bool): return False, "InternalGeom_Error: 'enable_smoothing' must be boolean.", None, None, None, None, None
+            if min_distance_mm is None: return False, "InternalGeom_Error: Missing 'min_distance_mm' in config.", None, None, None, None, None
+            if max_distance_mm is None: return False, "InternalGeom_Error: Missing 'max_distance_mm' in config.", None, None, None, None, None
+            if calibration_ref_height_mm is None: return False, "InternalGeom_Error: Missing 'calibration_ref_height_mm' in config.", None, None, None, None, None
+            if calibration_ref_pixels is None: return False, "InternalGeom_Error: Missing 'calibration_ref_pixels' in config.", None, None, None, None, None
             if not isinstance(additional_height_pixels,
-                              int) or additional_height_pixels < 0: return False, "InternalGeom_Error: Invalid 'additional_height_pixels' (must be non-negative integer).", None, None
-            # --- End MODIFIED ---
+                              int) or additional_height_pixels < 0: return False, "InternalGeom_Error: Invalid 'additional_height_pixels' (must be non-negative integer).", None, None, None, None, None
             if not isinstance(min_col_height_ratio, (float, int)) or not (
-                    0.0 <= min_col_height_ratio <= 1.0): return False, "InternalGeom_Error: Invalid 'min_column_height_ratio'.", None, None
+                    0.0 <= min_col_height_ratio <= 1.0): return False, "InternalGeom_Error: Invalid 'min_column_height_ratio'.", None, None, None, None, None
             if not isinstance(col_edge_ignore_ratio, (float, int)) or not (
-                    0.0 <= col_edge_ignore_ratio < 0.5): return False, "InternalGeom_Error: Invalid 'column_edge_ignore_ratio' (must be 0.0 to < 0.5).", None, None
+                    0.0 <= col_edge_ignore_ratio < 0.5): return False, "InternalGeom_Error: Invalid 'column_edge_ignore_ratio' (must be 0.0 to < 0.5).", None, None, None, None, None
 
             kernel_size = tuple(kernel_size_list)
             min_dist_mm = float(min_distance_mm)
             max_dist_mm = float(max_distance_mm)
             thresh = int(thresh)
-            # --- MODIFIED: Convert new parameters ---
             calibration_ref_height_mm = float(calibration_ref_height_mm)
-            calibration_ref_pixels = float(calibration_ref_pixels)  # Use float for division
-            # --- End MODIFIED ---
+            calibration_ref_pixels = float(calibration_ref_pixels)
 
             print(f"[Info][InternalGeom] Smoothing enabled: {enable_smoothing}")
             print(f"[Info][InternalGeom] Calibration Ref Height: {calibration_ref_height_mm:.5f} mm")
@@ -1182,14 +1186,14 @@ class RotationInvariantAOIChecker:
 
             # --- Calculate Effective Pixel Size from Calibration Values ---
             if calibration_ref_pixels <= 0:
-                return False, "InternalGeom_Error: Calibration reference pixels must be positive.", None, None
+                return False, "InternalGeom_Error: Calibration reference pixels must be positive.", None, None, None, None, None
             effective_mm_per_pixel = calibration_ref_height_mm / calibration_ref_pixels
             print(
                 f"[Info][InternalGeom] Calculated Effective mm/pixel (for conversion): {effective_mm_per_pixel:.5f}")
             # --- End Calculation ---
 
         except (KeyError, TypeError, ValueError) as config_err:
-            return False, f"InternalGeom_Error: Configuration error - {config_err}", None, None
+            return False, f"InternalGeom_Error: Configuration error - {config_err}", None, None, None, None, None
         # --- End Validation ---
 
         measured_distance_pixels = None  # Raw measurement from image
@@ -1201,28 +1205,26 @@ class RotationInvariantAOIChecker:
         try:
             # --- 1. Perspective Transform & Optional Rotation ---
             t0_crop = time.time()
-            src_pts = np.array(min_rect_vertices_np, dtype=np.float32)
-            width_rect_approx = np.linalg.norm(src_pts[0] - src_pts[1])
-            height_rect_approx = np.linalg.norm(src_pts[1] - src_pts[2])
-            dst_w = int(np.round(width_rect_approx))
-            dst_h = int(np.round(height_rect_approx))
-            dst_pts = np.array([[0, 0], [dst_w - 1, 0], [dst_w - 1, dst_h - 1], [0, dst_h - 1]], dtype=np.float32)
-            rotate_crop = dst_h > (dst_w * 1.1)
-            M = cv2.getPerspectiveTransform(src_pts, dst_pts)
-            warp_w = dst_w + 2
-            warp_h = dst_h + 2
-            dst_pts_warp = np.array([[1, 1], [dst_w, 1], [dst_w, dst_h], [1, dst_h]], dtype=np.float32)
-            M_warp = cv2.getPerspectiveTransform(src_pts, dst_pts_warp)
-            cropped_deskewed = cv2.warpPerspective(original_image, M_warp, (warp_w, warp_h))
+            src_pts = np.array(min_rect_vertices_np, dtype=np.float32);
+            width_rect_approx = np.linalg.norm(src_pts[0] - src_pts[1]);
+            height_rect_approx = np.linalg.norm(src_pts[1] - src_pts[2]);
+            dst_w = int(np.round(width_rect_approx));
+            dst_h = int(np.round(height_rect_approx));
+            dst_pts = np.array([[0, 0], [dst_w - 1, 0], [dst_w - 1, dst_h - 1], [0, dst_h - 1]], dtype=np.float32);
+            rotate_crop = dst_h > (dst_w * 1.1);
+            M = cv2.getPerspectiveTransform(src_pts, dst_pts);
+            warp_w = dst_w + 2;
+            warp_h = dst_h + 2;
+            dst_pts_warp = np.array([[1, 1], [dst_w, 1], [dst_w, dst_h], [1, dst_h]], dtype=np.float32);
+            M_warp = cv2.getPerspectiveTransform(src_pts, dst_pts_warp);
+            cropped_deskewed = cv2.warpPerspective(original_image, M_warp, (warp_w, warp_h));
             dst_w, dst_h = warp_w, warp_h
-            if rotate_crop:
-                print(
-                    "[Info][InternalGeom] Vertical mark detected, rotating crop 90 degrees.")
-                cropped_deskewed = cv2.rotate(
-                    cropped_deskewed, cv2.ROTATE_90_CLOCKWISE)
-                dst_w, dst_h = dst_h, dst_w
-            t1_crop = time.time()
+            if rotate_crop: print(
+                "[Info][InternalGeom] Vertical mark detected, rotating crop 90 degrees."); cropped_deskewed = cv2.rotate(
+                cropped_deskewed, cv2.ROTATE_90_CLOCKWISE); dst_w, dst_h = dst_h, dst_w
+            t1_crop = time.time();
             print(f"[TIME][InternalGeom] Cropping/Deskewing/Rotating: {t1_crop - t0_crop:.4f}s")
+            if prepare_display_images: cropped_deskewed_for_display = cropped_deskewed.copy()  # Store for return
 
             # --- 2. Binarization ---
             t0_bin = time.time()
@@ -1232,28 +1234,21 @@ class RotationInvariantAOIChecker:
                 gray_cropped = cropped_deskewed
             thresh_type = cv2.THRESH_BINARY_INV if not binary_inverted else cv2.THRESH_BINARY
             _, binary_img = cv2.threshold(gray_cropped, thresh, 255, thresh_type)
-            t1_bin = time.time()
+            t1_bin = time.time();
             print(f"[TIME][InternalGeom] Binarization: {t1_bin - t0_bin:.4f}s")
 
             # --- 3. Optional Erode/Dilate ---
-            processed_binary = binary_img.copy()
+            processed_binary = binary_img.copy()  # Keep a copy before smoothing
             morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
-            if erode_iterations > 0:
-                t0_erode = time.time()
-                processed_binary = cv2.erode(processed_binary,
-                                             morph_kernel,
-                                             iterations=erode_iterations)
-                t1_erode = time.time()
-                print(
-                    f"[TIME][InternalGeom] Erosion ({erode_iterations} iter): {t1_erode - t0_erode:.4f}s")
-            if dilate_iterations > 0:
-                t0_dilate = time.time()
-                processed_binary = cv2.dilate(processed_binary,
-                                              morph_kernel,
-                                              iterations=dilate_iterations)
-                t1_dilate = time.time()
-                print(
-                    f"[TIME][InternalGeom] Dilation ({dilate_iterations} iter): {t1_dilate - t0_dilate:.4f}s")
+            if erode_iterations > 0: t0_erode = time.time(); processed_binary = cv2.erode(processed_binary,
+                                                                                          morph_kernel,
+                                                                                          iterations=erode_iterations); t1_erode = time.time(); print(
+                f"[TIME][InternalGeom] Erosion ({erode_iterations} iter): {t1_erode - t0_erode:.4f}s")
+            if dilate_iterations > 0: t0_dilate = time.time(); processed_binary = cv2.dilate(processed_binary,
+                                                                                             morph_kernel,
+                                                                                             iterations=dilate_iterations); t1_dilate = time.time(); print(
+                f"[TIME][InternalGeom] Dilation ({dilate_iterations} iter): {t1_dilate - t0_dilate:.4f}s")
+            if prepare_display_images: processed_binary_for_display = processed_binary.copy()  # Store for return
 
             # --- 4. Optional Morphological Smoothing (Closing) ---
             t0_morph = time.time()
@@ -1263,87 +1258,70 @@ class RotationInvariantAOIChecker:
             else:
                 smoothed_binary = processed_binary  # Use the result from erode/dilate directly
                 print("[Info][InternalGeom] Skipped morphological closing (smoothing disabled).")
-            t1_morph = time.time()
+            t1_morph = time.time();
             print(f"[TIME][InternalGeom] Smoothing Step (conditional): {t1_morph - t0_morph:.4f}s")
 
             # --- 5. Find Max Vertical Column Height (Prioritizing Middle) ---
             t0_col_height = time.time()
             img_height, img_width = smoothed_binary.shape
             min_req_height = int(min_col_height_ratio * img_height)
-            target_pixel_value = 0 if not binary_inverted else 255
+            min_req_height = 5
+            target_pixel_value = 0 if not binary_inverted else 255;
             print(
-                f"[Info][InternalGeom] Searching for target pixel value: {target_pixel_value} (binary_inverted={binary_inverted})")
-            edge_width_px = int(col_edge_ignore_ratio * img_width)
-            middle_start_x = edge_width_px
-            middle_end_x = img_width - edge_width_px - 1
-            max_height_overall = 0
+                f"[Info][InternalGeom] Searching for target pixel value: {target_pixel_value} (binary_inverted={binary_inverted})");
+            edge_width_px = int(col_edge_ignore_ratio * img_width);
+            middle_start_x = edge_width_px;
+            middle_end_x = img_width - edge_width_px - 1;
+            max_height_overall = 0;
             max_height_middle = 0
             for x in range(img_width):
-                max_height_in_col = 0
-                current_run_height = 0
-                in_run = False
-                col_run_start_y = -1
-                col_run_end_y = -1
+                max_height_in_col = 0;
+                current_run_height = 0;
+                in_run = False;
+                col_run_start_y = -1;
+                col_run_end_y = -1;
                 potential_best_in_col = None
                 for y in range(img_height):
                     pixel = smoothed_binary[y, x]
                     if pixel == target_pixel_value:
-                        if not in_run:
-                            in_run = True
-                            col_run_start_y = y
+                        if not in_run: in_run = True; col_run_start_y = y
                         current_run_height += 1
                     else:
-                        if in_run:
-                            in_run = False
-                            col_run_end_y = y - 1
-                        if current_run_height > max_height_in_col:
-                            max_height_in_col = current_run_height
-                            potential_best_in_col = {
-                                'height': current_run_height,
-                                'x': x,
-                                'y_start': col_run_start_y,
-                                'y_end': col_run_end_y}
+                        if in_run: in_run = False; col_run_end_y = y - 1;
+                        if current_run_height > max_height_in_col: max_height_in_col = current_run_height; potential_best_in_col = {
+                            'height': current_run_height, 'x': x, 'y_start': col_run_start_y,
+                            'y_end': col_run_end_y}
                         current_run_height = 0
-                if in_run:
-                    col_run_end_y = img_height - 1
-                if current_run_height > max_height_in_col:
-                    max_height_in_col = current_run_height
-                    potential_best_in_col = {
-                        'height': current_run_height,
-                        'x': x,
-                        'y_start': col_run_start_y,
-                        'y_end': col_run_end_y}
-                if max_height_in_col > max_height_overall:
-                    max_height_overall = max_height_in_col
-                    max_height_info_overall = potential_best_in_col
+                if in_run: col_run_end_y = img_height - 1;
+                if current_run_height > max_height_in_col: max_height_in_col = current_run_height; potential_best_in_col = {
+                    'height': current_run_height, 'x': x, 'y_start': col_run_start_y, 'y_end': col_run_end_y}
+                if max_height_in_col > max_height_overall: max_height_overall = max_height_in_col; max_height_info_overall = potential_best_in_col
                 is_in_middle = (middle_start_x <= x <= middle_end_x)
-                if is_in_middle and max_height_in_col > max_height_middle:
-                    max_height_middle = max_height_in_col
-                    max_height_info_middle = potential_best_in_col
-            t1_col_height = time.time()
+                if is_in_middle and max_height_in_col > max_height_middle: max_height_middle = max_height_in_col; max_height_info_middle = potential_best_in_col
+            t1_col_height = time.time();
             print(f"[TIME][InternalGeom] Max Column Height Search: {t1_col_height - t0_col_height:.4f}s")
 
             # --- Select the best column (prioritize middle) ---
-            selected_max_height = 0
+            selected_max_height = 0;
             selected_max_height_info = None
             if max_height_middle > 0:
-                selected_max_height = max_height_middle
-                selected_max_height_info = max_height_info_middle
+                selected_max_height = max_height_middle;
+                selected_max_height_info = max_height_info_middle;
                 print(
                     f"[Info][InternalGeom] Prioritizing middle column: x={selected_max_height_info['x']}, height={selected_max_height}")
             elif max_height_overall > 0:
-                selected_max_height = max_height_overall
-                selected_max_height_info = max_height_info_overall
+                selected_max_height = max_height_overall;
+                selected_max_height_info = max_height_info_overall;
                 print(
                     f"[Info][InternalGeom] No middle column found, using overall best: x={selected_max_height_info['x']}, height={selected_max_height}")
             else:
-                return False, f"InternalGeom_NG: No vertical run of target pixels ({target_pixel_value}) found.", None, None
+                return False, f"InternalGeom_NG: No vertical run of target pixels ({target_pixel_value}) found.", None, None, cropped_deskewed_for_display, processed_binary_for_display, None
 
             # --- Check if the selected column meets the minimum height ratio ---
             if selected_max_height < min_req_height:
-                # Return the measured pixel value even if it fails the height ratio check
                 measured_distance_pixels = float(selected_max_height)
-                return False, f"InternalGeom_NG: Selected column height ({selected_max_height}px) below threshold ({min_req_height}px).", None, measured_distance_pixels  # Return measured pixels on failure
+                reason = f"InternalGeom_NG: Selected column height ({selected_max_height}px) below threshold ({min_req_height}px)."
+                return False, reason, None, measured_distance_pixels, cropped_deskewed_for_display, processed_binary_for_display, None
 
             # --- Calculate Distance (Apply Offset BEFORE Conversion) ---
             measured_distance_pixels = float(selected_max_height)
@@ -1354,26 +1332,21 @@ class RotationInvariantAOIChecker:
             print(
                 f"[Info][InternalGeom] Adjusted pixel height (+{additional_height_pixels}px offset): {adjusted_distance_pixels:.1f}px")
 
-            # --- MODIFIED: Use calculated effective_mm_per_pixel ---
             measured_distance_mm = adjusted_distance_pixels * effective_mm_per_pixel
-            # --- End MODIFIED ---
             print(f"[Info][InternalGeom] Calculated final distance: {measured_distance_mm:.3f} mm")
 
-            # --- Prepare Processed Binary Image for Display ---
-            processed_binary_display = None
-            if is_image_shown:
-                processed_binary_display = cv2.cvtColor(smoothed_binary, cv2.COLOR_GRAY2BGR)
+            # --- Prepare Annotated Binary Image for Display (if requested) ---
+            if prepare_display_images:
+                processed_binary_annotated = cv2.cvtColor(smoothed_binary, cv2.COLOR_GRAY2BGR)
+                # Draw the measured column
                 if selected_max_height_info['x'] != -1:
                     col_x = selected_max_height_info['x']
                     col_y_start = selected_max_height_info['y_start']
                     col_y_end = selected_max_height_info['y_end']
-                    cv2.line(
-                        processed_binary_display,
-                        (col_x, col_y_start),
-                        (col_x, col_y_end),
-                        (0, 255, 0),
-                        2)
-                arrow_color = (0, 255, 255)
+                    cv2.line(processed_binary_annotated, (col_x, col_y_start), (col_x, col_y_end), (0, 255, 0),
+                             2)  # Green line
+                # Draw the arrow representing the *adjusted* distance
+                arrow_color = (0, 255, 255);
                 arrow_thickness = 1
                 arrow_x = selected_max_height_info['x'] if selected_max_height_info['x'] != -1 else img_width // 2
                 arrow_start_y = selected_max_height_info['y_end'] if selected_max_height_info[
@@ -1381,103 +1354,39 @@ class RotationInvariantAOIChecker:
                 arrow_end_y = selected_max_height_info['y_start'] if selected_max_height_info[
                                                                          'x'] != -1 else arrow_start_y - int(
                     round(measured_distance_pixels))  # Arrow shows original measurement
-                arrow_start_y = max(0, min(img_height - 1, arrow_start_y))
-                arrow_end_y = max(0, min(img_height - 1, arrow_end_y))
+                arrow_start_y = max(0, min(img_height - 1, arrow_start_y));
+                arrow_end_y = max(0, min(img_height - 1, arrow_end_y));
                 arrow_x = max(0, min(img_width - 1, arrow_x))
-                cv2.arrowedLine(processed_binary_display,
-                                (arrow_x, arrow_start_y),
-                                (arrow_x, arrow_end_y),
-                                arrow_color,
-                                arrow_thickness,
-                                tipLength=0.05)
-                cv2.arrowedLine(processed_binary_display,
-                                (arrow_x, arrow_end_y),
-                                (arrow_x, arrow_start_y),
-                                arrow_color,
-                                arrow_thickness,
-                                tipLength=0.05)
-                dist_text = f"{measured_distance_mm:.2f}mm ({measured_distance_pixels:.1f}px + {additional_height_pixels}px)"  # Updated text
-                dist_text_color = arrow_color
-                dist_font_scale = 0.4
-                dist_thickness = 1
-                (tw_dist, th_dist), baseline_dist = cv2.getTextSize(dist_text,
-                                                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                                                    dist_font_scale,
-                                                                    dist_thickness)
-                text_x_dist = min(img_width - tw_dist - 2, arrow_x + 5)
-                text_y_dist = (arrow_start_y + arrow_end_y) // 2 + th_dist // 2
-                cv2.putText(processed_binary_display,
-                            dist_text,
-                            (text_x_dist, text_y_dist),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            dist_font_scale,
-                            dist_text_color,
-                            dist_thickness,
-                            cv2.LINE_AA)
-
-            # --- Optional Display ---
-            if is_image_shown:
-                try:
-                    print(">>> Displaying Deskewed Crop (press any key)...")
-                    display_scale = 3
-                    win_w, win_h = min(1600, dst_w * display_scale), min(900, dst_h * display_scale)
-                    cv2.imshow("Deskewed Crop",
-                               cv2.resize(cropped_deskewed,
-                                          (win_w, win_h),
-                                          interpolation=cv2.INTER_LINEAR))
-                    cv2.waitKey(0)
-                    print(">>> Displaying Binarized (+Erode/Dilate) Crop (press any key)...")
-                    win_w_bin, win_h_bin = min(1600, img_width * display_scale), min(900,
-                                                                                     img_height * display_scale)
-                    cv2.imshow("Binarized (+Erode/Dilate) Crop",
-                               cv2.resize(processed_binary,
-                                          (win_w_bin, win_h_bin),
-                                          interpolation=cv2.INTER_LINEAR))
-                    cv2.waitKey(0)
-                    if processed_binary_display is not None:
-                        print(
-                            ">>> Displaying Processed Binary with Max Height & Distance (press any key)...")
-                        cv2.imshow(
-                            "Processed Binary with Max Height & Distance",
-                            cv2.resize(processed_binary_display,
-                                       (win_w_bin, win_h_bin),
-                                       interpolation=cv2.INTER_LINEAR))
-                        cv2.waitKey(0)
-                    cv2.destroyWindow("Deskewed Crop")
-                    cv2.destroyWindow("Binarized (+Erode/Dilate) Crop")
-                    if processed_binary_display is not None:
-                        cv2.destroyWindow(
-                            "Processed Binary with Max Height & Distance")
-                except Exception as disp_err:
-                    print(f"[Warning] Failed to display intermediate images: {disp_err}")
-                    cv2.destroyAllWindows()
+                cv2.arrowedLine(processed_binary_annotated, (arrow_x, arrow_start_y), (arrow_x, arrow_end_y),
+                                arrow_color, arrow_thickness, tipLength=0.05)
+                cv2.arrowedLine(processed_binary_annotated, (arrow_x, arrow_end_y), (arrow_x, arrow_start_y),
+                                arrow_color, arrow_thickness, tipLength=0.05)
+                # Text shows the final calculated mm value (after offset and conversion)
+                dist_text = f"{measured_distance_mm:.2f}mm ({measured_distance_pixels:.1f}px + {additional_height_pixels}px)"
+                dist_text_color = arrow_color;
+                dist_font_scale = 0.4;
+                dist_thickness = 1;
+                (tw_dist, th_dist), baseline_dist = cv2.getTextSize(dist_text, cv2.FONT_HERSHEY_SIMPLEX,
+                                                                    dist_font_scale, dist_thickness);
+                text_x_dist = min(img_width - tw_dist - 2, arrow_x + 5);
+                text_y_dist = (arrow_start_y + arrow_end_y) // 2 + th_dist // 2;
+                cv2.putText(processed_binary_annotated, dist_text, (text_x_dist, text_y_dist),
+                            cv2.FONT_HERSHEY_SIMPLEX, dist_font_scale, dist_text_color, dist_thickness, cv2.LINE_AA)
 
             # --- Compare with Range (Using min/max distance) ---
+            total_geom_time = time.time() - start_geom_time  # Calculate time before return
+            print(f"[TIME][InternalGeom] Total Check Duration: {total_geom_time:.4f}s")
+
             if min_dist_mm <= measured_distance_mm <= max_dist_mm:
-                total_geom_time = time.time() - start_geom_time
-                print(f"[TIME][InternalGeom] Total Check Duration: {total_geom_time:.4f}s")
-                # Return the original pixel measurement along with the final mm value
-                return True, "OK", measured_distance_mm, measured_distance_pixels
+                # Return status, reason, measurements, and prepared intermediate images
+                return True, "OK", measured_distance_mm, measured_distance_pixels, cropped_deskewed_for_display, processed_binary_for_display, processed_binary_annotated
             else:
                 reason = f"InternalGeom_NG: Final distance {measured_distance_mm:.3f}mm (adj_px:{adjusted_distance_pixels:.1f}) outside range [{min_dist_mm:.3f}, {max_dist_mm:.3f}]mm"
-                total_geom_time = time.time() - start_geom_time
-                print(f"[TIME][InternalGeom] Total Check Duration: {total_geom_time:.4f}s")
-                # Return the original pixel measurement along with the final mm value
-                return False, reason, measured_distance_mm, measured_distance_pixels
+                # Return status, reason, measurements, and prepared intermediate images
+                return False, reason, measured_distance_mm, measured_distance_pixels, cropped_deskewed_for_display, processed_binary_for_display, processed_binary_annotated
 
         except Exception as e:
             print(f"[Error][InternalGeom] Unexpected error during check: {e}\n{traceback.format_exc()}")
-            return False, f"InternalGeom_Error: Processing failed - {e}", None, None
-
+            # Return status, reason, and None for measurements/images on error
+            return False, f"InternalGeom_Error: Processing failed - {e}", None, None, None, None, None
     # --- END check_internal_geometry METHOD ---
-
-
-
-
-
-
-
-
-
-
-

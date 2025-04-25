@@ -49,7 +49,7 @@ def main():
     window = MainWindow(detection_log_worker)
 
     # Load the config file
-    config_file_path = r"C:\BoardDefectChecker\modules\config.py"  # Replace with your actual config file path
+    config_file_path = r"C:\BoardDefectChecker\modules\config.py"  # Replace it with your actual config file path
     config_data = load_config_file(config_file_path)
 
     # Update the UI with the loaded config data

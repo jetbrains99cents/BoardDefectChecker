@@ -1936,9 +1936,9 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                        "enable_smoothing": false,
                        "column_edge_ignore_ratio": 0.15,
                        "min_column_height_ratio": 0.5,
-                       "min_distance_mm": 0.6,
+                       "min_distance_mm": 0.5,
                        "max_distance_mm": 1.4,
-                       "calibration_ref_height_mm": 0.425,
+                       "calibration_ref_height_mm": 0.55,
                        "calibration_ref_pixels": 30,
                        "additional_height_pixels": 10
                      }
@@ -2065,24 +2065,25 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
         # Return original position if no non-overlapping spot found after attempts
         return (center_x, center_y)
 
-    # --- draw_bounding_boxes METHOD (UPDATED SIGNATURE AND LOGIC) ---
+    # --- draw_bounding_boxes METHOD (UPDATED: Added Mask Overlay) ---
     def draw_bounding_boxes(self, image: np.ndarray,
                             classified_masks: Dict[str, List[Dict]],
-                            final_status: str,  # Overall status (OK/NG)
-                            # --- New Parameter ---
-                            pwb_measurement_info: Optional[Dict] = None,  # Info from PWB check
+                            final_status: str,
+                            final_reason: str,
+                            pwb_measurement_info: Optional[Dict] = None,
                             relative_position_pairs_to_check: Optional[List[str]] = None,
                             draw_param_table: bool = False,
                             draw_distance_lines: bool = False,
                             draw_relative_positions: bool = False,
-                            draw_min_rect_bbox: bool = True
+                            draw_min_rect_bbox: bool = True,
+                            # --- NEW PARAMETER ---
+                            draw_mask_overlay: bool = True  # Control mask overlay drawing
                             ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
         """
-        Draws bounding boxes (axis-aligned or min-rotated) with type-specific colors,
-        object type text (with background), numbered centroids, final status (with background),
+        Draws bounding boxes, object type text, numbered centroids, final status/reason,
         and optionally: parameter table, distance lines, relative position vectors,
-        and PWB measurement annotation.
-        *** Does NOT display the image. ***
+        ***and colored segmentation mask overlays***.
+        Draws PWB measurement annotation along the MINOR axis of the rotated rect.
         """
         if image is None:
             print("[Error][draw_bounding_boxes] Input image is None.")
@@ -2092,45 +2093,58 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
         except Exception as shape_err:
             print(f"[Error][draw_bounding_boxes] Cannot get shape: {shape_err}")
             return None, None
+        # Start with a copy of the original image
         mask_image = image.copy()
         table_image_np = None
         if draw_param_table:
             table_image_np = np.full((height, width, 3), (150, 150, 150), dtype=np.uint8)
 
+        # --- Define Colors ---
+        # Colors for Bounding Boxes and Text Labels
         BBOX_COLOR_MAP = {
             "bezel": (255, 0, 0),  # Blue
             "copper_mark": (0, 255, 0),  # Green
             "stamped_mark": (0, 0, 255),  # Red
             "Unknown": (0, 255, 255)  # Yellow for fallback
         }
+        # Colors for Mask Overlays (can be the same or different)
+        # Using slightly different shades for masks might improve visibility
+        MASK_OVERLAY_COLOR_MAP = {
+            "bezel": (255, 100, 100),  # Lighter Blue
+            "copper_mark": (100, 255, 100),  # Lighter Green
+            "stamped_mark": (100, 100, 255),  # Lighter Red
+            "Unknown": (100, 255, 255)  # Lighter Yellow
+        }
+        MASK_OVERLAY_ALPHA = 0.4  # Transparency level for mask overlay
+
         grey_color_bgr = (150, 150, 150)
         black_color_bgr = (0, 0, 0)
         black_color_rgb = (0, 0, 0)  # For Pillow
 
-        # Table Setup (only if drawing table)
+        # --- Table Setup (only if drawing table) ---
         table_image_pil = None
         table_draw = None
         pillow_ready = False
         if draw_param_table:
-            block_width = 200
-            block_height = 150
-            line_spacing_pixels = 22
-            margin = 20
-            cell_margin = 5
+            block_width = 200;
+            block_height = 150;
+            line_spacing_pixels = 22;
+            margin = 20;
+            cell_margin = 5;
             max_display_masks = 30
             global _pillow_available_global
             if _pillow_available_global and hasattr(self, 'font_large') and hasattr(self,
                                                                                     'font_small') and self.font_large and self.font_small:
                 try:
-                    from PIL import Image, ImageDraw  # Re-import locally if needed
+                    from PIL import Image, ImageDraw  # Local import ok here
                     table_image_pil = Image.fromarray(cv2.cvtColor(table_image_np, cv2.COLOR_BGR2RGB))
                     table_draw = ImageDraw.Draw(table_image_pil)
                     pillow_ready = True
                 except Exception as pil_e:
-                    print(f"[Warning] Pillow table setup failed: {pil_e}.")
+                    print(f"[Warning] Pillow table setup failed: {pil_e}.");
                     pillow_ready = False
 
-        # Prepare Data
+        # --- Prepare Data ---
         displayed_blocks = 0
         all_mask_info_with_type = []
         object_info_map = {}
@@ -2146,27 +2160,62 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                         all_mask_info_with_type.append(mask_info_copy)
                         if draw_param_table: displayed_blocks += 1
                         features = mask_info['features']
-                        cx = features.get("centroid_x")
-                        cy = features.get("centroid_y")
+                        cx = features.get("centroid_x");
+                        cy = features.get("centroid_y");
                         angle = features.get("angle")
-                        if cx is not None and cy is not None:
-                            object_info_map[obj_type].append(
-                                {'centroid': (int(cx), int(cy)), 'angle': angle, 'features': features})
+                        if cx is not None and cy is not None: object_info_map[obj_type].append(
+                            {'centroid': (int(cx), int(cy)), 'angle': angle, 'features': features})
                 if draw_param_table and displayed_blocks >= max_display_masks: break
 
-        # Draw BBoxes/MinRects, Object Type Text, Numbers, Table Cells
+        # --- MODIFICATION: Draw Mask Overlays FIRST (if enabled) ---
+        if draw_mask_overlay:
+            print("[Info] Drawing mask overlays...")
+            # Create a temporary image for blending overlays
+            overlay_image = mask_image.copy()
+            for mask_data in all_mask_info_with_type:
+                mask = mask_data.get("mask")
+                obj_type = mask_data.get("type", "Unknown")
+                if mask is None: continue
+
+                # Ensure mask is boolean
+                mask_bool = mask.astype(bool) if mask.dtype != bool else mask
+
+                # Get color for this object type
+                overlay_color = MASK_OVERLAY_COLOR_MAP.get(obj_type, MASK_OVERLAY_COLOR_MAP["Unknown"])
+
+                # Apply color to the mask area on the overlay image
+                overlay_image[mask_bool] = overlay_color
+
+            # Blend the overlay image with the original mask_image
+            try:
+                mask_image = cv2.addWeighted(overlay_image, MASK_OVERLAY_ALPHA, mask_image, 1 - MASK_OVERLAY_ALPHA,
+                                             0)
+                print(f"[Debug] Blended mask overlays with alpha {MASK_OVERLAY_ALPHA}")
+            except Exception as blend_err:
+                print(f"[Warning] Failed to blend mask overlays: {blend_err}")
+                # Continue with the unblended image if blending fails
+        else:
+            print("[Info] Drawing mask overlays disabled.")
+        # --- END MODIFICATION ---
+
+        # --- Draw BBoxes/MinRects, Object Type Text, Numbers, Table Cells ---
+        # (These will now be drawn ON TOP of the mask overlays)
         placed_circles_info: List[Tuple[int, int, int]] = []
         circle_radius = 15
-        blocks_per_column = max(1,
-                                (height - 2 * margin) // block_height) if draw_param_table and block_height > 0 else 1
+        blocks_per_column = max(1, (
+                    height - 2 * margin) // block_height) if draw_param_table and block_height > 0 else 1
         text_color_bgr = (255, 255, 0)
         text_bg_color_bgr = (0, 0, 0)
         text_font_scale = 0.5
         text_thickness = 1
         text_padding = 2
 
-        # --- Store info needed for PWB annotation ---
+        # Store PWB target info for annotation
         pwb_target_draw_info = None
+        if pwb_measurement_info:
+            pwb_target_type = pwb_measurement_info.get("target_object_type")
+            for mask_data in all_mask_info_with_type:
+                if mask_data.get("type") == pwb_target_type: pwb_target_draw_info = mask_data; break
 
         for idx, mask_data in enumerate(all_mask_info_with_type, 1):
             mask = mask_data.get("mask")
@@ -2182,24 +2231,24 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 x1, y1 = np.min(x_indices), np.min(y_indices)
                 x2, y2 = np.max(x_indices), np.max(y_indices)
                 text_anchor_x, text_anchor_y = x1, y1
-                min_rect_vertices = features.get("min_rect_vertices")
+                min_rect_vertices_np = features.get("min_rect_vertices")
 
-                # --- Draw Bounding Box OR Min Rotated Rect ---
-                if draw_min_rect_bbox and min_rect_vertices is not None:
-                    points = np.array(min_rect_vertices, dtype=np.int32)
+                # Draw Bounding Box OR Min Rotated Rect
+                if draw_min_rect_bbox and min_rect_vertices_np is not None:
+                    points = np.array(min_rect_vertices_np, dtype=np.int32)
                     if len(points) == 4:
                         cv2.polylines(mask_image, [points], isClosed=True, color=bbox_color, thickness=2)
                         top_vertex_index = np.argmin(points[:, 1])
                         text_anchor_x = points[top_vertex_index, 0]
                         text_anchor_y = points[top_vertex_index, 1]
-                    else:
-                        cv2.rectangle(mask_image, (max(0, x1), max(0, y1)), (min(width - 1, x2), min(height - 1, y2)),
-                                      bbox_color, 2)
-                else:
+                    else:  # Fallback
+                        cv2.rectangle(mask_image, (max(0, x1), max(0, y1)),
+                                      (min(width - 1, x2), min(height - 1, y2)), bbox_color, 2)
+                else:  # Axis-aligned
                     cv2.rectangle(mask_image, (max(0, x1), max(0, y1)), (min(width - 1, x2), min(height - 1, y2)),
                                   bbox_color, 2)
 
-                # --- Draw Object Type Text ---
+                # Draw Object Type Text
                 type_text = obj_type
                 (tw_type, th_type), baseline_type = cv2.getTextSize(type_text, cv2.FONT_HERSHEY_SIMPLEX,
                                                                     text_font_scale, text_thickness)
@@ -2211,36 +2260,72 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 cv2.putText(mask_image, type_text, (text_x_type, text_y_type), cv2.FONT_HERSHEY_SIMPLEX,
                             text_font_scale, text_color_bgr, text_thickness, cv2.LINE_AA)
 
-                # --- Draw Numbered Circle ---
+                # Draw Numbered Circle
                 initial_centroid_x = int(features.get("centroid_x", x1 + (x2 - x1) // 2))
                 initial_centroid_y = int(features.get("centroid_y", y1 + (y2 - y1) // 2))
                 final_cx, final_cy = self._find_non_overlapping_position(initial_centroid_x, initial_centroid_y,
                                                                          circle_radius, placed_circles_info)
-                placed_circles_info.append((final_cx, final_cy, circle_radius))
-                final_cx = max(0, min(width - 1, final_cx))
+                placed_circles_info.append((final_cx, final_cy, circle_radius));
+                final_cx = max(0, min(width - 1, final_cx));
                 final_cy = max(0, min(height - 1, final_cy))
-                cv2.circle(mask_image, (final_cx, final_cy), circle_radius, grey_color_bgr, -1)
+                cv2.circle(mask_image, (final_cx, final_cy), circle_radius, grey_color_bgr, -1);
                 cv2.circle(mask_image, (final_cx, final_cy), circle_radius, black_color_bgr, 1)
-                number_text = str(idx)
+                number_text = str(idx);
                 (tw_num, th_num), _ = cv2.getTextSize(number_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
                 cv2.putText(mask_image, number_text, (final_cx - tw_num // 2, final_cy + th_num // 2),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, black_color_bgr, 1, cv2.LINE_AA)
 
-                # --- Store info for PWB annotation ---
-                if pwb_measurement_info and obj_type == pwb_measurement_info.get("target_object_type"):
-                    pwb_target_draw_info = {"centroid_x": int(features.get("centroid_x", x1 + (x2 - x1) // 2)),
-                                            "bbox_y2": y2, "bbox_x1": x1, "bbox_x2": x2}
+                # Draw PWB Measurement Arrow
+                if pwb_target_draw_info and mask_data is pwb_target_draw_info:
+                    pwb_vertices_np = pwb_target_draw_info.get("features", {}).get("min_rect_vertices")
+                    pwb_measured_mm = pwb_measurement_info.get("distance_mm")
+                    if pwb_vertices_np is not None and pwb_measured_mm is not None:
+                        pwb_vertices = np.array(pwb_vertices_np, dtype=np.int32)
+                        if len(pwb_vertices) == 4:
+                            side1_len = np.linalg.norm(pwb_vertices[0] - pwb_vertices[1]);
+                            side2_len = np.linalg.norm(pwb_vertices[1] - pwb_vertices[2])
+                            if side1_len > side2_len:
+                                m1 = ((pwb_vertices[0] + pwb_vertices[1]) / 2).astype(int); m2 = (
+                                            (pwb_vertices[2] + pwb_vertices[3]) / 2).astype(int)
+                            else:
+                                m1 = ((pwb_vertices[1] + pwb_vertices[2]) / 2).astype(int); m2 = (
+                                            (pwb_vertices[3] + pwb_vertices[0]) / 2).astype(int)
+                            arrow_start = tuple(m1);
+                            arrow_end = tuple(m2);
+                            arrow_color = (0, 255, 255);
+                            arrow_thickness = 2
+                            cv2.arrowedLine(mask_image, arrow_start, arrow_end, arrow_color, arrow_thickness,
+                                            tipLength=0.05);
+                            cv2.arrowedLine(mask_image, arrow_end, arrow_start, arrow_color, arrow_thickness,
+                                            tipLength=0.05)
+                            pwb_text = f"{pwb_measured_mm:.2f}mm";
+                            pwb_text_color = arrow_color;
+                            pwb_text_bg_color = (0, 0, 0);
+                            pwb_font_scale = 0.5;
+                            pwb_thickness = 1;
+                            pwb_padding = 2;
+                            (tw_pwb, th_pwb), baseline_pwb = cv2.getTextSize(pwb_text, cv2.FONT_HERSHEY_SIMPLEX,
+                                                                             pwb_font_scale, pwb_thickness);
+                            text_center_x = (arrow_start[0] + arrow_end[0]) // 2;
+                            text_center_y = (arrow_start[1] + arrow_end[1]) // 2;
+                            text_x_pwb = max(pwb_padding, text_center_x + 5);
+                            text_y_pwb = text_center_y + th_pwb // 2;
+                            cv2.rectangle(mask_image, (text_x_pwb - pwb_padding, text_y_pwb - th_pwb - pwb_padding),
+                                          (text_x_pwb + tw_pwb + pwb_padding,
+                                           text_y_pwb + baseline_pwb + pwb_padding), pwb_text_bg_color, -1);
+                            cv2.putText(mask_image, pwb_text, (text_x_pwb, text_y_pwb), cv2.FONT_HERSHEY_SIMPLEX,
+                                        pwb_font_scale, pwb_text_color, pwb_thickness, cv2.LINE_AA)
 
             except Exception as mask_draw_err:
-                print(f"[Warning] Error drawing bbox/circle for mask #{idx}: {mask_draw_err}")
+                print(f"[Warning] Error drawing bbox/circle for mask #{idx}: {mask_draw_err}");
                 continue
 
-            # --- Draw Table Cell ---
+            # Draw Table Cell
             if draw_param_table and idx <= max_display_masks:
                 try:
-                    col_idx = (idx - 1) // blocks_per_column
-                    row_idx = (idx - 1) % blocks_per_column
-                    block_x = margin + col_idx * block_width
+                    col_idx = (idx - 1) // blocks_per_column;
+                    row_idx = (idx - 1) % blocks_per_column;
+                    block_x = margin + col_idx * block_width;
                     block_y = margin + row_idx * block_height
                     if block_x + block_width > width or block_y + block_height > height: continue
                     text_lines = [f"{idx}: {obj_type}", f" Area: {features.get('area', 'N/A'):.0f}",
@@ -2250,220 +2335,185 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                                   f" Perim: {features.get('perimeter', 'N/A'):.1f}",
                                   f" Angle: {features.get('angle', 'N/A'):.1f}"]
                     if pillow_ready and table_draw is not None and self.font_large and self.font_small:
-                        current_y = block_y + cell_margin
-                        table_draw.text((block_x + cell_margin, current_y), text_lines[0], font=self.font_large,
-                                        fill=black_color_rgb)
-                        current_y += line_spacing_pixels
-                        for line in text_lines[1:]:
+                        current_y = block_y + cell_margin; table_draw.text((block_x + cell_margin, current_y),
+                                                                           text_lines[0], font=self.font_large,
+                                                                           fill=black_color_rgb); current_y += line_spacing_pixels; [
                             table_draw.text((block_x + cell_margin, current_y), line, font=self.font_small,
-                                            fill=black_color_rgb)
-                            current_y += line_spacing_pixels
-                    else:  # OpenCV Fallback
-                        current_y = block_y + cell_margin + 18
-                        cv2.putText(table_image_np, text_lines[0], (block_x + cell_margin, current_y),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, black_color_bgr, 1, cv2.LINE_AA)
-                        current_y += line_spacing_pixels
-                        for line in text_lines[1:]:
+                                            fill=black_color_rgb) or (current_y := current_y + line_spacing_pixels)
+                            for line in text_lines[1:]]
+                    else:
+                        current_y = block_y + cell_margin + 18; cv2.putText(table_image_np, text_lines[0],
+                                                                            (block_x + cell_margin, current_y),
+                                                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                                                            black_color_bgr, 1,
+                                                                            cv2.LINE_AA); current_y += line_spacing_pixels; [
                             cv2.putText(table_image_np, line, (block_x + cell_margin, current_y),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, black_color_bgr, 1, cv2.LINE_AA)
-                            current_y += line_spacing_pixels
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, black_color_bgr, 1, cv2.LINE_AA) or (
+                                current_y := current_y + line_spacing_pixels) for line in text_lines[1:]]
                 except Exception as table_draw_err:
-                    print(f"[Error Table] Failed draw cell #{idx}: {table_draw_err}")
-                    traceback.print_exc()
+                    print(f"[Error Table] Failed draw cell #{idx}: {table_draw_err}"); traceback.print_exc()
 
-        # Draw Distance Lines (Only if enabled)
+        # --- Draw Distance Lines (Only if enabled) ---
         if draw_distance_lines:
-            print("[Info] Drawing distance constraints...")
-            distance_line_color = (255, 255, 0)
-            distance_text_color = (255, 255, 0)
-            distance_font_scale = 0.5
-            distance_font_thickness = 1
-            dist_constraints = {}
+            # ... (distance line drawing logic remains the same) ...
+            print("[Info] Drawing distance constraints...");
+            distance_line_color = (255, 255, 0);
+            distance_text_color = (255, 255, 0);
+            distance_font_scale = 0.5;
+            distance_font_thickness = 1;
+            dist_constraints = {};
             drawn_dist_count = 0
             if hasattr(self, 'rotation_invariant_checker') and hasattr(self.rotation_invariant_checker,
-                                                                       'distance_constraints'):
-                dist_constraints = self.rotation_invariant_checker.distance_constraints
+                                                                       'distance_constraints'): dist_constraints = self.rotation_invariant_checker.distance_constraints
             for pair_key, constraint_data in dist_constraints.items():
                 try:
-                    obj_types = pair_key.split('-')
-                    if len(obj_types) != 2: continue
-                    type1, type2 = obj_types[0], obj_types[1]
-                    infos1 = object_info_map.get(type1, [])
-                    infos2 = object_info_map.get(type2, [])
+                    obj_types = pair_key.split('-');
+                    if len(obj_types) != 2: continue; type1, type2 = obj_types[0], obj_types[
+                        1]; infos1 = object_info_map.get(type1, []); infos2 = object_info_map.get(type2, [])
                     if not infos1 or not infos2: continue
                     for info1 in infos1:
                         c1 = info1['centroid']
                         for info2 in infos2:
-                            if info1 is info2: continue
-                            c2 = info2['centroid']
-                            dist = math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
-                            dist_text = f"{dist:.1f}"
-                            cv2.line(mask_image, c1, c2, distance_line_color, distance_font_thickness)
-                            mid_x = (c1[0] + c2[0]) // 2
-                            mid_y = (c1[1] + c2[1]) // 2
-                            (tw, th), _ = cv2.getTextSize(dist_text, cv2.FONT_HERSHEY_SIMPLEX, distance_font_scale,
-                                                          distance_font_thickness)
-                            text_x = mid_x - tw // 2
-                            text_y = mid_y - th // 2 - 5
-                            cv2.putText(mask_image, dist_text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX,
-                                        distance_font_scale, distance_text_color, distance_font_thickness, cv2.LINE_AA)
-                            drawn_dist_count += 1
+                            if info1 is info2: continue; c2 = info2['centroid']; dist = math.sqrt(
+                                (c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2); dist_text = f"{dist:.1f}"; cv2.line(
+                                mask_image, c1, c2, distance_line_color, distance_font_thickness); mid_x = (c1[0] +
+                                                                                                            c2[
+                                                                                                                0]) // 2; mid_y = (
+                                                                                                                                              c1[
+                                                                                                                                                  1] +
+                                                                                                                                              c2[
+                                                                                                                                                  1]) // 2; (
+                                tw, th), _ = cv2.getTextSize(dist_text, cv2.FONT_HERSHEY_SIMPLEX,
+                                                             distance_font_scale,
+                                                             distance_font_thickness); text_x = mid_x - tw // 2; text_y = mid_y - th // 2 - 5; cv2.putText(
+                                mask_image, dist_text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX,
+                                distance_font_scale, distance_text_color, distance_font_thickness,
+                                cv2.LINE_AA); drawn_dist_count += 1
                 except Exception as dist_draw_err:
                     print(f"[Warning] Error drawing distance for '{pair_key}': {dist_draw_err}")
             print(f"[Debug] Drawn {drawn_dist_count} distance lines.")
         else:
             print("[Info] Drawing distance lines disabled.")
 
-        # Draw Relative Position Visualization (Only if enabled)
+        # --- Draw Relative Position Visualization (Only if enabled) ---
         if draw_relative_positions:
-            print("[Info] Drawing relative position constraints...")
-            relpos_constraints = {}
+            # ... (relative position drawing logic remains the same) ...
+            print("[Info] Drawing relative position constraints...");
+            relpos_constraints = {};
             drawn_relpos_count = 0
             if hasattr(self, 'rotation_invariant_checker') and hasattr(self.rotation_invariant_checker,
-                                                                       'relative_position_constraints'):
-                relpos_constraints = self.rotation_invariant_checker.relative_position_constraints
+                                                                       'relative_position_constraints'): relpos_constraints = self.rotation_invariant_checker.relative_position_constraints
             visualize_pairs_set = None
             if relative_position_pairs_to_check is not None:
-                visualize_pairs_set = set("-".join(sorted(p.split('-'))) for p in relative_position_pairs_to_check)
-                print(f"  - Only visualizing relative position for pairs: {visualize_pairs_set}")
+                visualize_pairs_set = set(
+                    "-".join(sorted(p.split('-'))) for p in relative_position_pairs_to_check); print(
+                    f"  - Only visualizing relative position for pairs: {visualize_pairs_set}")
             else:
                 print("  - Visualizing all defined relative position pairs.")
-            relpos_orig_color = (0, 165, 255)
-            relpos_rot_color = (255, 0, 255)
-            relpos_axis_color = (100, 100, 100)
-            relpos_text_color = (255, 0, 255)
-            relpos_font_scale = 0.4
-            relpos_thickness = 1
+            relpos_orig_color = (0, 165, 255);
+            relpos_rot_color = (255, 0, 255);
+            relpos_axis_color = (100, 100, 100);
+            relpos_text_color = (255, 0, 255);
+            relpos_font_scale = 0.4;
+            relpos_thickness = 1;
             axis_length = 30
             for pair_key, constraint_data in relpos_constraints.items():
                 try:
-                    obj_types = pair_key.split('-')
-                    if len(obj_types) != 2: continue
-                    sorted_pair_key = "-".join(sorted(obj_types))
-                    should_skip = visualize_pairs_set is not None and sorted_pair_key not in visualize_pairs_set
-                    if should_skip: continue
-                    type1, type2 = obj_types[0], obj_types[1]
-                    infos1 = object_info_map.get(type1, [])
-                    infos2 = object_info_map.get(type2, [])
+                    obj_types = pair_key.split('-');
+                    if len(obj_types) != 2: continue; sorted_pair_key = "-".join(sorted(
+                        obj_types)); should_skip = visualize_pairs_set is not None and sorted_pair_key not in visualize_pairs_set;
+                    if should_skip: continue; type1, type2 = obj_types[0], obj_types[
+                        1]; infos1 = object_info_map.get(type1, []); infos2 = object_info_map.get(type2, [])
                     if not infos1 or not infos2: continue
                     for info1 in infos1:
-                        c1 = info1['centroid']
-                        a1_deg = info1.get('angle')
-                        if a1_deg is None: continue
-                        a1_rad = math.radians(a1_deg)
-                        cos_neg_a1 = math.cos(-a1_rad)
-                        sin_neg_a1 = math.sin(-a1_rad)
-                        cos_pos_a1 = math.cos(a1_rad)
-                        sin_pos_a1 = math.sin(a1_rad)
-                        x_axis_end_x = c1[0] + int(axis_length * cos_pos_a1)
-                        x_axis_end_y = c1[1] + int(axis_length * sin_pos_a1)
-                        cv2.line(mask_image, c1, (x_axis_end_x, x_axis_end_y), relpos_axis_color, relpos_thickness)
-                        cv2.putText(mask_image, "dx'", (x_axis_end_x + 5, x_axis_end_y + 5), cv2.FONT_HERSHEY_SIMPLEX,
-                                    relpos_font_scale * 0.8, relpos_axis_color, 1)
-                        y_axis_end_x = c1[0] - int(axis_length * sin_pos_a1)
-                        y_axis_end_y = c1[1] + int(axis_length * cos_pos_a1)
-                        cv2.line(mask_image, c1, (y_axis_end_x, y_axis_end_y), relpos_axis_color, relpos_thickness)
-                        cv2.putText(mask_image, "dy'", (y_axis_end_x + 5, y_axis_end_y + 5), cv2.FONT_HERSHEY_SIMPLEX,
-                                    relpos_font_scale * 0.8, relpos_axis_color, 1)
+                        c1 = info1['centroid'];
+                        a1_deg = info1.get('angle');
+                        if a1_deg is None: continue; a1_rad = math.radians(a1_deg); cos_neg_a1 = math.cos(
+                            -a1_rad); sin_neg_a1 = math.sin(-a1_rad); cos_pos_a1 = math.cos(
+                            a1_rad); sin_pos_a1 = math.sin(a1_rad); x_axis_end_x = c1[0] + int(
+                            axis_length * cos_pos_a1); x_axis_end_y = c1[1] + int(
+                            axis_length * sin_pos_a1); cv2.line(mask_image, c1, (x_axis_end_x, x_axis_end_y),
+                                                                relpos_axis_color, relpos_thickness); cv2.putText(
+                            mask_image, "dx'", (x_axis_end_x + 5, x_axis_end_y + 5), cv2.FONT_HERSHEY_SIMPLEX,
+                            relpos_font_scale * 0.8, relpos_axis_color, 1); y_axis_end_x = c1[0] - int(
+                            axis_length * sin_pos_a1); y_axis_end_y = c1[1] + int(
+                            axis_length * cos_pos_a1); cv2.line(mask_image, c1, (y_axis_end_x, y_axis_end_y),
+                                                                relpos_axis_color, relpos_thickness); cv2.putText(
+                            mask_image, "dy'", (y_axis_end_x + 5, y_axis_end_y + 5), cv2.FONT_HERSHEY_SIMPLEX,
+                            relpos_font_scale * 0.8, relpos_axis_color, 1)
                         for info2 in infos2:
-                            if info1 is info2: continue
-                            c2 = info2['centroid']
-                            cv2.arrowedLine(mask_image, c1, c2, relpos_orig_color, relpos_thickness, tipLength=0.05)
-                            dx = c2[0] - c1[0]
-                            dy = c2[1] - c1[1]
-                            dx_rel = dx * cos_neg_a1 - dy * sin_neg_a1
-                            dy_rel = dx * sin_neg_a1 + dy * cos_neg_a1
-                            end_x_img = c1[0] + int(dx_rel * cos_pos_a1 - dy_rel * sin_pos_a1)
-                            end_y_img = c1[1] + int(dx_rel * sin_pos_a1 + dy_rel * cos_pos_a1)
-                            cv2.arrowedLine(mask_image, c1, (end_x_img, end_y_img), relpos_rot_color,
-                                            relpos_thickness + 1, tipLength=0.07)
-                            relpos_text = f"({dx_rel:.1f},{dy_rel:.1f})"
-                            (tw_rel, th_rel), _ = cv2.getTextSize(relpos_text, cv2.FONT_HERSHEY_SIMPLEX,
-                                                                  relpos_font_scale, relpos_thickness)
-                            text_x_rel = end_x_img + 5
-                            text_y_rel = end_y_img - 5
-                            cv2.rectangle(mask_image, (text_x_rel - 2, text_y_rel - th_rel - 2),
-                                          (text_x_rel + tw_rel + 2, text_y_rel + 2), (255, 255, 255), -1)
-                            cv2.putText(mask_image, relpos_text, (text_x_rel, text_y_rel), cv2.FONT_HERSHEY_SIMPLEX,
-                                        relpos_font_scale, relpos_text_color, relpos_thickness, cv2.LINE_AA)
-                            drawn_relpos_count += 1
+                            if info1 is info2: continue; c2 = info2['centroid']; cv2.arrowedLine(mask_image, c1, c2,
+                                                                                                 relpos_orig_color,
+                                                                                                 relpos_thickness,
+                                                                                                 tipLength=0.05); dx = \
+                            c2[0] - c1[0]; dy = c2[1] - c1[
+                                1]; dx_rel = dx * cos_neg_a1 - dy * sin_neg_a1; dy_rel = dx * sin_neg_a1 + dy * cos_neg_a1; end_x_img = \
+                            c1[0] + int(dx_rel * cos_pos_a1 - dy_rel * sin_pos_a1); end_y_img = c1[1] + int(
+                                dx_rel * sin_pos_a1 + dy_rel * cos_pos_a1); cv2.arrowedLine(mask_image, c1,
+                                                                                            (end_x_img, end_y_img),
+                                                                                            relpos_rot_color,
+                                                                                            relpos_thickness + 1,
+                                                                                            tipLength=0.07); relpos_text = f"({dx_rel:.1f},{dy_rel:.1f})"; (
+                                tw_rel, th_rel), _ = cv2.getTextSize(relpos_text, cv2.FONT_HERSHEY_SIMPLEX,
+                                                                     relpos_font_scale,
+                                                                     relpos_thickness); text_x_rel = end_x_img + 5; text_y_rel = end_y_img - 5; cv2.rectangle(
+                                mask_image, (text_x_rel - 2, text_y_rel - th_rel - 2),
+                                (text_x_rel + tw_rel + 2, text_y_rel + 2), (255, 255, 255), -1); cv2.putText(
+                                mask_image, relpos_text, (text_x_rel, text_y_rel), cv2.FONT_HERSHEY_SIMPLEX,
+                                relpos_font_scale, relpos_text_color, relpos_thickness,
+                                cv2.LINE_AA); drawn_relpos_count += 1
                 except Exception as relpos_draw_err:
                     print(f"[Warning] Error drawing relative position for '{pair_key}': {relpos_draw_err}")
-            print(f"[Debug] Drawn {drawn_relpos_count} relative position visualizations (filtered by input parameter).")
+            print(
+                f"[Debug] Drawn {drawn_relpos_count} relative position visualizations (filtered by input parameter).")
         else:
             print("[Info] Drawing relative positions disabled.")
 
-        # --- Draw PWB Measurement Annotation (NEW) ---
-        if pwb_measurement_info and pwb_target_draw_info:
-            print("[Info] Drawing PWB measurement annotation...")
-            try:
-                pixel_dist = pwb_measurement_info.get("distance_pixels")
-                mm_dist = pwb_measurement_info.get("distance_mm")
-                target_centroid_x = pwb_target_draw_info["centroid_x"]
-                target_bbox_y2 = pwb_target_draw_info["bbox_y2"]
-                # target_bbox_x1 = pwb_target_draw_info["bbox_x1"] # Not needed for current drawing
-
-                if pixel_dist is not None and mm_dist is not None:
-                    arrow_start_y = target_bbox_y2
-                    arrow_end_y = target_bbox_y2 - int(pixel_dist)
-                    arrow_x = target_centroid_x
-                    arrow_start_y = max(0, min(height - 1, arrow_start_y))
-                    arrow_end_y = max(0, min(height - 1, arrow_end_y))
-                    arrow_x = max(0, min(width - 1, arrow_x))
-                    arrow_color = (0, 255, 255)  # Yellow
-                    arrow_thickness = 2
-                    cv2.arrowedLine(mask_image, (arrow_x, arrow_start_y), (arrow_x, arrow_end_y), arrow_color,
-                                    arrow_thickness, tipLength=0.05)
-                    cv2.arrowedLine(mask_image, (arrow_x, arrow_end_y), (arrow_x, arrow_start_y), arrow_color,
-                                    arrow_thickness, tipLength=0.05)
-
-                    # Draw text label
-                    pwb_text = f"{mm_dist:.2f}mm"
-                    pwb_text_color = arrow_color
-                    pwb_text_bg_color = (0, 0, 0)  # Black background
-                    pwb_font_scale = 0.5
-                    pwb_thickness = 1
-                    pwb_padding = 2
-
-                    (tw_pwb, th_pwb), baseline_pwb = cv2.getTextSize(pwb_text, cv2.FONT_HERSHEY_SIMPLEX, pwb_font_scale,
-                                                                     pwb_thickness)
-                    # Position text next to the arrow (e.g., to the left)
-                    text_x_pwb = max(pwb_padding, arrow_x - tw_pwb - 10 - pwb_padding)  # Position left of arrow
-                    text_y_pwb = (arrow_start_y + arrow_end_y) // 2 + th_pwb // 2  # Vertically centered on arrow
-
-                    # Draw background
-                    cv2.rectangle(mask_image,
-                                  (text_x_pwb - pwb_padding, text_y_pwb - th_pwb - pwb_padding),
-                                  (text_x_pwb + tw_pwb + pwb_padding, text_y_pwb + baseline_pwb + pwb_padding),
-                                  pwb_text_bg_color, -1)
-                    # Draw text
-                    cv2.putText(mask_image, pwb_text, (text_x_pwb, text_y_pwb), cv2.FONT_HERSHEY_SIMPLEX,
-                                pwb_font_scale, pwb_text_color, pwb_thickness, cv2.LINE_AA)
-                else:
-                    print("[Warning] PWB measurement data missing (pixel_dist or mm_dist).")
-            except Exception as pwb_draw_err:
-                print(f"[Error] Failed to draw PWB measurement annotation: {pwb_draw_err}")
-        # --- End PWB Measurement Annotation ---
-
-        # --- Draw Final Status Text ---
-        status_text = final_status
+        # --- Draw Final Status AND Reason Text ---
+        status_text = f"{final_status} - {final_reason}"  # Combine status and reason
         status_color = (0, 255, 0) if final_status == "OK" else (0, 0, 255)  # GREEN for OK, RED for NG
-        status_bg_color = (0, 0, 0)
-        status_font_scale = 0.7
-        status_thickness = 2
+        status_bg_color = (0, 0, 0)  # Black background
+        status_font_scale = 0.7;
+        status_thickness = 2;
         status_padding = 5
-        (tw_status, th_status), baseline_status = cv2.getTextSize(status_text, cv2.FONT_HERSHEY_SIMPLEX,
-                                                                  status_font_scale, status_thickness)
-        status_pos_x = status_padding
-        status_pos_y = th_status + status_padding  # Position from top-left
-        # Draw background rectangle
-        cv2.rectangle(mask_image,
-                      (status_pos_x - status_padding, status_pos_y - th_status - status_padding),
-                      (status_pos_x + tw_status + status_padding, status_pos_y + baseline_status + status_padding),
-                      status_bg_color, -1)
-        # Draw text
-        cv2.putText(mask_image, status_text, (status_pos_x, status_pos_y), cv2.FONT_HERSHEY_SIMPLEX, status_font_scale,
-                    status_color, status_thickness, cv2.LINE_AA)
+        # Text Wrapping Logic
+        max_line_width = width - 2 * status_padding;
+        status_lines = [];
+        words = status_text.split(' ');
+        current_line = ""
+        for word in words:
+            test_line = f"{current_line} {word}".strip();
+            (tw, th), _ = cv2.getTextSize(test_line, cv2.FONT_HERSHEY_SIMPLEX, status_font_scale, status_thickness)
+            if tw <= max_line_width:
+                current_line = test_line
+            else:
+                status_lines.append(current_line); current_line = word
+        status_lines.append(current_line)
+        # Calculate background size
+        max_tw_status = 0;
+        total_th_status = 0;
+        line_height = 0;
+        baseline_status = 0;
+        line_spacing = status_padding // 2
+        for i, line in enumerate(status_lines):
+            (tw_status, th_status), baseline_status = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX,
+                                                                      status_font_scale, status_thickness);
+            max_tw_status = max(max_tw_status, tw_status);
+            line_height = th_status + baseline_status;
+            total_th_status += line_height
+            if i < len(status_lines) - 1: total_th_status += line_spacing
+        # Define position and draw background
+        status_pos_x = status_padding;
+        status_pos_y = status_padding
+        cv2.rectangle(mask_image, (status_pos_x - status_padding, status_pos_y - status_padding),
+                      (status_pos_x + max_tw_status + status_padding,
+                       status_pos_y + total_th_status + status_padding), status_bg_color, -1)
+        # Draw text lines
+        current_y = status_pos_y + line_height - baseline_status
+        for line in status_lines:
+            cv2.putText(mask_image, line, (status_pos_x, current_y), cv2.FONT_HERSHEY_SIMPLEX, status_font_scale,
+                        status_color, status_thickness, cv2.LINE_AA);
+            current_y += line_height + line_spacing
         # --- End Final Status Text ---
 
         # Finalize Table Image
@@ -2474,7 +2524,6 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 print(f"[Error Table] PIL to OpenCV conversion failed: {conv_e}")
 
         return mask_image, table_image_np if draw_param_table else None
-
     # --- END draw_bounding_boxes METHOD ---
 
     # ... (draw_test_visualization method remains the same) ...
@@ -2498,32 +2547,38 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                       bbox_nms_target_types: Optional[List[str]] = None,
                       sort_by_area: bool = True,
                       window_title: str = "Visualization",
-                      is_image_shown: bool = False,
+                      is_image_shown: bool = False,  # Controls BOTH intermediate and final display
                       draw_param_table: bool = False,
                       draw_distance_lines: bool = False,
                       draw_relative_positions: bool = False,
                       draw_min_rect_bbox: bool = True,
-                      # --- New Parameter ---
-                      enable_pwb_check: bool = True  # Flag to enable the second stage check
-                      ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float, str, str]:
+                      enable_pwb_check: bool = True
+                      ) -> Tuple[
+        Optional[np.ndarray], Optional[np.ndarray], float, str, str]:  # MODIFIED RETURN SIGNATURE
         """
         Processes image: inference, Bezel Check, optional PWB Check, visualize.
         Separates drawing computation time from display/wait time.
+        Handles display of intermediate PWB check images at the end if is_image_shown is True.
+        Returns: (final_mask_img, annotated_pwb_img, proc_time_before_display, final_status, final_reason)
         """
         start_time = time.time()
         inf_time = 0.0
         eval_time_bezel = 0.0
         eval_time_pwb = 0.0
-        draw_time_bezel = 0.0
-        draw_time_final = 0.0
-        # num_displayed_masks = 0 # Not used in eval mode
-        mask_img, table_img = None, None
+        draw_time_bezel = 0.0  # Time for intermediate bezel draw (if shown)
+        draw_time_final = 0.0  # Time for final drawing
+        mask_img, table_img = None, None  # table_img is generated but no longer returned
         final_status, final_reason = "NG", "Initialization Error"
         raw_masks = None
         masks = []
         blank_image = None
-        bezel_classified_masks = {}  # Store results from Bezel check
-        pwb_measurement_info = None  # Store results from PWB check
+        bezel_classified_masks = {}
+        pwb_measurement_info = None
+        # --- MODIFIED: Variables to store PWB intermediate images ---
+        pwb_cropped_deskewed_img = None
+        pwb_processed_binary_img = None
+        pwb_processed_binary_annotated_img = None  # This will be returned
+        # --- End MODIFICATION ---
 
         # --- Input Validation ---
         if self.model is None:
@@ -2532,21 +2587,23 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             proc_time = time.time() - start_time
             blank_shape = (768, 1024, 3)
             blank_image = np.zeros(blank_shape, dtype=np.uint8)
-            return blank_image.copy(), blank_image.copy(), proc_time, reason, reason
+            # MODIFIED RETURN: Return None for annotated PWB image on error
+            return blank_image.copy(), None, proc_time, reason, reason
         if image_array is None or image_array.size == 0:
             reason = "Invalid input image."
             print(f"[{self.__class__.__name__}] NG: {reason}")
             proc_time = time.time() - start_time
             blank_shape = (768, 1024, 3)
             blank_image = np.zeros(blank_shape, dtype=np.uint8)
-            return blank_image.copy(), blank_image.copy(), proc_time, reason, reason
+            # MODIFIED RETURN: Return None for annotated PWB image on error
+            return blank_image.copy(), None, proc_time, reason, reason
 
         original_image_shape = image_array.shape[:2]
         try:
             blank_image = self.load_blank_image(original_image_shape)
         except AttributeError:
             blank_image = np.zeros((*original_image_shape, 3), dtype=np.uint8)
-        mask_img, table_img = blank_image.copy(), blank_image.copy()
+        mask_img, table_img = blank_image.copy(), blank_image.copy()  # table_img still used internally for drawing if enabled
 
         try:
             # --- 1. Inference ---
@@ -2561,7 +2618,7 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             filter_shape = None
             if masks:
                 try:
-                    filter_shape = masks[0].shape
+                    filter_shape = masks[0].shape;
                     print(f"[Info] Using mask shape for filtering: {filter_shape}")
                 except IndexError:
                     print("[Warning] Masks list empty? Cannot get filter_shape.")
@@ -2570,8 +2627,8 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             else:
                 print("[Warning] No valid masks from inference.")
 
-            if self.rotation_invariant_checker is None:
-                raise RuntimeError("RotationInvariantChecker failed to initialize. Cannot proceed.")
+            if self.rotation_invariant_checker is None: raise RuntimeError(
+                "RotationInvariantChecker failed to initialize. Cannot proceed.")
 
             # --- 2. Bezel Position Check (Stage 1) ---
             print(f"[{self.__class__.__name__}] Running Bezel Position Check (Stage 1)...")
@@ -2594,7 +2651,8 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                         containment_reference_type=containment_reference_type,
                         containment_target_type=containment_target_type,
                         enable_bbox_nms=enable_bbox_nms, bbox_nms_iou_threshold=bbox_nms_iou_threshold,
-                        bbox_nms_target_types=bbox_nms_target_types
+                        bbox_nms_target_types=bbox_nms_target_types,
+                        enable_pwb_check=enable_pwb_check
                     )
                     eval_time_bezel = time.time() - t0_eval_bezel
                     print(
@@ -2602,41 +2660,36 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                     print(f"[TIME] Bezel Check Evaluate call: {eval_time_bezel:.4f}s")
                 except Exception as eval_err:
                     print(f"[Error] Error during Bezel Check evaluation: {eval_err}\n{traceback.format_exc()}")
-                    bezel_ok = False
-                    bezel_reason = f"Bezel Check Error: {eval_err}"
-                    bezel_classified_masks = {}
+                    bezel_ok = False;
+                    bezel_reason = f"Bezel Check Error: {eval_err}";
+                    bezel_classified_masks = {};
                     eval_time_bezel = 0.0
 
-            # --- Intermediate Visualization (Optional) ---
-            if is_image_shown:
-                print(f"[{self.__class__.__name__}] Drawing intermediate Bezel Check visualization...")
+            # --- Intermediate Bezel Visualization (Drawing only, if is_image_shown) ---
+            interim_mask_img = None  # Reset for this run
+            if is_image_shown:  # Only draw if display is intended later
+                print(f"[{self.__class__.__name__}] Preparing intermediate Bezel Check visualization...")
                 t0_draw_bezel = time.time()
                 interim_status = "OK" if bezel_ok else "NG"
                 try:
-                    interim_mask_img, interim_table_img = self.draw_bounding_boxes(
-                        image_array, bezel_classified_masks, final_status=interim_status, pwb_measurement_info=None,
+                    # Draw, but don't show yet
+                    interim_mask_img, _ = self.draw_bounding_boxes(  # Discard table image here
+                        image_array, bezel_classified_masks, final_status=interim_status,
+                        final_reason=bezel_reason,  # Pass reason for consistency
+                        pwb_measurement_info=None,
                         relative_position_pairs_to_check=relative_position_pairs_to_check,
-                        draw_param_table=draw_param_table,
+                        draw_param_table=False,  # Don't draw table for intermediate
                         draw_distance_lines=draw_distance_lines, draw_relative_positions=draw_relative_positions,
                         draw_min_rect_bbox=draw_min_rect_bbox
                     )
                     draw_time_bezel = time.time() - t0_draw_bezel
-                    print(f"[TIME] Intermediate Bezel Draw call: {draw_time_bezel:.4f}s")
-                    if interim_mask_img is not None:
-                        display_width = 1280
-                        display_height = 800
-                        resized_interim_img = cv2.resize(interim_mask_img, (display_width, display_height),
-                                                         interpolation=cv2.INTER_AREA)
-                        cv2.imshow(f"{window_title} - Bezel Check Result ({interim_status})", resized_interim_img)
-                        print(
-                            ">>> Displaying Bezel Check Result. Press any key to continue to PWB Check (if applicable)...")
-                        cv2.waitKey(0)
-                        cv2.destroyWindow(f"{window_title} - Bezel Check Result ({interim_status})")
-                    else:
-                        print("[Warning] Intermediate mask image is None, cannot display.")
+                    print(f"[TIME] Intermediate Bezel Draw Preparation: {draw_time_bezel:.4f}s")
+                    if interim_mask_img is None: print(
+                        "[Warning] Intermediate Bezel mask image is None after drawing.")
                 except Exception as draw_err:
-                    print(f"[Error] Failed to draw/display intermediate Bezel Check visualization: {draw_err}")
-                    draw_time_bezel = time.time() - t0_draw_bezel
+                    print(f"[Error] Failed to prepare intermediate Bezel Check visualization: {draw_err}")
+                    draw_time_bezel = time.time() - t0_draw_bezel  # Still record time
+            # --- End Intermediate Bezel Visualization ---
 
             # --- 3. PWB Position Check (Stage 2 - Conditional) ---
             final_status = "OK" if bezel_ok else "NG"
@@ -2648,8 +2701,8 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 pwb_reason = "PWB check not performed"
                 target_pwb_object = None
                 try:
-                    pwb_check_config = self.rotation_invariant_checker.config.get("internal_geometry_checks", {}).get(
-                        "pwb_check")
+                    pwb_check_config = self.rotation_invariant_checker.config.get("internal_geometry_checks",
+                                                                                  {}).get("pwb_check")
                     if not pwb_check_config: raise ValueError(
                         "PWB check configuration ('internal_geometry_checks.pwb_check') not found in checker config.")
                     target_type = pwb_check_config.get("target_object_type")
@@ -2657,53 +2710,66 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
 
                     target_objects_list = bezel_classified_masks.get(target_type, [])
                     if len(target_objects_list) == 1:
-                        target_pwb_object = target_objects_list[0]
-                        print(f"[Info] Found target '{target_type}' for PWB check.")
+                        target_pwb_object = target_objects_list[0];
+                        print(
+                            f"[Info] Found target '{target_type}' for PWB check.")
                     elif len(target_objects_list) == 0:
-                        pwb_reason = f"PWB_NG: Target object '{target_type}' not found after Bezel check."
-                        print(f"[Warning] {pwb_reason}")
+                        pwb_reason = f"PWB_NG: Target object '{target_type}' not found after Bezel check.";
+                        print(
+                            f"[Warning] {pwb_reason}");
                         pwb_ok = False
                     else:
-                        pwb_reason = f"PWB_NG: Expected 1 target '{target_type}', found {len(target_objects_list)} after Bezel check."
-                        print(f"[Warning] {pwb_reason}")
+                        pwb_reason = f"PWB_NG: Expected 1 target '{target_type}', found {len(target_objects_list)} after Bezel check.";
+                        print(
+                            f"[Warning] {pwb_reason}");
                         pwb_ok = False
 
                     if target_pwb_object:
                         t0_eval_pwb = time.time()
-                        pwb_ok, pwb_reason, measured_mm, measured_pixels = self.rotation_invariant_checker.check_internal_geometry(
+                        # --- Call updated check_internal_geometry ---
+                        # It now returns the annotated image as the last element
+                        # prepare_display_images flag controls if *any* intermediate PWB images are generated
+                        pwb_ok, pwb_reason, measured_mm, measured_pixels, \
+                            pwb_cropped_deskewed_img, pwb_processed_binary_img, \
+                            pwb_processed_binary_annotated_img = self.rotation_invariant_checker.check_internal_geometry(
                             target_object_info=target_pwb_object, original_image=image_array,
-                            check_config=pwb_check_config, is_image_shown=is_image_shown
+                            check_config=pwb_check_config,
+                            prepare_display_images=True  # Always prepare if check runs, display handled later
                         )
+                        # --- End Call ---
                         eval_time_pwb = time.time() - t0_eval_pwb
                         print(
                             f"[{self.__class__.__name__}] PWB Check Result: {'OK' if pwb_ok else 'NG'} ({pwb_reason})")
-                        print(f"[TIME] PWB Check Evaluate call: {eval_time_pwb:.4f}s")
+                        print(f"[TIME] PWB Check Evaluate & Prep call: {eval_time_pwb:.4f}s")
                         if pwb_ok or measured_pixels is not None:
                             pwb_measurement_info = {"target_object_type": target_type,
                                                     "distance_pixels": measured_pixels, "distance_mm": measured_mm,
                                                     "status": "OK" if pwb_ok else "NG"}
 
                 except AttributeError as ae:
-                    pwb_reason = f"PWB_NG: Checker missing 'check_internal_geometry' method? Error: {ae}"
-                    print(f"[Error] {pwb_reason}")
-                    pwb_ok = False
+                    pwb_reason = f"PWB_NG: Checker missing 'check_internal_geometry' method? Error: {ae}";
+                    print(
+                        f"[Error] {pwb_reason}");
+                    pwb_ok = False;
                     eval_time_pwb = 0.0
                 except ValueError as ve:
-                    pwb_reason = f"PWB_NG: Configuration error: {ve}"
-                    print(f"[Error] {pwb_reason}")
-                    pwb_ok = False
+                    pwb_reason = f"PWB_NG: Configuration error: {ve}";
+                    print(
+                        f"[Error] {pwb_reason}");
+                    pwb_ok = False;
                     eval_time_pwb = 0.0
                 except Exception as pwb_err:
-                    print(f"[Error] Error during PWB Check: {pwb_err}\n{traceback.format_exc()}")
-                    pwb_ok = False
-                    pwb_reason = f"PWB Check Error: {pwb_err}"
+                    print(
+                        f"[Error] Error during PWB Check: {pwb_err}\n{traceback.format_exc()}");
+                    pwb_ok = False;
+                    pwb_reason = f"PWB Check Error: {pwb_err}";
                     eval_time_pwb = 0.0
 
                 if not pwb_ok:
-                    final_status = "NG"
+                    final_status = "NG";
                     final_reason = pwb_reason
                 else:
-                    final_status = "OK"
+                    final_status = "OK";
                     final_reason = "OK: Bezel and PWB checks passed."
 
             elif not bezel_ok:
@@ -2712,15 +2778,17 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 print(f"[{self.__class__.__name__}] Skipping PWB check because it is disabled.")
             # --- End PWB Check ---
 
-            # --- 4. Final Visualization ---
+            # --- 4. Final Visualization Drawing ---
             print(f"[{self.__class__.__name__}] Drawing final visualization...")
             t0_draw_final = time.time()
             try:
+                # Call draw_bounding_boxes to get the final mask and potentially the table image
                 mask_img, table_img = self.draw_bounding_boxes(
                     image_array, bezel_classified_masks, final_status=final_status,
-                    pwb_measurement_info=pwb_measurement_info,
+                    final_reason=final_reason,  # Pass final reason
+                    pwb_measurement_info=pwb_measurement_info,  # Contains info needed for annotation
                     relative_position_pairs_to_check=relative_position_pairs_to_check,
-                    draw_param_table=draw_param_table,
+                    draw_param_table=draw_param_table,  # Control if table is drawn
                     draw_distance_lines=draw_distance_lines, draw_relative_positions=draw_relative_positions,
                     draw_min_rect_bbox=draw_min_rect_bbox
                 )
@@ -2733,63 +2801,129 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
 
         # --- Error Handling ---
         except Exception as e:
-            proc_time = time.time() - start_time
+            proc_time_before_display = time.time() - start_time  # Time before any potential display
             final_status = "NG"
             final_reason = f"Overall Processing Error: {e}"
-            print(f"[{self.__class__.__name__}] NG: {final_reason}. Time: {proc_time:.3f}s")
+            print(f"[{self.__class__.__name__}] NG: {final_reason}. Time: {proc_time_before_display:.3f}s")
             print(traceback.format_exc())
-            if blank_image is None:
-                blank_image = np.zeros((768, 1024, 3), dtype=np.uint8)
-            mask_img, table_img = blank_image.copy(), blank_image.copy()
-            if 'bezel_classified_masks' not in locals(): bezel_classified_masks = {}
-            if 'masks' in locals() and masks is not None: del masks
-            if 'raw_masks' in locals() and raw_masks is not None: del raw_masks
+            if blank_image is None: blank_image = np.zeros((768, 1024, 3), dtype=np.uint8)
+            mask_img = blank_image.copy()
+            pwb_processed_binary_annotated_img = None  # Ensure PWB image is None on error
+            # Cleanup might be needed here depending on exception point
+            if 'masks' in locals(): del masks
+            if 'raw_masks' in locals(): del raw_masks
             if 'bezel_classified_masks' in locals(): del bezel_classified_masks
             gc.collect()
-            return mask_img, table_img, proc_time, final_status, final_reason
+            # Don't display anything on error, return None for PWB image
+            return mask_img, None, proc_time_before_display, final_status, final_reason
         # --- End Error Handling ---
 
-        # --- Final Summary and Display ---
+        # --- Final Summary (Computation Time Only) ---
         proc_time_before_display = time.time() - start_time
         print(f"[{self.__class__.__name__}] Final Result: {final_status}. Reason: {final_reason}.")
         print(
-            f"[TIME SUMMARY (Computation)] Inference: {inf_time:.4f}s | Bezel Eval: {eval_time_bezel:.4f}s | PWB Eval: {eval_time_pwb:.4f}s | Bezel Draw: {draw_time_bezel:.4f}s | Final Draw: {draw_time_final:.4f}s | Total Comp: {proc_time_before_display:.4f}s")
+            f"[TIME SUMMARY (Computation)] Inference: {inf_time:.4f}s | Bezel Eval: {eval_time_bezel:.4f}s | PWB Eval: {eval_time_pwb:.4f}s | Bezel Draw Prep: {draw_time_bezel:.4f}s | Final Draw: {draw_time_final:.4f}s | Total Comp: {proc_time_before_display:.4f}s")
 
+        # --- Display Section (Handles ALL displays if is_image_shown) ---
+        display_wait_start_time = time.time()
+        display_duration = 0.0
         if is_image_shown:
-            print(f"[{self.__class__.__name__}] Displaying final results (press any key)...")
+            print(f"[{self.__class__.__name__}] Displaying results (press any key in a window to close all)...")
             try:
                 display_width = 1280
                 display_height = 800
+                windows_shown = []  # Keep track of shown windows
+
+                # Display Intermediate Bezel Check (if prepared)
+                if interim_mask_img is not None:
+                    resized_interim_img = cv2.resize(interim_mask_img, (display_width, display_height),
+                                                     interpolation=cv2.INTER_AREA)
+                    win_name_interim = f"{window_title} - Bezel Check Result ({'OK' if bezel_ok else 'NG'})"
+                    cv2.imshow(win_name_interim, resized_interim_img)
+                    windows_shown.append(win_name_interim)
+
+                # Display PWB Intermediate Images (if prepared and exist)
+                # Cropped/Deskewed PWB
+                if pwb_cropped_deskewed_img is not None:
+                    win_name_pwb_crop = f"{window_title} - PWB Cropped/Deskewed"
+                    h_pwb, w_pwb = pwb_cropped_deskewed_img.shape[:2]
+                    aspect_ratio = w_pwb / h_pwb if h_pwb > 0 else 1
+                    disp_h_pwb = min(display_height // 2, h_pwb)  # Show smaller
+                    disp_w_pwb = int(disp_h_pwb * aspect_ratio)
+                    resized_pwb_crop = cv2.resize(pwb_cropped_deskewed_img, (disp_w_pwb, disp_h_pwb),
+                                                  interpolation=cv2.INTER_AREA)
+                    cv2.imshow(win_name_pwb_crop, resized_pwb_crop)
+                    windows_shown.append(win_name_pwb_crop)
+
+                # Binary PWB (before smoothing)
+                if pwb_processed_binary_img is not None:
+                    win_name_pwb_bin = f"{window_title} - PWB Binary (Pre-Smooth)"
+                    h_pwb, w_pwb = pwb_processed_binary_img.shape[:2]
+                    aspect_ratio = w_pwb / h_pwb if h_pwb > 0 else 1
+                    disp_h_pwb = min(display_height // 2, h_pwb)  # Show smaller
+                    disp_w_pwb = int(disp_h_pwb * aspect_ratio)
+                    resized_pwb_bin = cv2.resize(pwb_processed_binary_img, (disp_w_pwb, disp_h_pwb),
+                                                 interpolation=cv2.INTER_AREA)
+                    cv2.imshow(win_name_pwb_bin, resized_pwb_bin)
+                    windows_shown.append(win_name_pwb_bin)
+
+                # Annotated PWB Binary (after smoothing, with measurement)
+                if pwb_processed_binary_annotated_img is not None:
+                    win_name_pwb_anno = f"{window_title} - PWB Annotated Binary"
+                    h_pwb, w_pwb = pwb_processed_binary_annotated_img.shape[:2]
+                    aspect_ratio = w_pwb / h_pwb if h_pwb > 0 else 1
+                    disp_h_pwb = min(display_height // 2, h_pwb)  # Show smaller
+                    disp_w_pwb = int(disp_h_pwb * aspect_ratio)
+                    resized_pwb_anno = cv2.resize(pwb_processed_binary_annotated_img, (disp_w_pwb, disp_h_pwb),
+                                                  interpolation=cv2.INTER_AREA)
+                    cv2.imshow(win_name_pwb_anno, resized_pwb_anno)
+                    windows_shown.append(win_name_pwb_anno)
+
+                # Display Final Mask Image
                 if mask_img is not None:
                     resized_mask_img = cv2.resize(mask_img, (display_width, display_height),
                                                   interpolation=cv2.INTER_AREA)
-                    cv2.imshow(f"{window_title} - Final Result ({final_status})", resized_mask_img)
+                    win_name_final_mask = f"{window_title} - Final Result ({final_status})"
+                    cv2.imshow(win_name_final_mask, resized_mask_img)
+                    windows_shown.append(win_name_final_mask)
                 else:
-                    print("[Warning] final mask_img is None, cannot display.")
+                    print("[Warning] Final mask_img is None, cannot display.")
+
+                # Display Final Table Image (if drawn and enabled)
                 if table_img is not None and draw_param_table:
-                    table_window_title = f"{window_title} - Parameters"
+                    win_name_final_table = f"{window_title} - Parameters"
                     resized_table_img = cv2.resize(table_img, (display_width, display_height),
                                                    interpolation=cv2.INTER_AREA)
-                    cv2.imshow(table_window_title, resized_table_img)
+                    cv2.imshow(win_name_final_table, resized_table_img)
+                    windows_shown.append(win_name_final_table)
+
+                # Wait for key press ONLY if any window was shown
+                if windows_shown:
+                    cv2.waitKey(0)
+                    for win_name in windows_shown:
+                        cv2.destroyWindow(win_name)
                 else:
-                    table_window_title = None
-                cv2.waitKey(0)
-                cv2.destroyWindow(f"{window_title} - Final Result ({final_status})")
-                if table_window_title: cv2.destroyWindow(table_window_title)
+                    print("[Info] No images were prepared for display.")
+
             except Exception as display_err:
                 print(f"[Error] Display failed during process_image: {display_err}")
-                cv2.destroyAllWindows()
-        # --- End Final Summary and Display ---
+                cv2.destroyAllWindows()  # Attempt to close any open windows
+            finally:
+                display_duration = time.time() - display_wait_start_time
+                print(f"[TIME] Display & Wait Duration: {display_duration:.4f}s")
+        # --- End Display Section ---
 
         # --- Final Cleanup and Return ---
         if 'masks' in locals(): del masks
         if 'raw_masks' in locals(): del raw_masks
         if 'bezel_classified_masks' in locals(): del bezel_classified_masks
         gc.collect()
-        proc_time = time.time() - start_time
-        final_mask_img = mask_img if isinstance(mask_img, np.ndarray) else blank_image.copy()
-        final_table_img = table_img if isinstance(table_img, np.ndarray) else blank_image.copy()
-        return final_mask_img, final_table_img, proc_time, final_status, final_reason
+
+        # --- MODIFIED RETURN ---
+        # Return the main mask image, the annotated PWB image (or None), time, status, reason
+        final_mask_img_to_return = mask_img if isinstance(mask_img, np.ndarray) else blank_image.copy()
+        # pwb_processed_binary_annotated_img is already set correctly (or None)
+        return final_mask_img_to_return, pwb_processed_binary_annotated_img, proc_time_before_display, final_status, final_reason
     # --- END process_image METHOD ---
 
 

@@ -3796,7 +3796,7 @@ class Ui_MainWindow(object):
         self.label_108.setObjectName(u"label_108")
         self.label_108.setGeometry(QRect(600, 740, 40, 40))
         self.label_108.setFont(font1)
-        self.label_108.setPixmap(QPixmap(u"../../../BoardDefectChecker/resources/warning.png"))
+        self.label_108.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/warning.png"))
         self.label_108.setScaledContents(True)
         self.label_133 = QLabel(self.tab_bezel_pwb_position)
         self.label_133.setObjectName(u"label_133")

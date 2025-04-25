@@ -19832,7 +19832,7 @@ when full disk</string>
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../BoardDefectChecker/resources/warning.png</pixmap>
+       <pixmap>C:/BoardDefectChecker/resources/warning.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
