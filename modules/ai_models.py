@@ -1850,126 +1850,30 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
     Includes PWB measurement visualization.
     """
 
-    def __init__(self, model_type="x", model_path="ai-models/", output_dir=r"C:\BoardDefectChecker\ai-outputs"):
-        """Initializes the BezelPWBPositionSegmenter."""
+    def __init__(self,
+                 model_type: str = "x",
+                 model_path: str = "ai-models/",
+                 output_dir: str = r"C:\BoardDefectChecker\ai-outputs",
+                 checker_config_path: Optional[str] = None):
+        """
+        Initializes the BezelPWBPositionSegmenter.
+
+        Args:
+            model_type (str): Type of FastSAM model (e.g., "x").
+            model_path (str): Path to the directory containing AI models.
+            output_dir (str): Directory to save output images.
+            checker_config_path (Optional[str]): Initial path to the JSON configuration file
+                                                 for the RotationInvariantAOIChecker.
+        """
         super().__init__(model_type=model_type, model_path=model_path, imgsz=896, conf=0.2, iou=0.9)
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
 
-        # --- CONFIGURATION STRING (NEEDS MANUAL UPDATE from learning tool) ---
-        # *** USER ACTION REQUIRED: Manually add the "internal_geometry_checks" section below ***
-        # Example structure:
-        # "internal_geometry_checks": {
-        #   "pwb_check": {
-        #     "target_object_type": "stamped_mark",
-        #     "binarization_threshold": 128,
-        #     "morph_kernel_size": [3, 3],
-        #     "distance_range_mm": [1.5, 2.5],
-        #     "pixel_size_mm": 0.00345 # Added pixel size here for clarity
-        #   }
-        # }
-        self.rotation_invariant_checking_config = '''
-                 {
-                   "target_objects": {
-                     "bezel": {
-                       "expected_evaluation_count": 1,
-                       "total_samples_labeled": 190,
-                       "feature_ranges": {
-                         "area": [8809, 43065],
-                         "aspect_ratio": [0.119, 0.281],
-                         "larger_dim": [306.286, 677.683],
-                         "smaller_dim": [39.846, 160.561],
-                         "perimeter": [668.071, 1832.17]
-                       }
-                     },
-                     "copper_mark": {
-                       "expected_evaluation_count": 2,
-                       "total_samples_labeled": 279,
-                       "feature_ranges": {
-                         "area": [1571.25, 3438.75],
-                         "aspect_ratio": [0.187, 0.331],
-                         "larger_dim": [99.805, 118.609],
-                         "smaller_dim": [19.673, 36.411],
-                         "perimeter": [233.518, 301.283]
-                       }
-                     },
-                     "stamped_mark": {
-                       "expected_evaluation_count": 1,
-                       "total_samples_labeled": 162,
-                       "feature_ranges": {
-                         "area": [2903.6, 8375.4],
-                         "aspect_ratio": [0.323, 0.788],
-                         "larger_dim": [91.8, 124.2],
-                         "smaller_dim": [33.52, 87.48],
-                         "perimeter": [246.678, 478.76]
-                       }
-                     }
-                   },
-                   "distance_constraints": {
-                     "bezel-copper_mark": {"range": [28.56, 326.02], "mean": 150.825, "stddev": 49.539, "count": 337},
-                     "bezel-stamped_mark": {"range": [484.646, 858.299], "mean": 675.628, "stddev": 40.174, "count": 190},
-                     "copper_mark-stamped_mark": {"range": [583.675, 1021.73], "mean": 789.546, "stddev": 74.239, "count": 279}
-                   },
-                   "relative_position_constraints": {
-                     "bezel-copper_mark": {"dx_range": [-272.308, 229.892], "dy_range": [-385.202, 205.832], "mean_dx": -21.208, "stddev_dx": 83.7, "mean_dy": -89.685, "stddev_dy": 98.506, "count": 337},
-                     "bezel-stamped_mark": {"dx_range": [-1231.696, 1229.154], "dy_range": [-913.083, 1592.667], "mean_dx": -1.271, "stddev_dx": 410.142, "mean_dy": 339.792, "stddev_dy": 417.625, "count": 190},
-                     "copper_mark-stamped_mark": {"dx_range": [-1586.16, 1175.537], "dy_range": [-1368.152, 1916.537], "mean_dx": -205.311, "stddev_dx": 460.283, "mean_dy": 274.192, "stddev_dy": 547.448, "count": 279},
-                     "copper_mark-copper_mark": {"dx_range": [-171.428, 417.941], "dy_range": [-213.522, 144.613], "mean_dx": 123.256, "stddev_dx": 98.228, "mean_dy": -34.454, "stddev_dy": 59.689, "count": 117},
-                     "bezel-bezel": {"dx_range": [-21.59, 20.046], "dy_range": [-148.591, 59.343], "mean_dx": -0.772, "stddev_dx": 6.939, "mean_dy": -44.624, "stddev_dy": 34.656, "count": 32}
-                   },
-                   "overlap_rules": [
-                     {"objects": ["copper_mark", "stamped_mark"], "mode": "absolute"},
-                     {"objects": ["bezel", "stamped_mark"], "mode": "absolute"},
-                     {"objects": ["bezel", "copper_mark"], "mode": "absolute"},
-                     {"objects": ["bezel", "bezel"], "mode": "absolute"},
-                     {"objects": ["copper_mark", "copper_mark"], "mode": "absolute"},
-                     {"objects": ["stamped_mark", "stamped_mark"], "mode": "absolute"}
-                   ],
-                   "internal_geometry_checks": {
-                     "pwb_check": {
-                       "target_object_type": "stamped_mark",
-                       "binarization_threshold": 128,
-                       "binary_inverted": false,
-                       "erode_iterations": 0,
-                       "dilate_iterations": 0,
-                       "morph_kernel_size": [3, 3],
-                       "enable_smoothing": false,
-                       "column_edge_ignore_ratio": 0.15,
-                       "min_column_height_ratio": 0.5,
-                       "min_distance_mm": 0.5,
-                       "max_distance_mm": 1.4,
-                       "calibration_ref_height_mm": 0.55,
-                       "calibration_ref_pixels": 30,
-                       "additional_height_pixels": 10
-                     }
-                   }
-                 }
-                 '''
-        # --- End CONFIGURATION STRING ---
+        self.checker_config_path = None  # Store the currently loaded path
+        self.rotation_invariant_checker = None  # Initialize checker attribute
 
-        config_dict = {}
-        try:
-            config_dict = json.loads(self.rotation_invariant_checking_config)
-            print(f"[{self.__class__.__name__}] Parsed configuration JSON.")
-        except json.JSONDecodeError as e:
-            print(f"[ERROR][{self.__class__.__name__}] Failed parse config JSON: {e}. Using empty default.")
-            config_dict = {"target_objects": {}}
-        except Exception as e_cfg:
-            print(f"[ERROR][{self.__class__.__name__}] Unexpected error loading config: {e_cfg}. Using empty default.")
-            config_dict = {"target_objects": {}}
-
-        # Initialize the checker
-        try:
-            if 'RotationInvariantAOIChecker' in globals() and not hasattr(RotationInvariantAOIChecker, 'pass'):
-                # Pass the full config_dict, the checker should parse internal_geometry_checks if needed
-                self.rotation_invariant_checker = RotationInvariantAOIChecker(config_dict)
-                print(f"[{self.__class__.__name__}] Checker initialized.")
-            else:
-                print("[ERROR] RotationInvariantAOIChecker class not available or is a dummy.")
-                self.rotation_invariant_checker = None  # Set to None if dummy
-        except Exception as e:
-            print(f"[FATAL] Failed init checker: {e}")
-            self.rotation_invariant_checker = None  # Set to None on error
+        # --- Load initial checker configuration ---
+        self.set_checker_config_path(checker_config_path, is_initial_load=True)
 
         # --- Font Configuration ---
         self.font_path = "C:/Windows/Fonts/segoeui.ttf"
@@ -1977,23 +1881,103 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
         self.font_size_small = 14
         self.font_large = None
         self.font_small = None
-        global _pillow_available_global  # Assuming this global flag exists
+        global _pillow_available_global
         if _pillow_available_global:
             try:
-                from PIL import ImageFont  # Import locally if needed
+                from PIL import ImageFont
                 self.font_large = ImageFont.truetype(self.font_path, self.font_size_large)
                 self.font_small = ImageFont.truetype(self.font_path, self.font_size_small)
-                print(f"[Info] Loaded font: {self.font_path}")
+                print(f"[Info][{self.__class__.__name__}] Loaded font: {self.font_path}")
             except Exception as e:
                 print(f"[{self.__class__.__name__}] Warn: Font load error: {e}.")
-                self.font_large = None
+                self.font_large = None;
                 self.font_small = None
         else:
-            print(f"[{self.__class__.__name__}] Info: Pillow not available.")
+            print(f"[{self.__class__.__name__}] Info: Pillow not available, text rendering may be basic.")
         # --- End Font Configuration ---
 
         print(f"[{self.__class__.__name__}] Initialized. Output Dir: {self.output_dir}")
-        # --- End Initialization ---
+
+    # --- NEW METHOD to set/reload checker config ---
+    def set_checker_config_path(self, new_config_path: Optional[str], is_initial_load: bool = False):
+        """
+        Loads or reloads the RotationInvariantAOIChecker configuration from a JSON file.
+
+        Args:
+            new_config_path (Optional[str]): The path to the new JSON configuration file.
+                                            If None, attempts to use a default path during initial load,
+                                            otherwise keeps the existing config if called later.
+            is_initial_load (bool): Flag to indicate if this is the first load during __init__.
+        """
+        class_name = self.__class__.__name__
+        action = "Loading initial" if is_initial_load else "Reloading"
+        print(f"[{class_name}] {action} checker configuration...")
+
+        config_dict = {}
+        path_to_load = new_config_path
+
+        # Determine the path to load
+        if path_to_load is None and is_initial_load:
+            # Attempt to find a default path only during initial load if none provided
+            default_config_filename = "rotation_invariant_checker_config.json"  # Default filename
+            try:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                # Adjust relative path as needed (e.g., '../configs/')
+                path_to_load = os.path.join(base_dir, default_config_filename)
+                print(f"[{class_name}] No path provided, attempting default: {path_to_load}")
+            except NameError:
+                print(f"[{class_name}] Could not determine default config path (__file__ not defined).")
+                path_to_load = None
+        elif path_to_load is None and not is_initial_load:
+            print(f"[{class_name}] No new path provided for reload. Keeping existing configuration.")
+            return  # Keep existing config if no path given for reload
+
+        # Attempt to load from the determined path
+        if path_to_load and os.path.exists(path_to_load):
+            try:
+                with open(path_to_load, 'r') as f:
+                    config_dict = json.load(f)
+                print(f"[{class_name}] Successfully loaded checker configuration from: {path_to_load}")
+                load_successful = True
+            except json.JSONDecodeError as e:
+                print(f"[ERROR][{class_name}] Failed to parse JSON from {path_to_load}: {e}.")
+                load_successful = False
+            except Exception as e_file:
+                print(f"[ERROR][{class_name}] Failed to read config file {path_to_load}: {e_file}.")
+                load_successful = False
+        else:
+            print(f"[ERROR][{class_name}] Checker config file not found at path: {path_to_load}.")
+            load_successful = False
+
+        # If loading failed, decide whether to keep old config or use empty
+        if not load_successful:
+            if not is_initial_load and self.rotation_invariant_checker is not None:
+                print(f"[{class_name}] Reload failed. Keeping previously loaded checker configuration.")
+                return  # Keep the existing valid checker
+            else:
+                print(f"[{class_name}] Using empty checker configuration due to load failure.")
+                config_dict = {"target_objects": {}}  # Use empty default
+
+        # Initialize or re-initialize the checker
+        try:
+            # Ensure RotationInvariantAOIChecker is available
+            if 'RotationInvariantAOIChecker' in globals() and not hasattr(RotationInvariantAOIChecker, 'pass'):
+                self.rotation_invariant_checker = RotationInvariantAOIChecker(config_dict)
+                self.checker_config_path = path_to_load if load_successful else None  # Store path only if load succeeded
+                status = "initialized" if is_initial_load else "re-initialized"
+                print(f"[{class_name}] RotationInvariantAOIChecker {status}.")
+            else:
+                print(
+                    f"[ERROR][{class_name}] RotationInvariantAOIChecker class not available or is a dummy. Cannot initialize checker.")
+                self.rotation_invariant_checker = None  # Ensure it's None if class is missing
+                self.checker_config_path = None
+        except Exception as e:
+            print(f"[FATAL][{class_name}] Failed to initialize RotationInvariantAOIChecker: {e}")
+            traceback.print_exc()
+            self.rotation_invariant_checker = None  # Ensure it's None on init error
+            self.checker_config_path = None
+
+    # --- END NEW METHOD ---
 
     def load_blank_image(self, target_shape):
         """Loads a blank background image."""
@@ -2203,7 +2187,7 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
         placed_circles_info: List[Tuple[int, int, int]] = []
         circle_radius = 15
         blocks_per_column = max(1, (
-                    height - 2 * margin) // block_height) if draw_param_table and block_height > 0 else 1
+                height - 2 * margin) // block_height) if draw_param_table and block_height > 0 else 1
         text_color_bgr = (255, 255, 0)
         text_bg_color_bgr = (0, 0, 0)
         text_font_scale = 0.5
@@ -2285,11 +2269,13 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                             side1_len = np.linalg.norm(pwb_vertices[0] - pwb_vertices[1]);
                             side2_len = np.linalg.norm(pwb_vertices[1] - pwb_vertices[2])
                             if side1_len > side2_len:
-                                m1 = ((pwb_vertices[0] + pwb_vertices[1]) / 2).astype(int); m2 = (
-                                            (pwb_vertices[2] + pwb_vertices[3]) / 2).astype(int)
+                                m1 = ((pwb_vertices[0] + pwb_vertices[1]) / 2).astype(int);
+                                m2 = (
+                                        (pwb_vertices[2] + pwb_vertices[3]) / 2).astype(int)
                             else:
-                                m1 = ((pwb_vertices[1] + pwb_vertices[2]) / 2).astype(int); m2 = (
-                                            (pwb_vertices[3] + pwb_vertices[0]) / 2).astype(int)
+                                m1 = ((pwb_vertices[1] + pwb_vertices[2]) / 2).astype(int);
+                                m2 = (
+                                        (pwb_vertices[3] + pwb_vertices[0]) / 2).astype(int)
                             arrow_start = tuple(m1);
                             arrow_end = tuple(m2);
                             arrow_color = (0, 255, 255);
@@ -2335,23 +2321,30 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                                   f" Perim: {features.get('perimeter', 'N/A'):.1f}",
                                   f" Angle: {features.get('angle', 'N/A'):.1f}"]
                     if pillow_ready and table_draw is not None and self.font_large and self.font_small:
-                        current_y = block_y + cell_margin; table_draw.text((block_x + cell_margin, current_y),
-                                                                           text_lines[0], font=self.font_large,
-                                                                           fill=black_color_rgb); current_y += line_spacing_pixels; [
+                        current_y = block_y + cell_margin;
+                        table_draw.text((block_x + cell_margin, current_y),
+                                        text_lines[0], font=self.font_large,
+                                        fill=black_color_rgb);
+                        current_y += line_spacing_pixels;
+                        [
                             table_draw.text((block_x + cell_margin, current_y), line, font=self.font_small,
                                             fill=black_color_rgb) or (current_y := current_y + line_spacing_pixels)
                             for line in text_lines[1:]]
                     else:
-                        current_y = block_y + cell_margin + 18; cv2.putText(table_image_np, text_lines[0],
-                                                                            (block_x + cell_margin, current_y),
-                                                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                                                            black_color_bgr, 1,
-                                                                            cv2.LINE_AA); current_y += line_spacing_pixels; [
+                        current_y = block_y + cell_margin + 18;
+                        cv2.putText(table_image_np, text_lines[0],
+                                    (block_x + cell_margin, current_y),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                    black_color_bgr, 1,
+                                    cv2.LINE_AA);
+                        current_y += line_spacing_pixels;
+                        [
                             cv2.putText(table_image_np, line, (block_x + cell_margin, current_y),
                                         cv2.FONT_HERSHEY_SIMPLEX, 0.4, black_color_bgr, 1, cv2.LINE_AA) or (
                                 current_y := current_y + line_spacing_pixels) for line in text_lines[1:]]
                 except Exception as table_draw_err:
-                    print(f"[Error Table] Failed draw cell #{idx}: {table_draw_err}"); traceback.print_exc()
+                    print(f"[Error Table] Failed draw cell #{idx}: {table_draw_err}");
+                    traceback.print_exc()
 
         # --- Draw Distance Lines (Only if enabled) ---
         if draw_distance_lines:
@@ -2379,10 +2372,10 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                                 mask_image, c1, c2, distance_line_color, distance_font_thickness); mid_x = (c1[0] +
                                                                                                             c2[
                                                                                                                 0]) // 2; mid_y = (
-                                                                                                                                              c1[
-                                                                                                                                                  1] +
-                                                                                                                                              c2[
-                                                                                                                                                  1]) // 2; (
+                                                                                                                                          c1[
+                                                                                                                                              1] +
+                                                                                                                                          c2[
+                                                                                                                                              1]) // 2; (
                                 tw, th), _ = cv2.getTextSize(dist_text, cv2.FONT_HERSHEY_SIMPLEX,
                                                              distance_font_scale,
                                                              distance_font_thickness); text_x = mid_x - tw // 2; text_y = mid_y - th // 2 - 5; cv2.putText(
@@ -2406,7 +2399,8 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             visualize_pairs_set = None
             if relative_position_pairs_to_check is not None:
                 visualize_pairs_set = set(
-                    "-".join(sorted(p.split('-'))) for p in relative_position_pairs_to_check); print(
+                    "-".join(sorted(p.split('-'))) for p in relative_position_pairs_to_check);
+                print(
                     f"  - Only visualizing relative position for pairs: {visualize_pairs_set}")
             else:
                 print("  - Visualizing all defined relative position pairs.")
@@ -2446,9 +2440,9 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                                                                                                  relpos_orig_color,
                                                                                                  relpos_thickness,
                                                                                                  tipLength=0.05); dx = \
-                            c2[0] - c1[0]; dy = c2[1] - c1[
+                                c2[0] - c1[0]; dy = c2[1] - c1[
                                 1]; dx_rel = dx * cos_neg_a1 - dy * sin_neg_a1; dy_rel = dx * sin_neg_a1 + dy * cos_neg_a1; end_x_img = \
-                            c1[0] + int(dx_rel * cos_pos_a1 - dy_rel * sin_pos_a1); end_y_img = c1[1] + int(
+                                c1[0] + int(dx_rel * cos_pos_a1 - dy_rel * sin_pos_a1); end_y_img = c1[1] + int(
                                 dx_rel * sin_pos_a1 + dy_rel * cos_pos_a1); cv2.arrowedLine(mask_image, c1,
                                                                                             (end_x_img, end_y_img),
                                                                                             relpos_rot_color,
@@ -2487,7 +2481,8 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
             if tw <= max_line_width:
                 current_line = test_line
             else:
-                status_lines.append(current_line); current_line = word
+                status_lines.append(current_line);
+                current_line = word
         status_lines.append(current_line)
         # Calculate background size
         max_tw_status = 0;
@@ -2524,6 +2519,7 @@ class BezelPWBPositionSegmenter(BaseFastSamSegmenter):
                 print(f"[Error Table] PIL to OpenCV conversion failed: {conv_e}")
 
         return mask_image, table_image_np if draw_param_table else None
+
     # --- END draw_bounding_boxes METHOD ---
 
     # ... (draw_test_visualization method remains the same) ...

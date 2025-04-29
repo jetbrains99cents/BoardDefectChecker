@@ -193,7 +193,8 @@
       "label_319": "Image Display",
       "label_310": "Image Display",
       "label_317": "Image Display",
-      "label_321": "Image Display"
+      "label_321": "Image Display",
+      "comboBox_6": "Product type"
     },
     "vi": {
       "label_307": "Mã nhân viên:",
@@ -246,7 +247,8 @@
       "label_319": "Hình ảnh",
       "label_310": "Hình ảnh",
       "label_317": "Hình ảnh",
-      "label_321": "Hình ảnh"
+      "label_321": "Hình ảnh",
+      "comboBox_6": "Chọn mã hàng"
     }
   }
 }

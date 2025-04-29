@@ -3521,7 +3521,7 @@ class Ui_MainWindow(object):
         self.label_305.setScaledContents(True)
         self.label_306 = QLabel(self.tab_bezel_pwb_position)
         self.label_306.setObjectName(u"label_306")
-        self.label_306.setGeometry(QRect(550, 10, 161, 30))
+        self.label_306.setGeometry(QRect(450, 10, 161, 30))
         self.label_306.setFont(font)
         self.label_307 = QLabel(self.tab_bezel_pwb_position)
         self.label_307.setObjectName(u"label_307")
@@ -3542,7 +3542,7 @@ class Ui_MainWindow(object):
 "}")
         self.lineEdit_29 = QLineEdit(self.tab_bezel_pwb_position)
         self.lineEdit_29.setObjectName(u"lineEdit_29")
-        self.lineEdit_29.setGeometry(QRect(720, 10, 350, 30))
+        self.lineEdit_29.setGeometry(QRect(620, 10, 260, 30))
         self.lineEdit_29.setFont(font)
         self.label_309 = QLabel(self.tab_bezel_pwb_position)
         self.label_309.setObjectName(u"label_309")
@@ -3559,7 +3559,7 @@ class Ui_MainWindow(object):
         self.graphicsView_49.setGeometry(QRect(720, 105, 220, 220))
         self.pushButton_51 = QPushButton(self.tab_bezel_pwb_position)
         self.pushButton_51.setObjectName(u"pushButton_51")
-        self.pushButton_51.setGeometry(QRect(18, 108, 190, 30))
+        self.pushButton_51.setGeometry(QRect(18, 110, 190, 30))
         self.pushButton_51.setFont(font2)
         self.label_311 = QLabel(self.tab_bezel_pwb_position)
         self.label_311.setObjectName(u"label_311")
@@ -3597,7 +3597,7 @@ class Ui_MainWindow(object):
         self.graphicsView_51.setGeometry(QRect(1070, 105, 220, 220))
         self.checkBox_28 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_28.setObjectName(u"checkBox_28")
-        self.checkBox_28.setGeometry(QRect(18, 140, 158, 20))
+        self.checkBox_28.setGeometry(QRect(18, 150, 158, 20))
         self.checkBox_28.setFont(font2)
         self.checkBox_28.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
@@ -3716,7 +3716,7 @@ class Ui_MainWindow(object):
         palette66.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush3)
 #endif
         self.label_103.setPalette(palette66)
-        self.label_103.setFont(font4)
+        self.label_103.setFont(font3)
         self.label_103.setStyleSheet(u"QLabel {\n"
 "    color: #be2b25; /* Set the text color to yellow */\n"
 "}")
@@ -3794,7 +3794,7 @@ class Ui_MainWindow(object):
 "}")
         self.label_108 = QLabel(self.tab_bezel_pwb_position)
         self.label_108.setObjectName(u"label_108")
-        self.label_108.setGeometry(QRect(600, 740, 40, 40))
+        self.label_108.setGeometry(QRect(600, 745, 40, 40))
         self.label_108.setFont(font1)
         self.label_108.setPixmap(QPixmap(u"C:/BoardDefectChecker/resources/warning.png"))
         self.label_108.setScaledContents(True)
@@ -4404,7 +4404,7 @@ class Ui_MainWindow(object):
 "}")
         self.checkBox_12 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_12.setObjectName(u"checkBox_12")
-        self.checkBox_12.setGeometry(QRect(18, 170, 151, 41))
+        self.checkBox_12.setGeometry(QRect(18, 180, 151, 41))
         self.checkBox_12.setFont(font2)
         self.checkBox_12.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
@@ -4413,7 +4413,7 @@ class Ui_MainWindow(object):
         self.checkBox_12.setChecked(True)
         self.label_177 = QLabel(self.tab_bezel_pwb_position)
         self.label_177.setObjectName(u"label_177")
-        self.label_177.setGeometry(QRect(18, 220, 161, 40))
+        self.label_177.setGeometry(QRect(18, 230, 161, 40))
         palette85 = QPalette()
         palette85.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette85.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -4449,7 +4449,7 @@ class Ui_MainWindow(object):
 "}")
         self.label_182 = QLabel(self.tab_bezel_pwb_position)
         self.label_182.setObjectName(u"label_182")
-        self.label_182.setGeometry(QRect(18, 270, 161, 40))
+        self.label_182.setGeometry(QRect(18, 280, 161, 40))
         palette86 = QPalette()
         palette86.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette86.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -4485,7 +4485,7 @@ class Ui_MainWindow(object):
 "}")
         self.checkBox_14 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_14.setObjectName(u"checkBox_14")
-        self.checkBox_14.setGeometry(QRect(18, 310, 158, 81))
+        self.checkBox_14.setGeometry(QRect(18, 320, 158, 81))
         self.checkBox_14.setFont(font2)
         self.checkBox_14.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
@@ -4561,8 +4561,12 @@ class Ui_MainWindow(object):
 "}")
         self.checkBox_15 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_15.setObjectName(u"checkBox_15")
-        self.checkBox_15.setGeometry(QRect(18, 388, 158, 51))
-        self.checkBox_15.setFont(font2)
+        self.checkBox_15.setGeometry(QRect(18, 398, 158, 51))
+        font13 = QFont()
+        font13.setPointSize(12)
+        font13.setBold(True)
+        font13.setStrikeOut(False)
+        self.checkBox_15.setFont(font13)
         self.checkBox_15.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
 "}")
@@ -4704,7 +4708,7 @@ class Ui_MainWindow(object):
         self.comboBox_5.setFont(font2)
         self.checkBox_16 = QCheckBox(self.tab_bezel_pwb_position)
         self.checkBox_16.setObjectName(u"checkBox_16")
-        self.checkBox_16.setGeometry(QRect(18, 440, 158, 30))
+        self.checkBox_16.setGeometry(QRect(18, 450, 158, 30))
         self.checkBox_16.setFont(font2)
         self.checkBox_16.setStyleSheet(u"QCheckBox {\n"
 "    color: yellow; /* Set the text color to yellow */\n"
@@ -4718,7 +4722,7 @@ class Ui_MainWindow(object):
 "}")
         self.label_179 = QLabel(self.tab_bezel_pwb_position)
         self.label_179.setObjectName(u"label_179")
-        self.label_179.setGeometry(QRect(18, 470, 161, 51))
+        self.label_179.setGeometry(QRect(18, 480, 161, 51))
         palette91 = QPalette()
         palette91.setBrush(QPalette.Active, QPalette.WindowText, brush)
         palette91.setBrush(QPalette.Active, QPalette.Button, brush1)
@@ -4752,6 +4756,13 @@ class Ui_MainWindow(object):
         self.label_179.setStyleSheet(u"QLabel {\n"
 "    color: white; /* Set the text color to yellow */\n"
 "}")
+        self.comboBox_6 = QComboBox(self.tab_bezel_pwb_position)
+        self.comboBox_6.addItem("")
+        self.comboBox_6.addItem("")
+        self.comboBox_6.addItem("")
+        self.comboBox_6.setObjectName(u"comboBox_6")
+        self.comboBox_6.setGeometry(QRect(900, 10, 320, 30))
+        self.comboBox_6.setFont(font2)
         self.tabWidget.addTab(self.tab_bezel_pwb_position, "")
         self.tab_robotic_arm = QWidget()
         self.tab_robotic_arm.setObjectName(u"tab_robotic_arm")
@@ -4788,6 +4799,7 @@ class Ui_MainWindow(object):
         self.comboBox_2.setCurrentIndex(-1)
         self.comboBox_4.setCurrentIndex(-1)
         self.comboBox_5.setCurrentIndex(-1)
+        self.comboBox_6.setCurrentIndex(-1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -5051,7 +5063,7 @@ class Ui_MainWindow(object):
         self.label_157.setText(QCoreApplication.translate("MainWindow", u"Successful", None))
         self.label_158.setText(QCoreApplication.translate("MainWindow", u"Connected", None))
         self.label_159.setText(QCoreApplication.translate("MainWindow", u"Detected OK part count:", None))
-        self.label_160.setText(QCoreApplication.translate("MainWindow", u"Plug", None))
+        self.label_160.setText(QCoreApplication.translate("MainWindow", u"Bezel", None))
         self.label_161.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.label_162.setText(QCoreApplication.translate("MainWindow", u"Detected NG part count:", None))
         self.label_163.setText(QCoreApplication.translate("MainWindow", u"Detected part count:", None))
@@ -5099,6 +5111,12 @@ class Ui_MainWindow(object):
         self.comboBox_5.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Camera IP", None))
         self.checkBox_16.setText(QCoreApplication.translate("MainWindow", u"Check bezel only", None))
         self.label_179.setText(QCoreApplication.translate("MainWindow", u"--", None))
+        self.comboBox_6.setItemText(0, QCoreApplication.translate("MainWindow", u"LS124M5Z04", None))
+        self.comboBox_6.setItemText(1, QCoreApplication.translate("MainWindow", u"Hollywood", None))
+        self.comboBox_6.setItemText(2, QCoreApplication.translate("MainWindow", u"Maverick", None))
+
+        self.comboBox_6.setCurrentText("")
+        self.comboBox_6.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Product Type", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_bezel_pwb_position), QCoreApplication.translate("MainWindow", u"Bezel - PWB position checker", None))
         self.label_38.setText("")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_robotic_arm), QCoreApplication.translate("MainWindow", u"Robotic arm", None))

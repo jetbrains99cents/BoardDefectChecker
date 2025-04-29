@@ -6,18 +6,29 @@ import psutil
 import numpy as np
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import Qt, QTimer, QThread, Slot
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QComboBox, QLabel
 
 from modules.bezel_pwb_position_image_processing import BezelPWBPositionImageProcessor
 from modules.ai_models import BezelPWBPositionSegmenter
 from modules.language import SimpleLanguageManager
 from modules.disk_space_monitoring import DiskSpaceMonitor
 from modules.processing_working import BezelPWBProcessingWorker, ProcessingDialog
+# --- Import the QR Scanner Worker ---
+from modules.qr_code_reading import QRScannerWorker, save_qr_code_image  # Import both
 
 from typing import List, Dict, Tuple, Any, Optional
 
 
 class BezelPWBTabController:
+    # --- Define checker config directory path ---
+    CHECKER_CONFIG_DIR = r"C:\BoardDefectChecker\ai-training-data"  # Example path
+    # --- Define base save directory for QR code images (used when calling the imported save function) ---
+    QR_IMAGE_SAVE_BASE_DIR = r"C:\BoardDefectChecker\images\qr-codes"
+    # --- Define the specific prefix for THIS tab ---
+    TAB_FOLDER_PREFIX = "bezel-pwb-position"
+    # Define the path to the blank image as a class attribute or constant
+    BLANK_IMAGE_PATH = r"C:\BoardDefectChecker\resources\blank.png"
+
     def __init__(self, ui, camera_worker, camera_interaction, snap_worker_left, snap_worker_right,
                  detection_log_worker=None, parent=None):
         self.processing_worker = None
@@ -41,6 +52,12 @@ class BezelPWBTabController:
         self.is_streaming_left = False
         self.is_streaming_right = False
 
+        # --- QR Scanning State ---
+        self.is_qr_scanning_enabled = False
+        # --- Instantiate the imported worker ---
+        self.qr_scanner_worker = QRScannerWorker(verbose=False)
+        self.qr_scanner_worker.qr_code_found.connect(self.on_qr_code_found)  # Connect signal
+
         lang_path = os.path.join(os.path.dirname(__file__), "language.json")
         self.lang_manager = SimpleLanguageManager(lang_path)
         self.lang_manager.set_tab("bezel_pwb_position_tab")
@@ -48,7 +65,8 @@ class BezelPWBTabController:
         self.apply_translations()
 
         self.processor = BezelPWBPositionImageProcessor()
-        self.bezel_pwb_ai_model = BezelPWBPositionSegmenter(model_type="x", model_path="ai-models/")
+        self.bezel_pwb_ai_model = BezelPWBPositionSegmenter(model_type="x", model_path="ai-models/",
+                                                            checker_config_path=r"C:\BoardDefectChecker\ai-training-data\hollywood.json")
 
         self.disk_monitor = DiskSpaceMonitor(interval=5, language="en", low_space_threshold=5)
         self.disk_blink_timer = QTimer()
@@ -62,6 +80,11 @@ class BezelPWBTabController:
         self.disk_monitor.critical_space_stop.connect(self.handle_critical_space)
         self.disk_blink_timer.timeout.connect(self.toggle_blink)
         self.disk_monitor.start()
+
+        # --- Result Label Blinking Setup (Simplified) ---
+        # Dedicated timer for result blinking
+        self.result_blink_timer = QTimer()
+        # Removed other result blink attributes (_active, _count, _labels_to_blink, _original_styles)
 
         self.load_config()
 
@@ -88,6 +111,19 @@ class BezelPWBTabController:
         self.ui.lineEdit_30.returnPressed.connect(self.update_staff_id)
         self.ui.lineEdit_29.returnPressed.connect(self.handle_part_number_return_pressed)
         self.ui.checkBox_16.stateChanged.connect(self.toggle_pwb_check)
+
+        # --- Connect QR Scan Checkbox ---
+        self.ui.checkBox_15.stateChanged.connect(self.toggle_qr_scanning)
+
+        # Populate and connect checker config combobox
+        self.populate_checker_config_combobox()  # Populate comboBox_6
+        if hasattr(self.ui, 'comboBox_6'):
+            self.ui.comboBox_6.currentIndexChanged.connect(self.on_checker_config_changed)
+            # --- MODIFICATION: Set index to -1 (no selection) initially ---
+            self.ui.comboBox_6.setCurrentIndex(-1)
+            # --- END MODIFICATION ---
+        else:
+            print("[Error][BezelPWB Init] comboBox_6 not found in UI definition.")
 
         self.ui.radioButton_13.setText("ENG")
         self.ui.radioButton_14.setText("VIE")
@@ -210,6 +246,8 @@ class BezelPWBTabController:
             self.disk_monitor.language = "en"
             self.apply_translations()
             self.update_connection_status(self.current_connection_state or False)
+            # Update comboBox
+            self.ui.comboBox_6.setPlaceholderText(self.lang_manager.get_text("comboBox_6"))
             # Update tab names for English
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_operation_log), "Operation log")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_robotic_arm), "Robotic arm")
@@ -229,6 +267,8 @@ class BezelPWBTabController:
             self.disk_monitor.language = "vi"
             self.apply_translations()
             self.update_connection_status(self.current_connection_state or False)
+            # Update comboBox
+            self.ui.comboBox_6.setPlaceholderText(self.lang_manager.get_text("comboBox_6"))
             # Update tab names for Vietnamese
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_operation_log), "Nhật ký hoạt động")
             self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.tab_robotic_arm), "Cánh tay robot")
@@ -384,6 +424,10 @@ class BezelPWBTabController:
             self.is_streaming_left = False
             print("[BezelPWB] Left camera streaming state: OFF")
 
+            # --- Stop QR scanner if no streams are active ---
+            if not self.is_streaming_right and self.is_qr_scanning_enabled:
+                self.stop_qr_scanner()
+
     def stop_video_streaming_right(self):
         if self.snap_worker_right and self.snap_worker_right.isRunning():
             self.snap_worker_right.stop()
@@ -397,6 +441,10 @@ class BezelPWBTabController:
             self.is_streaming_right = False
             print("[BezelPWB] Right camera streaming state: OFF")
 
+            # --- Stop QR scanner if no streams are active ---
+            if not self.is_streaming_right and self.is_qr_scanning_enabled:
+                self.stop_qr_scanner()
+
     def update_video_frame_left(self, frame):
         if frame is not None:
             h, w, c = frame.shape
@@ -407,6 +455,10 @@ class BezelPWBTabController:
             self.ui.label_315.setScaledContents(True)
             self.ui.label_315.setText("")
 
+            # --- Send frame to QR worker ---
+            if self.is_qr_scanning_enabled and self.qr_scanner_worker.isRunning():
+                self.qr_scanner_worker.set_frame(frame, 'left')
+
     def update_video_frame_right(self, frame):
         if frame is not None:
             h, w, c = frame.shape
@@ -416,6 +468,10 @@ class BezelPWBTabController:
             self.ui.label_322.setPixmap(pixmap)
             self.ui.label_322.setScaledContents(True)
             self.ui.label_322.setText("")
+
+            # --- Send frame to QR worker ---
+            if self.is_qr_scanning_enabled and self.qr_scanner_worker.isRunning():
+                self.qr_scanner_worker.set_frame(frame, 'right')
 
     # Disk Space Management
     def toggle_blink(self):
@@ -533,12 +589,12 @@ class BezelPWBTabController:
         Updates the internal state and shows a translated message directly defined here.
         """
         # Reverse the logic: checked (state=2) means DISABLED (False)
-        self.is_pwb_check_enabled = (state != 2) # True if unchecked, False if checked
+        self.is_pwb_check_enabled = (state != 2)  # True if unchecked, False if checked
 
         # --- MODIFICATION: Define translations directly ---
-        title = "PWB Check Status" # Default English title
+        title = "PWB Check Status"  # Default English title
         status_message = ""
-        lang = "en" # Default language
+        lang = "en"  # Default language
 
         # Try to get current language from manager if it exists
         if hasattr(self, 'lang_manager') and self.lang_manager is not None:
@@ -551,7 +607,7 @@ class BezelPWBTabController:
                 status_message = "Kiểm PWB được BẬT."
             else:
                 status_message = "Kiểm PWB bị TẮT."
-        else: # Default to English
+        else:  # Default to English
             title = "PWB Check Status"
             if self.is_pwb_check_enabled:
                 status_message = "PWB check is ENABLED."
@@ -559,8 +615,9 @@ class BezelPWBTabController:
                 status_message = "PWB check is DISABLED."
         # --- END MODIFICATION ---
 
-        print(f"[BezelPWB] PWB Check toggled. New state: {'ENABLED' if self.is_pwb_check_enabled else 'DISABLED'} (Lang: {lang})")
-        QMessageBox.information(None, title, status_message) # Show the determined message
+        print(
+            f"[BezelPWB] PWB Check toggled. New state: {'ENABLED' if self.is_pwb_check_enabled else 'DISABLED'} (Lang: {lang})")
+        QMessageBox.information(None, title, status_message)  # Show the determined message
 
         # Optional: Check if options are locked and potentially revert UI state
         # if hasattr(self, 'is_options_locked') and self.is_options_locked:
@@ -637,6 +694,16 @@ class BezelPWBTabController:
             QMessageBox.warning(None, title, message)
             return
 
+        # --- ADDED CHECK for comboBox_6 selection ---
+        if self.ui.comboBox_6.currentIndex() == -1:
+            title = "Lỗi / Error" if self.lang_manager.current_language == "vi" else "Selection Error"
+            message = ("Vui lòng chọn một mã hàng từ danh sách trước khi tiếp tục.\n"
+                       "Please select a product type before proceeding.")
+            QMessageBox.warning(None, title, message)
+            print("[BezelPWB] Cannot process: No product type is selected")
+            return
+        # --- END ADDED CHECK ---
+
         # Verify detection_log_worker is not None
         if self.detection_log_worker is None:
             print("[BezelPWB] Error: detection_log_worker is None, cannot log results")
@@ -712,9 +779,6 @@ class BezelPWBTabController:
         self.processing_worker.start()
         self.processing_dialog.exec()
 
-    # Define the path to the blank image as a class attribute or constant
-    BLANK_IMAGE_PATH = r"C:\BoardDefectChecker\resources\blank.png"
-
     # --- UPDATED HELPER METHOD ---
     def _parse_and_translate_reason(self, reason: Optional[str], side: str) -> str:
         """
@@ -737,7 +801,7 @@ class BezelPWBTabController:
             "copper_mark": "dấu đồng",  # Simplified
             "bezel": "ngàm",
             "stamped_mark": "dấu dập",
-            "pwb": "mạch PWB",  # Simplified
+            "pwb": "PWB",  # Simplified
             "part": ""  # Removed fallback word
         }
         object_translations_en = {
@@ -757,7 +821,7 @@ class BezelPWBTabController:
             # Handle specific OK reason from evaluate if PWB check was skipped
             if isinstance(reason, str) and "[Stamped Mark Skipped]" in reason:
                 # Return the specific message including the side
-                return f"Kiểm PWB bị tắt bên {side_vi}" if lang == "vi" else f"PWB Check Disabled on {side_en}"
+                return f"Kiểm vị trí dán PWB bị tắt bên {side_vi}" if lang == "vi" else f"PWB Position Check Disabled on {side_en}"
             # Standard OK case or empty reason - return empty string
             return ""
         # --- END MODIFICATION ---
@@ -815,19 +879,84 @@ class BezelPWBTabController:
             # Default message already includes side
             return default_reason_vi if lang == "vi" else default_reason_en
 
-    # --- UPDATED SLOT METHOD ---
-    @Slot(object, object, object, object, str, str, float, float, str, str)  # Keep 10 arguments
+    # --- NEW Blinking Method (Adapted from token_fpc_tab.py) ---
+    def blink_labels(self):
+        """Blink label_103, label_171, and label_108 (if exists) for 3 seconds."""
+        labels_to_blink: List[QLabel] = []  # Use type hinting
+        if hasattr(self.ui, 'label_103'):
+            labels_to_blink.append(self.ui.label_103)
+        else:
+            print("[Warning] UI does not have label_103, cannot blink it.")
+        if hasattr(self.ui, 'label_171'):
+            labels_to_blink.append(self.ui.label_171)
+        else:
+            print("[Warning] UI does not have label_171, cannot blink it.")
+        if hasattr(self.ui, 'label_108'):
+            labels_to_blink.append(self.ui.label_108)
+        else:
+            print("[Warning] UI does not have label_108, cannot blink it.")
+
+        if not labels_to_blink:
+            print("[BezelPWB] No labels found to blink.")
+            return
+
+        blink_duration_ms = 2000  # 2 seconds
+        blink_interval_ms = 500  # Blink every 500ms
+        max_blinks = blink_duration_ms // blink_interval_ms
+
+        # Stop any existing timer to avoid overlap or multiple connections
+        if self.result_blink_timer.isActive():
+            try:
+                # Attempt to disconnect all slots connected to timeout()
+                self.result_blink_timer.timeout.disconnect()
+            except RuntimeError:
+                # Ignore if no connections exist (e.g., first run)
+                pass
+            self.result_blink_timer.stop()
+            print("[BezelPWB] Stopped existing result blink timer.")
+
+        # --- Local blink state and toggle function ---
+        blink_count = 0
+        visible = True  # Start visible
+
+        def toggle():
+            nonlocal blink_count, visible
+            visible = not visible
+            for label in labels_to_blink:
+                label.setVisible(visible)  # Toggle visibility
+
+            blink_count += 1
+            if blink_count >= max_blinks:
+                self.result_blink_timer.stop()
+                try:
+                    # Disconnect after stopping to prevent issues if stopped externally
+                    self.result_blink_timer.timeout.disconnect()
+                except RuntimeError:
+                    pass  # Ignore if already disconnected
+                for label in labels_to_blink:
+                    label.setVisible(True)  # Ensure final state is visible
+                print("[BezelPWB] Result label blinking completed.")
+
+        # --- End local toggle function ---
+
+        # Connect the local toggle function and start the timer
+        self.result_blink_timer.timeout.connect(toggle)
+        self.result_blink_timer.start(blink_interval_ms)
+        print("[BezelPWB] Started blinking result labels.")
+
+    # --- Fully updated on_processing_finished method ---
+    @Slot(object, object, object, object, str, str, float, float, str, str)
     def on_processing_finished(self, left_mask_img, right_mask_img, left_annotated_pwb_img, right_annotated_pwb_img,
                                left_result, right_result, left_time, right_time, final_result,
-                               defect_reason_raw):  # Receive combined reason
+                               defect_reason_raw):
         """
-        Handle the processing results, parse the combined reason, translate, update UI text and colors.
+        Handle the processing results, parse the combined reason, translate, update UI text and colors,
+        and blink the result labels.
         """
         print("[BezelPWB] Processing finished signal received.")
         print(f"  Left Result Raw: {left_result}, Right Result Raw: {right_result}, Final Raw: {final_result}")
         print(f"  Defect Reason Raw (Combined): {defect_reason_raw}")
         print(f"  Left Time: {left_time:.3f}s, Right Time: {right_time:.3f}s")
-        # ... (log image types) ...
 
         # --- Update Time Labels with Language ---
         if hasattr(self, 'lang_manager') and self.lang_manager is not None:
@@ -851,7 +980,6 @@ class BezelPWBTabController:
         # --- Parse and Translate Defect Reason ---
         final_defect_reason_display = ""
         # *** Still using simulation for individual reasons - needs fixing upstream ***
-        # This simulation logic needs to be replaced if individual reasons are passed
         simulated_left_reason = None
         simulated_right_reason = None
         if isinstance(defect_reason_raw, str):
@@ -869,7 +997,8 @@ class BezelPWBTabController:
                 elif right_result == "NG":
                     simulated_right_reason = parts[0]
                 else:
-                    simulated_left_reason = parts[0]  # Assign to left if both OK but reason exists
+                    # Assign to left if both OK but reason exists (e.g., PWB skipped)
+                    simulated_left_reason = parts[0]
 
         left_reason_parsed = self._parse_and_translate_reason(simulated_left_reason, "left")
         right_reason_parsed = self._parse_and_translate_reason(simulated_right_reason, "right")
@@ -877,9 +1006,9 @@ class BezelPWBTabController:
         # Combine parsed reasons for display
         reasons_list = [r for r in [left_reason_parsed, right_reason_parsed] if r]  # Filter out empty strings
 
-        if not reasons_list:  # If both sides were OK and no special OK reason (like skipped PWB)
+        if not reasons_list:  # If both sides were OK and no special OK reason
             if hasattr(self, 'lang_manager') and self.lang_manager is not None:
-                final_defect_reason_display = "Không phát hiện bất thường vị trí" if self.lang_manager.current_language == "vi" else "No position defect found"
+                final_defect_reason_display = "Không phát hiện bất thường về vị trí" if self.lang_manager.current_language == "vi" else "No position defect found"
             else:
                 final_defect_reason_display = "No position defect found"
         else:
@@ -888,10 +1017,8 @@ class BezelPWBTabController:
         self.ui.label_103.setText(final_defect_reason_display)
         # Set defect reason label color based on the overall final_result
         self.ui.label_103.setStyleSheet(ok_style if final_result == "OK" else ng_style)
-        # --- END MODIFICATION ---
 
         # --- Display Images (Mask and PWB/Blank) ---
-        # (Image display logic remains the same)
         # Display Left Mask Image
         if left_mask_img is not None and isinstance(left_mask_img, np.ndarray):
             try:
@@ -911,11 +1038,13 @@ class BezelPWBTabController:
                 self.ui.label_311.setScaledContents(True)
                 self.ui.label_311.setText("")
             except Exception as e:
-                print(f"[Error][UI] Failed to display left mask image: {e}"); self.ui.label_311.setText(
-                    "Display Error"); self.ui.label_311.setPixmap(QPixmap())
+                print(f"[Error][UI] Failed to display left mask image: {e}");
+                self.ui.label_311.setText("Display Error");
+                self.ui.label_311.setPixmap(QPixmap())
         else:
-            print("[Warning] Left mask image is None"); self.ui.label_311.setText(
-                "No Image"); self.ui.label_311.setPixmap(QPixmap())
+            print("[Warning] Left mask image is None");
+            self.ui.label_311.setText("No Image");
+            self.ui.label_311.setPixmap(QPixmap())
 
         # Display Right Mask Image
         if right_mask_img is not None and isinstance(right_mask_img, np.ndarray):
@@ -936,11 +1065,13 @@ class BezelPWBTabController:
                 self.ui.label_310.setScaledContents(True)
                 self.ui.label_310.setText("")
             except Exception as e:
-                print(f"[Error][UI] Failed to display right mask image: {e}"); self.ui.label_310.setText(
-                    "Display Error"); self.ui.label_310.setPixmap(QPixmap())
+                print(f"[Error][UI] Failed to display right mask image: {e}");
+                self.ui.label_310.setText("Display Error");
+                self.ui.label_310.setPixmap(QPixmap())
         else:
-            print("[Warning] Right mask image is None"); self.ui.label_310.setText(
-                "No Image"); self.ui.label_310.setPixmap(QPixmap())
+            print("[Warning] Right mask image is None");
+            self.ui.label_310.setText("No Image");
+            self.ui.label_310.setPixmap(QPixmap())
 
         # Display Left Annotated PWB Image or Blank
         target_label_left_pwb = self.ui.label_319
@@ -962,19 +1093,21 @@ class BezelPWBTabController:
                 target_label_left_pwb.setScaledContents(True)
                 target_label_left_pwb.setText("")
             except Exception as e:
-                print(f"[Error][UI] Failed to display left PWB image: {e}"); target_label_left_pwb.setText(
-                    "PWB Error"); target_label_left_pwb.setPixmap(QPixmap())
+                print(f"[Error][UI] Failed to display left PWB image: {e}");
+                target_label_left_pwb.setText("PWB Error");
+                target_label_left_pwb.setPixmap(QPixmap())
         else:
             print("[Info][UI] Left annotated PWB image is None. Displaying blank.")
             blank_pixmap = QPixmap(self.BLANK_IMAGE_PATH)
             if not blank_pixmap.isNull():
                 target_label_left_pwb.setPixmap(blank_pixmap.scaled(220, 220, Qt.IgnoreAspectRatio,
-                                                                    Qt.SmoothTransformation)); target_label_left_pwb.setScaledContents(
-                    True); target_label_left_pwb.setText("")
+                                                                    Qt.SmoothTransformation));
+                target_label_left_pwb.setScaledContents(True);
+                target_label_left_pwb.setText("")
             else:
-                print(
-                    f"[Error][UI] Failed to load blank image: {self.BLANK_IMAGE_PATH}"); target_label_left_pwb.setText(
-                    "Blank Missing"); target_label_left_pwb.setPixmap(QPixmap())
+                print(f"[Error][UI] Failed to load blank image: {self.BLANK_IMAGE_PATH}");
+                target_label_left_pwb.setText("Blank Missing");
+                target_label_left_pwb.setPixmap(QPixmap())
 
         # Display Right Annotated PWB Image or Blank
         target_label_right_pwb = self.ui.label_317
@@ -996,19 +1129,25 @@ class BezelPWBTabController:
                 target_label_right_pwb.setScaledContents(True)
                 target_label_right_pwb.setText("")
             except Exception as e:
-                print(f"[Error][UI] Failed to display right PWB image: {e}"); target_label_right_pwb.setText(
-                    "PWB Error"); target_label_right_pwb.setPixmap(QPixmap())
+                print(f"[Error][UI] Failed to display right PWB image: {e}");
+                target_label_right_pwb.setText("PWB Error");
+                target_label_right_pwb.setPixmap(QPixmap())
         else:
             print("[Info][UI] Right annotated PWB image is None. Displaying blank.")
             blank_pixmap = QPixmap(self.BLANK_IMAGE_PATH)
             if not blank_pixmap.isNull():
                 target_label_right_pwb.setPixmap(blank_pixmap.scaled(220, 220, Qt.IgnoreAspectRatio,
-                                                                     Qt.SmoothTransformation)); target_label_right_pwb.setScaledContents(
-                    True); target_label_right_pwb.setText("")
+                                                                     Qt.SmoothTransformation));
+                target_label_right_pwb.setScaledContents(True);
+                target_label_right_pwb.setText("")
             else:
-                print(
-                    f"[Error][UI] Failed to load blank image: {self.BLANK_IMAGE_PATH}"); target_label_right_pwb.setText(
-                    "Blank Missing"); target_label_right_pwb.setPixmap(QPixmap())
+                print(f"[Error][UI] Failed to load blank image: {self.BLANK_IMAGE_PATH}");
+                target_label_right_pwb.setText("Blank Missing");
+                target_label_right_pwb.setPixmap(QPixmap())
+
+        # --- Call the new blinking method ---
+        self.blink_labels()
+        # --- Blinking logic ends ---
 
         # Explicitly update the counter display after processing results are handled
         self.update_detected_result_count()
@@ -1055,15 +1194,30 @@ class BezelPWBTabController:
             self.ui.label_158.setStyleSheet("color: #be2b25;")
             print("[BezelPWB] Camera Status Updated: Disconnected")
 
+    # --- __del__ method (Logic remains the same, interacts with imported worker) ---
     def __del__(self):
-        if hasattr(self, 'disk_monitor'):
+        """Clean up resources including the QR scanner worker."""
+        print("[BezelPWB] Cleaning up controller...")
+        if hasattr(self, 'disk_monitor') and self.disk_monitor.isRunning():
             self.disk_monitor.stop()
-        if hasattr(self, 'disk_blink_timer'):
+            print("[BezelPWB] Disk monitor stopped.")
+        if hasattr(self, 'disk_blink_timer') and self.disk_blink_timer.isActive():
             self.disk_blink_timer.stop()
+            print("[BezelPWB] Disk blink timer stopped.")
+        if hasattr(self, 'result_blink_timer') and self.result_blink_timer.isActive():
+            self.result_blink_timer.stop()
+            print("[BezelPWB] Result blink timer stopped.")
+        # --- Ensure worker exists before stopping ---
+        if hasattr(self, 'qr_scanner_worker') and self.qr_scanner_worker.isRunning():
+            self.qr_scanner_worker.stop()  # Use the stop method
+            print("[BezelPWB] QR scanner worker stopped.")
         if self.snap_worker_left and self.snap_worker_left.isRunning():
             self.stop_video_streaming_left()
+            print("[BezelPWB] Left snap worker stopped.")
         if self.snap_worker_right and self.snap_worker_right.isRunning():
             self.stop_video_streaming_right()
+            print("[BezelPWB] Right snap worker stopped.")
+        print("[BezelPWB] Cleanup complete.")
 
     def save_raw_image(self, raw_image, camera_id, original_image_path, show_image=False):
         """
@@ -1103,3 +1257,242 @@ class BezelPWBTabController:
 
         # Always return the absolute path
         return os.path.abspath(saved_path)
+
+    # --- UPDATED METHOD: Populate comboBox_6 without placeholder ---
+    def populate_checker_config_combobox(self):
+        """
+        Scans the checker config directory and populates comboBox_6
+        with JSON base filenames (e.g., "Maverick", "Hollywood").
+        """
+        if not hasattr(self.ui, 'comboBox_6'):
+            print("[Error] Cannot populate: comboBox_6 not found in UI.")
+            return
+
+        combobox: QComboBox = self.ui.comboBox_6
+        combobox.clear()
+        # --- REMOVED Placeholder ---
+        # combobox.addItem(self.CONFIG_PLACEHOLDER)
+        # --- END REMOVED Placeholder ---
+        config_base_names = []
+
+        if not os.path.isdir(self.CHECKER_CONFIG_DIR):
+            print(f"[Error] Checker config directory not found: {self.CHECKER_CONFIG_DIR}")
+            combobox.addItem("Config Dir Error")
+            combobox.setEnabled(False)
+            return
+
+        try:
+            for filename in os.listdir(self.CHECKER_CONFIG_DIR):
+                if filename.lower().endswith(".json"):
+                    base_name = os.path.splitext(filename)[0]
+                    config_base_names.append(base_name)  # Store only the base name
+
+            if config_base_names:
+                config_base_names.sort()  # Sort alphabetically
+                for base_name in config_base_names:
+                    combobox.addItem(base_name)  # Add only the base name (e.g., "Maverick")
+                combobox.setEnabled(True)
+                print(
+                    f"[Info] Populated comboBox_6 with {len(config_base_names)} configs from {self.CHECKER_CONFIG_DIR}")
+                # --- MODIFICATION: Set index to -1 (no selection) after populating ---
+                combobox.setCurrentIndex(-1)
+                # --- END MODIFICATION ---
+            else:
+                print(f"[Warning] No JSON files found in {self.CHECKER_CONFIG_DIR}")
+                combobox.addItem("No Configs Found")
+                combobox.setEnabled(False)
+                combobox.setCurrentIndex(0)  # Select the error message
+
+        except Exception as e:
+            print(f"[Error] Failed to scan checker config directory {self.CHECKER_CONFIG_DIR}: {e}")
+            combobox.addItem("Scan Error")
+            combobox.setEnabled(False)
+            combobox.setCurrentIndex(0)  # Select the error message
+
+    # --- UPDATED SLOT METHOD: Handle config selection change ---
+    @Slot(int)
+    def on_checker_config_changed(self, index):
+        """
+        Handles the selection change in the checker config combobox.
+        Loads the config based on the selected base filename.
+        Does nothing if index is -1 (no selection).
+        """
+        if not hasattr(self.ui, 'comboBox_6'): return
+        if not hasattr(self, 'bezel_pwb_ai_model') or self.bezel_pwb_ai_model is None:
+            print("[Error] AI Model not initialized, cannot set config.")
+            return
+
+        combobox: QComboBox = self.ui.comboBox_6
+
+        # --- MODIFICATION: Check for invalid index ---
+        if index < 0:  # No item selected or combobox is empty
+            print(f"[Info] No config selected (index: {index}).")
+            # Optionally unload the current config if needed
+            # self.bezel_pwb_ai_model.set_checker_config_path(None)
+            return
+        # --- END MODIFICATION ---
+
+        selected_base_name = combobox.itemText(index)
+
+        # Check if the selected item is an error message
+        if selected_base_name in ["No Configs Found", "Config Dir Error", "Scan Error"]:
+            print(f"[Info] Error item selected in comboBox_6: '{selected_base_name}'. No config loaded.")
+            return
+
+        # Construct filename and path
+        json_filename = f"{selected_base_name}.json"
+        full_config_path = os.path.join(self.CHECKER_CONFIG_DIR, json_filename)
+
+        print(f"[Info] Config selection changed. Attempting to load: {full_config_path}")
+        self.bezel_pwb_ai_model.set_checker_config_path(full_config_path)
+
+        # Check if the load was successful (optional logging)
+        load_successful = (
+                self.bezel_pwb_ai_model.rotation_invariant_checker is not None and
+                self.bezel_pwb_ai_model.checker_config_path == full_config_path
+        )
+        if load_successful:
+            print(f"[Info] Checker configuration loaded successfully from: {json_filename}")
+        else:
+            print(f"[Error] Failed to load checker configuration from: {json_filename}")
+
+    # --- QR Scanning Methods (toggle_qr_scanning MODIFIED) ---
+    def toggle_qr_scanning(self, state):
+        """Enable/disable QR code scanning based on checkBox_15 state."""
+        # --- ADDED Debug Prints ---
+        print(f"[BezelPWB][Debug] toggle_qr_scanning received state from signal: {state}")
+        # --- Check current UI state directly ---
+        is_checked_now = self.ui.checkBox_15.isChecked()
+        print(f"[BezelPWB][Debug] checkBox_15.isChecked() reports: {is_checked_now}")
+
+        # Determine desired state based on CURRENT UI state, not just the signal argument
+        should_enable = is_checked_now
+        print(f"[BezelPWB] QR Scanning toggle. Determined desired state: {'ON' if should_enable else 'OFF'}")
+
+        if should_enable:  # User WANTS scanning ON (box is currently checked)
+            # Check internal state to avoid redundant actions
+            if self.is_qr_scanning_enabled:
+                print("[BezelPWB] QR Scanning already enabled (internal state).")
+                # Optional: Ensure worker is running if state mismatch
+                if hasattr(self, 'qr_scanner_worker') and not self.qr_scanner_worker.isRunning():
+                    print("[BezelPWB] State mismatch: Starting worker.")
+                    self.qr_scanner_worker.start()
+                return
+
+            # Check if streams are active (required to start)
+            if not self.is_streaming_left and not self.is_streaming_right:
+                title = "Lỗi / Error" if self.lang_manager.current_language == "vi" else "Streaming Error"
+                message = ("Vui lòng bắt đầu truyền video từ ít nhất một camera trước khi bật quét QR.\n"
+                           "Please start video streaming from at least one camera before enabling QR scanning.")
+                QMessageBox.warning(None, title, message)
+                # Ensure checkbox exists before trying to uncheck it
+                if hasattr(self.ui, 'checkBox_15'):
+                    # Block signals to prevent recursion when setting checked state
+                    self.ui.checkBox_15.blockSignals(True)
+                    self.ui.checkBox_15.setChecked(False)  # Revert UI change
+                    self.ui.checkBox_15.blockSignals(False)
+                self.is_qr_scanning_enabled = False  # Keep internal state OFF
+                print("[BezelPWB] QR Scan start prevented: No active streams.")  # Debug
+                return
+
+            # Start worker if possible
+            if hasattr(self, 'qr_scanner_worker') and not self.qr_scanner_worker.isRunning():
+                print("[BezelPWB] Starting QR scanner worker thread...")  # Debug
+                self.qr_scanner_worker.start()
+                self.is_qr_scanning_enabled = True  # Set internal state ON
+            elif not hasattr(self, 'qr_scanner_worker'):
+                print("[Error][BezelPWB] QR scanner worker not initialized.")
+                self.is_qr_scanning_enabled = False
+                if hasattr(self.ui, 'checkBox_15'): self.ui.checkBox_15.setChecked(False)  # Revert UI
+            elif self.qr_scanner_worker.isRunning():
+                print("[BezelPWB] QR scanner worker already running.")  # Debug
+                self.is_qr_scanning_enabled = True  # Ensure internal state is ON
+            else:
+                # Should not happen if worker exists but is not running, but handle anyway
+                self.is_qr_scanning_enabled = False
+                if hasattr(self.ui, 'checkBox_15'): self.ui.checkBox_15.setChecked(False)  # Revert UI
+
+        else:  # User WANTS scanning OFF (box is currently unchecked)
+            # Check internal state to avoid redundant actions
+            if not self.is_qr_scanning_enabled:
+                print("[BezelPWB] QR Scanning already disabled (internal state).")
+                return
+
+            # Stop the worker
+            print("[BezelPWB] Stopping QR scanner due to checkbox toggle (OFF).")  # Debug
+            self.stop_qr_scanner()  # This stops the thread and sets internal state OFF
+            # Clear QR related UI elements
+            self.ui.label_184.setText("--")
+            self.ui.label_321.setText(self.lang_manager.get_text("label_321"))
+            self.ui.label_321.setPixmap(QPixmap())
+
+    def stop_qr_scanner(self):
+        """Stops the QR scanner worker thread and updates the internal flag."""
+        print("[BezelPWB] stop_qr_scanner called.")  # Debug
+        # Check qr_scanner_worker exists before trying to stop
+        if hasattr(self, 'qr_scanner_worker') and self.qr_scanner_worker is not None:
+            if self.qr_scanner_worker.isRunning():
+                print("[BezelPWB] QR scanner worker is running, attempting to stop.")  # Debug
+                self.qr_scanner_worker.stop()  # Use the worker's stop method
+                print("[BezelPWB] QR scanner worker stop() called.")  # Debug
+            else:
+                print("[BezelPWB] QR scanner worker exists but is not running.")  # Debug
+        else:
+            print("[BezelPWB] QR scanner worker object does not exist or is None.")  # Debug
+
+        # Update the internal state flag *after* stopping the thread
+        self.is_qr_scanning_enabled = False
+        print("[BezelPWB] Internal QR scanning state set to False.")
+
+    # --- UPDATED on_qr_code_found method ---
+    @Slot(str, object, str)
+    def on_qr_code_found(self, data: str, frame: np.ndarray, source: str):
+        """Handle the found QR code data and frame. Keep scanner running."""
+        print(f"[BezelPWB] QR Code Found Slot Triggered. Data: {data}, Source: {source}")
+
+        # --- Call the imported save function with dynamic prefix ---
+        # Use the class attribute for the base save directory
+        # Use the TAB_FOLDER_PREFIX for the specific folder prefix
+        saved_qr_path = save_qr_code_image(
+            frame=frame,
+            source=source,
+            qr_data=data,
+            base_save_dir=self.QR_IMAGE_SAVE_BASE_DIR,
+            folder_prefix=self.TAB_FOLDER_PREFIX  # Pass the dynamic prefix
+        )
+        # --- End Call ---
+
+        if saved_qr_path:
+            print(f"[BezelPWB] Saved QR code image via function to: {saved_qr_path}")
+        else:
+            print("[BezelPWB] Warning: Failed to save QR code image via function.")
+
+        # Update QR Data Label
+        self.ui.label_184.setText(data)
+
+        # Update QR Image Label (label_321) with the frame received
+        try:
+            if frame is not None and isinstance(frame, np.ndarray) and frame.size > 0:
+                h, w, c = frame.shape
+                if h > 0 and w > 0:
+                    q_img = QImage(frame.data, w, h, c * w, QImage.Format_RGB888)
+                    pixmap = QPixmap.fromImage(q_img).scaled(220, 220, Qt.IgnoreAspectRatio,
+                                                             Qt.SmoothTransformation)
+                    self.ui.label_321.setGeometry(1340, 230, 220, 220)
+                    self.ui.label_321.setPixmap(pixmap)
+                    self.ui.label_321.setScaledContents(True)
+                    self.ui.label_321.setText("")
+                    print("[BezelPWB] QR image displayed on label_321.")
+                else:
+                    raise ValueError("Invalid frame dimensions")
+            else:
+                raise ValueError("Invalid or empty frame received")
+        except Exception as e:
+            print(f"[Error][UI] Failed to display QR image: {e}")
+            self.ui.label_321.setText("QR Img Error")
+            self.ui.label_321.setPixmap(QPixmap())
+
+        # Update Part Number LineEdit (lineEdit_29) and set focus
+        self.ui.lineEdit_29.setText(data)
+        self.ui.lineEdit_29.setFocus()
+        print(f"[BezelPWB] Part number set to '{data}' and focus given.")
